@@ -8,6 +8,7 @@ import ModalEditarPedido from "../components/ModalEditarPedido";
 import ModalEditarProducto from "../components/ModalEditarProducto";
 import PedidoCard from "../components/PedidoCard";
 import ResumenCards from "../components/ResumenCards";
+import ResumenDetalle from "../components/ResumenDetalle";
 
 import { calcularPedidosConTotales, calcularResumen } from "../lib/calculos";
 import {
@@ -602,7 +603,9 @@ export default function Home() {
                   <input
                     type="month"
                     value={filtroMesResumen}
-                    onChange={(event) => setFiltroMesResumen(event.target.value)}
+                    onChange={(event) =>
+                      setFiltroMesResumen(event.target.value)
+                    }
                     className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
                   />
                 </div>
@@ -618,6 +621,8 @@ export default function Home() {
             </div>
 
             <ResumenCards resumen={resumen} />
+
+            <ResumenDetalle pedidos={pedidosResumen} />
 
             <div className="rounded-2xl bg-neutral-50 p-5 text-sm text-neutral-600">
               <p>
