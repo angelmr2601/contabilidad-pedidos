@@ -1,5 +1,8 @@
+"use client";
+
+import { useState } from "react";
+
 import {
-  COSTE_FIJO_PEDIDO,
   calcularProducto,
   formatoEuros,
   formatoFecha,
@@ -33,6 +36,15 @@ export default function PedidoCard({
   onAlternarPagoProducto,
   onAlternarEntregaProducto,
 }: Props) {
+  const [productoMovilAbierto, setProductoMovilAbierto] =
+    useState<number | null>(null);
+
+  function cambiarProductoMovilAbierto(productoId: number) {
+    setProductoMovilAbierto((actual) =>
+      actual === productoId ? null : productoId
+    );
+  }
+
   return (
     <div className="overflow-hidden rounded-2xl border border-neutral-200">
       <div className="flex flex-col gap-4 bg-white p-5 md:flex-row md:items-center md:justify-between">
@@ -116,29 +128,179 @@ export default function PedidoCard({
 
       {abierto && (
         <div className="border-t border-neutral-200 bg-neutral-50 p-5">
-          <div className="mb-4 grid gap-3 rounded-xl bg-white p-4 text-sm md:grid-cols-4">
-            <div>
-              <p className="text-neutral-500">Coste productos</p>
-              <p className="font-bold">{formatoEuros(pedido.costeProductos)}</p>
-            </div>
+          <div className="space-y-3 md:hidden">
+            {pedido.productos.map((producto, index) => {
+              const calculo = calcularProducto(producto);
+              const productoAbierto = productoMovilAbierto === producto.id;
 
-            <div>
-              <p className="text-neutral-500">Coste fijo pedido</p>
-              <p className="font-bold">{formatoEuros(COSTE_FIJO_PEDIDO)}</p>
-            </div>
+              return (
+                <div
+                  key={producto.id}
+                  className="overflow-hidden rounded-2xl bg-white shadow-sm"
+                >
+                  <button
+                    type="button"
+                    onClick={() => cambiarProductoMovilAbierto(producto.id)}
+                    className="flex w-full items-start justify-between gap-3 p-4 text-left"
+                  >
+                    <div>
+                      <p className="text-xs font-medium text-neutral-500">
+                        Producto {index + 1} · {producto.cliente}
+                      </p>
 
-            <div>
-              <p className="text-neutral-500">Coste total</p>
-              <p className="font-bold">{formatoEuros(pedido.totalCoste)}</p>
-            </div>
+                      <h4 className="mt-1 font-bold">{producto.nombre}</h4>
 
-            <div>
-              <p className="text-neutral-500">Beneficio pedido</p>
-              <p className="font-bold">{formatoEuros(pedido.beneficio)}</p>
-            </div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700">
+                          {producto.tipo}
+                        </span>
+
+                        <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700">
+                          Talla {producto.talla}
+                        </span>
+
+                        {!producto.pagado && (
+                          <span className="rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-700">
+                            Pendiente pago
+                          </span>
+                        )}
+
+                        {!producto.entregado && (
+                          <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">
+                            Pendiente entrega
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <span className="text-lg">{productoAbierto ? "−" : "+"}</span>
+                  </button>
+
+                  {productoAbierto && (
+                    <div className="border-t border-neutral-100 p-4">
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div className="rounded-xl bg-neutral-50 p-3">
+                          <p className="text-neutral-500">Cliente</p>
+                          <p className="font-semibold">{producto.cliente}</p>
+                        </div>
+
+                        <div className="rounded-xl bg-neutral-50 p-3">
+                          <p className="text-neutral-500">Talla</p>
+                          <p className="font-semibold">{producto.talla}</p>
+                        </div>
+
+                        <div className="rounded-xl bg-neutral-50 p-3">
+                          <p className="text-neutral-500">Tipo</p>
+                          <p className="font-semibold">{producto.tipo}</p>
+                        </div>
+
+                        <div className="rounded-xl bg-neutral-50 p-3">
+                          <p className="text-neutral-500">Manga</p>
+                          <p className="font-semibold">{producto.manga}</p>
+                        </div>
+
+                        <div className="rounded-xl bg-neutral-50 p-3">
+                          <p className="text-neutral-500">Venta</p>
+                          <p className="font-semibold">
+                            {formatoEuros(calculo.ventaTotal)}
+                          </p>
+                        </div>
+
+                        <div className="rounded-xl bg-neutral-50 p-3">
+                          <p className="text-neutral-500">Coste</p>
+                          <p className="font-semibold">
+                            {formatoEuros(calculo.costeTotal)}
+                          </p>
+                        </div>
+
+                        <div className="rounded-xl bg-neutral-50 p-3">
+                          <p className="text-neutral-500">Beneficio</p>
+                          <p className="font-semibold">
+                            {formatoEuros(calculo.beneficio)}
+                          </p>
+                        </div>
+
+                        <div className="rounded-xl bg-neutral-50 p-3">
+                          <p className="text-neutral-500">Personalización</p>
+                          {producto.personalizacion ? (
+                            <p className="font-semibold">
+                              {producto.nombrePersonalizacion || "Sin nombre"}{" "}
+                              {producto.numeroPersonalizacion &&
+                                `#${producto.numeroPersonalizacion}`}
+                            </p>
+                          ) : (
+                            <p className="font-semibold">No</p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onAlternarPagoProducto(pedido.id, producto.id)
+                          }
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${
+                            producto.pagado
+                              ? "bg-green-100 text-green-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}
+                        >
+                          {producto.pagado ? "Pagado" : "Pendiente pago"}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onAlternarEntregaProducto(pedido.id, producto.id)
+                          }
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${
+                            producto.entregado
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {producto.entregado
+                            ? "Entregado"
+                            : "Pendiente entrega"}
+                        </button>
+                      </div>
+
+                      <div className="mt-4 grid grid-cols-3 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => onDuplicarProducto(pedido.id, producto)}
+                          className="rounded-xl bg-blue-100 px-3 py-2 text-xs font-medium text-blue-700"
+                        >
+                          Duplicar
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => onEditarProducto(pedido.id, producto)}
+                          className="rounded-xl bg-neutral-100 px-3 py-2 text-xs font-medium text-neutral-700"
+                        >
+                          Editar
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onEliminarProducto(pedido.id, producto.id)
+                          }
+                          className="rounded-xl bg-red-100 px-3 py-2 text-xs font-medium text-red-700"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
-          <div className="overflow-x-auto rounded-xl bg-white">
+          <div className="hidden overflow-x-auto rounded-xl bg-white md:block">
             <table className="w-full border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b text-neutral-500">
