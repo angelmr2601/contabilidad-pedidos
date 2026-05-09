@@ -32,7 +32,7 @@ import type {
 } from "../types";
 
 export default function Home() {
-  const [pedidoAbierto, setPedidoAbierto] = useState<number | null>(1);
+  const [pedidoAbierto, setPedidoAbierto] = useState<number | null>(null);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [productoFormularioAbierto, setProductoFormularioAbierto] =
     useState<number>(1);
@@ -49,40 +49,7 @@ export default function Home() {
   const [pedidoEditando, setPedidoEditando] =
     useState<PedidoEditando | null>(null);
 
-  const [pedidos, setPedidos] = useState<Pedido[]>([
-    {
-      id: 1,
-      nombre: "Pedido proveedor mayo",
-      productos: [
-        {
-          id: 1,
-          cliente: "Carlos",
-          nombre: "Camiseta Nike blanca",
-          talla: "M",
-          tipo: "Fan",
-          manga: "Corta",
-          personalizacion: false,
-          nombrePersonalizacion: "",
-          numeroPersonalizacion: "",
-          pagado: false,
-          entregado: false,
-        },
-        {
-          id: 2,
-          cliente: "Lucía",
-          nombre: "Camiseta retro Adidas negra",
-          talla: "L",
-          tipo: "Retro/Player",
-          manga: "Larga",
-          personalizacion: true,
-          nombrePersonalizacion: "MESSI",
-          numeroPersonalizacion: "10",
-          pagado: true,
-          entregado: false,
-        },
-      ],
-    },
-  ]);
+  const [pedidos, setPedidos] = useState<Pedido[]>([]);
 
   const [nombrePedido, setNombrePedido] = useState("");
   const [productosFormulario, setProductosFormulario] = useState<Producto[]>([
