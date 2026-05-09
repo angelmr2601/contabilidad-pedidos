@@ -13,6 +13,7 @@ type Props = {
   onEditarPedido: (pedido: Pedido) => void;
   onEliminarPedido: (pedidoId: number) => void;
   onAñadirProducto: (pedido: Pedido) => void;
+  onDuplicarProducto: (pedidoId: number, producto: Producto) => void;
   onEditarProducto: (pedidoId: number, producto: Producto) => void;
   onEliminarProducto: (pedidoId: number, productoId: number) => void;
   onAlternarPagoProducto: (pedidoId: number, productoId: number) => void;
@@ -26,6 +27,7 @@ export default function PedidoCard({
   onEditarPedido,
   onEliminarPedido,
   onAñadirProducto,
+  onDuplicarProducto,
   onEditarProducto,
   onEliminarProducto,
   onAlternarPagoProducto,
@@ -233,7 +235,17 @@ export default function PedidoCard({
                       </td>
 
                       <td className="py-4 pr-4">
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onDuplicarProducto(pedido.id, producto)
+                            }
+                            className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700"
+                          >
+                            Duplicar
+                          </button>
+
                           <button
                             type="button"
                             onClick={() => onEditarProducto(pedido.id, producto)}

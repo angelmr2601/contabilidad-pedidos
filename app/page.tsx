@@ -360,6 +360,48 @@ export default function Home() {
     }
   }
 
+  async function duplicarProducto(pedidoId: number, producto: Producto) {
+    const confirmar = confirm("¿Quieres duplicar este producto?");
+
+    if (!confirmar) {
+      return;
+    }
+
+    const productoDuplicado: Producto = {
+      ...producto,
+      id: 1,
+      pagado: false,
+      entregado: false,
+    };
+
+    try {
+      setGuardando(true);
+
+      const productoCreado = await crearProductoEnPedido(
+        pedidoId,
+        productoDuplicado
+      );
+
+      setPedidos((pedidosActuales) =>
+        pedidosActuales.map((pedido) =>
+          pedido.id === pedidoId
+            ? {
+                ...pedido,
+                productos: [...pedido.productos, productoCreado],
+              }
+            : pedido
+        )
+      );
+
+      setPedidoAbierto(pedidoId);
+    } catch (error) {
+      console.error(error);
+      alert("No se pudo duplicar el producto.");
+    } finally {
+      setGuardando(false);
+    }
+  }
+
   function abrirEditorProducto(pedidoId: number, producto: Producto) {
     setProductoEditando({
       pedidoId,
@@ -795,6 +837,7 @@ export default function Home() {
                     onEditarPedido={abrirEditorPedido}
                     onEliminarPedido={eliminarPedido}
                     onAñadirProducto={abrirAñadirProductoPedido}
+                    onDuplicarProducto={duplicarProducto}
                     onEditarProducto={abrirEditorProducto}
                     onEliminarProducto={eliminarProducto}
                     onAlternarPagoProducto={alternarPagoProducto}
