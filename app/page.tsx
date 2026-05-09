@@ -9,12 +9,17 @@ import ModalEditarProducto from "../components/ModalEditarProducto";
 import PedidoCard from "../components/PedidoCard";
 import ResumenCards from "../components/ResumenCards";
 
+import { calcularPedidosConTotales, calcularResumen } from "../lib/calculos";
 import {
-  calcularPedidosConTotales,
-  calcularResumen,
-} from "../lib/calculos";
+  actualizarEstadoProductoDB,
+  actualizarPedidoNombre,
+  actualizarProductoDB,
+  cargarPedidos,
+  crearPedidoConProductos,
+  eliminarPedidoDB,
+  eliminarProductoDB,
+} from "../lib/pedidos-db";
 import { crearProductoVacio } from "../lib/productos";
-import { STORAGE_KEY } from "../lib/storage";
 import {
   obtenerProductosValidos,
   validarNuevoPedido,
@@ -36,7 +41,10 @@ export default function Home() {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [productoFormularioAbierto, setProductoFormularioAbierto] =
     useState<number>(1);
+
   const [cargandoPedidos, setCargandoPedidos] = useState(true);
+  const [guardando, setGuardando] = useState(false);
+  const [errorCarga, setErrorCarga] = useState("");
 
   const [busqueda, setBusqueda] = useState("");
   const [filtroPago, setFiltroPago] = useState<FiltroPago>("todos");
@@ -57,20 +65,24 @@ export default function Home() {
   ]);
 
   useEffect(() => {
-    const pedidosGuardados = localStorage.getItem(STORAGE_KEY);
+    async function cargarDatos() {
+      try {
+        setCargandoPedidos(true);
+        setErrorCarga("");
 
-    if (pedidosGuardados) {
-      setPedidos(JSON.parse(pedidosGuardados));
+        const pedidosDB = await cargarPedidos();
+
+        setPedidos(pedidosDB);
+      } catch (error) {
+        console.error(error);
+        setErrorCarga("No se pudieron cargar los pedidos.");
+      } finally {
+        setCargandoPedidos(false);
+      }
     }
 
-    setCargandoPedidos(false);
+    cargarDatos();
   }, []);
-
-  useEffect(() => {
-    if (!cargandoPedidos) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(pedidos));
-    }
-  }, [pedidos, cargandoPedidos]);
 
   const pedidosConTotales = calcularPedidosConTotales(pedidos);
   const resumen = calcularResumen(pedidosConTotales);
@@ -122,9 +134,10 @@ export default function Home() {
   }
 
   function abrirModalNuevoPedido() {
-    setModalAbierto(true);
-    setProductoFormularioAbierto(1);
-  }
+  console.log("Abriendo modal");
+  setModalAbierto(true);
+  setProductoFormularioAbierto(1);
+}
 
   function cerrarModalNuevoPedido() {
     setModalAbierto(false);
@@ -163,46 +176,116 @@ export default function Home() {
     });
   }
 
-  function alternarPagoProducto(pedidoId: number, productoId: number) {
+  async function alternarPagoProducto(pedidoId: number, productoId: number) {
+    const pedido = pedidos.find((pedidoActual) => pedidoActual.id === pedidoId);
+    const producto = pedido?.productos.find(
+      (productoActual) => productoActual.id === productoId
+    );
+
+    if (!producto) {
+      return;
+    }
+
+    const nuevoPagado = !producto.pagado;
+
     setPedidos((pedidosActuales) =>
-      pedidosActuales.map((pedido) =>
-        pedido.id === pedidoId
+      pedidosActuales.map((pedidoActual) =>
+        pedidoActual.id === pedidoId
           ? {
-              ...pedido,
-              productos: pedido.productos.map((producto) =>
-                producto.id === productoId
-                  ? { ...producto, pagado: !producto.pagado }
-                  : producto
+              ...pedidoActual,
+              productos: pedidoActual.productos.map((productoActual) =>
+                productoActual.id === productoId
+                  ? { ...productoActual, pagado: nuevoPagado }
+                  : productoActual
               ),
             }
-          : pedido
+          : pedidoActual
       )
     );
+
+    try {
+      await actualizarEstadoProductoDB(productoId, { pagado: nuevoPagado });
+    } catch (error) {
+      console.error(error);
+      alert("No se pudo actualizar el pago.");
+
+      setPedidos((pedidosActuales) =>
+        pedidosActuales.map((pedidoActual) =>
+          pedidoActual.id === pedidoId
+            ? {
+                ...pedidoActual,
+                productos: pedidoActual.productos.map((productoActual) =>
+                  productoActual.id === productoId
+                    ? { ...productoActual, pagado: producto.pagado }
+                    : productoActual
+                ),
+              }
+            : pedidoActual
+        )
+      );
+    }
   }
 
-  function alternarEntregaProducto(pedidoId: number, productoId: number) {
+  async function alternarEntregaProducto(pedidoId: number, productoId: number) {
+    const pedido = pedidos.find((pedidoActual) => pedidoActual.id === pedidoId);
+    const producto = pedido?.productos.find(
+      (productoActual) => productoActual.id === productoId
+    );
+
+    if (!producto) {
+      return;
+    }
+
+    const nuevoEntregado = !producto.entregado;
+
     setPedidos((pedidosActuales) =>
-      pedidosActuales.map((pedido) =>
-        pedido.id === pedidoId
+      pedidosActuales.map((pedidoActual) =>
+        pedidoActual.id === pedidoId
           ? {
-              ...pedido,
-              productos: pedido.productos.map((producto) =>
-                producto.id === productoId
-                  ? { ...producto, entregado: !producto.entregado }
-                  : producto
+              ...pedidoActual,
+              productos: pedidoActual.productos.map((productoActual) =>
+                productoActual.id === productoId
+                  ? { ...productoActual, entregado: nuevoEntregado }
+                  : productoActual
               ),
             }
-          : pedido
+          : pedidoActual
       )
     );
+
+    try {
+      await actualizarEstadoProductoDB(productoId, {
+        entregado: nuevoEntregado,
+      });
+    } catch (error) {
+      console.error(error);
+      alert("No se pudo actualizar la entrega.");
+
+      setPedidos((pedidosActuales) =>
+        pedidosActuales.map((pedidoActual) =>
+          pedidoActual.id === pedidoId
+            ? {
+                ...pedidoActual,
+                productos: pedidoActual.productos.map((productoActual) =>
+                  productoActual.id === productoId
+                    ? { ...productoActual, entregado: producto.entregado }
+                    : productoActual
+                ),
+              }
+            : pedidoActual
+        )
+      );
+    }
   }
 
-  function eliminarProducto(pedidoId: number, productoId: number) {
+  async function eliminarProducto(pedidoId: number, productoId: number) {
     const confirmar = confirm("¿Seguro que quieres eliminar este producto?");
 
     if (!confirmar) {
       return;
     }
+
+    const pedidosAntes = pedidos;
 
     setPedidos((pedidosActuales) =>
       pedidosActuales
@@ -218,6 +301,14 @@ export default function Home() {
         )
         .filter((pedido) => pedido.productos.length > 0)
     );
+
+    try {
+      await eliminarProductoDB(productoId);
+    } catch (error) {
+      console.error(error);
+      alert("No se pudo eliminar el producto.");
+      setPedidos(pedidosAntes);
+    }
   }
 
   function abrirEditorProducto(pedidoId: number, producto: Producto) {
@@ -244,7 +335,7 @@ export default function Home() {
     );
   }
 
-  function guardarProductoEditado() {
+  async function guardarProductoEditado() {
     if (!productoEditando) {
       return;
     }
@@ -255,6 +346,8 @@ export default function Home() {
       alert(error);
       return;
     }
+
+    const pedidosAntes = pedidos;
 
     setPedidos((pedidosActuales) =>
       pedidosActuales.map((pedido) =>
@@ -271,7 +364,14 @@ export default function Home() {
       )
     );
 
-    setProductoEditando(null);
+    try {
+      await actualizarProductoDB(productoEditando.producto);
+      setProductoEditando(null);
+    } catch (error) {
+      console.error(error);
+      alert("No se pudo guardar el producto.");
+      setPedidos(pedidosAntes);
+    }
   }
 
   function abrirEditorPedido(pedido: Pedido) {
@@ -292,7 +392,7 @@ export default function Home() {
     );
   }
 
-  function guardarPedidoEditado() {
+  async function guardarPedidoEditado() {
     if (!pedidoEditando) {
       return;
     }
@@ -303,6 +403,8 @@ export default function Home() {
       alert(error);
       return;
     }
+
+    const pedidosAntes = pedidos;
 
     setPedidos((pedidosActuales) =>
       pedidosActuales.map((pedido) =>
@@ -315,10 +417,17 @@ export default function Home() {
       )
     );
 
-    setPedidoEditando(null);
+    try {
+      await actualizarPedidoNombre(pedidoEditando.id, pedidoEditando.nombre);
+      setPedidoEditando(null);
+    } catch (error) {
+      console.error(error);
+      alert("No se pudo guardar el pedido.");
+      setPedidos(pedidosAntes);
+    }
   }
 
-  function eliminarPedido(pedidoId: number) {
+  async function eliminarPedido(pedidoId: number) {
     const confirmar = confirm(
       "¿Seguro que quieres eliminar este pedido completo?"
     );
@@ -327,14 +436,24 @@ export default function Home() {
       return;
     }
 
+    const pedidosAntes = pedidos;
+
     setPedidos((pedidosActuales) =>
       pedidosActuales.filter((pedido) => pedido.id !== pedidoId)
     );
 
     setPedidoAbierto((actual) => (actual === pedidoId ? null : actual));
+
+    try {
+      await eliminarPedidoDB(pedidoId);
+    } catch (error) {
+      console.error(error);
+      alert("No se pudo eliminar el pedido.");
+      setPedidos(pedidosAntes);
+    }
   }
 
-  function guardarPedido() {
+  async function guardarPedido() {
     const error = validarNuevoPedido(nombrePedido, productosFormulario);
 
     if (error) {
@@ -344,23 +463,26 @@ export default function Home() {
 
     const productosValidos = obtenerProductosValidos(productosFormulario);
 
-    const nuevoId =
-      pedidos.length === 0
-        ? 1
-        : Math.max(...pedidos.map((pedido) => pedido.id)) + 1;
+    try {
+      setGuardando(true);
 
-    const nuevoPedido: Pedido = {
-      id: nuevoId,
-      nombre: nombrePedido,
-      productos: productosValidos,
-    };
+      const nuevoPedido = await crearPedidoConProductos(
+        nombrePedido,
+        productosValidos
+      );
 
-    setPedidos((actuales) => [...actuales, nuevoPedido]);
-    setPedidoAbierto(nuevoPedido.id);
-    setModalAbierto(false);
-    setNombrePedido("");
-    setProductosFormulario([crearProductoVacio(1)]);
-    setProductoFormularioAbierto(1);
+      setPedidos((actuales) => [...actuales, nuevoPedido]);
+      setPedidoAbierto(nuevoPedido.id);
+      setModalAbierto(false);
+      setNombrePedido("");
+      setProductosFormulario([crearProductoVacio(1)]);
+      setProductoFormularioAbierto(1);
+    } catch (error) {
+      console.error(error);
+      alert("No se pudo crear el pedido.");
+    } finally {
+      setGuardando(false);
+    }
   }
 
   return (
@@ -385,11 +507,12 @@ export default function Home() {
             </div>
 
             <button
-              onClick={abrirModalNuevoPedido}
-              className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white"
-            >
-              Añadir pedido
-            </button>
+  type="button"
+  onClick={abrirModalNuevoPedido}
+  className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white"
+>
+  Añadir pedido
+</button>
           </div>
 
           <FiltrosPedidos
@@ -405,7 +528,19 @@ export default function Home() {
           />
 
           <div className="space-y-3">
-            {pedidosConTotales.length === 0 && (
+            {cargandoPedidos && (
+              <div className="rounded-2xl border border-dashed border-neutral-300 p-8 text-center">
+                <p className="font-medium">Cargando pedidos...</p>
+              </div>
+            )}
+
+            {errorCarga && (
+              <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center text-red-700">
+                <p className="font-medium">{errorCarga}</p>
+              </div>
+            )}
+
+            {!cargandoPedidos && !errorCarga && pedidosConTotales.length === 0 && (
               <div className="rounded-2xl border border-dashed border-neutral-300 p-8 text-center">
                 <p className="font-medium">Todavía no hay pedidos.</p>
                 <p className="mt-1 text-sm text-neutral-500">
@@ -414,29 +549,34 @@ export default function Home() {
               </div>
             )}
 
-            {pedidosConTotales.length > 0 && pedidosFiltrados.length === 0 && (
-              <div className="rounded-2xl border border-dashed border-neutral-300 p-8 text-center">
-                <p className="font-medium">No hay resultados.</p>
-                <p className="mt-1 text-sm text-neutral-500">
-                  Prueba con otra búsqueda o limpia los filtros.
-                </p>
-              </div>
-            )}
+            {!cargandoPedidos &&
+              !errorCarga &&
+              pedidosConTotales.length > 0 &&
+              pedidosFiltrados.length === 0 && (
+                <div className="rounded-2xl border border-dashed border-neutral-300 p-8 text-center">
+                  <p className="font-medium">No hay resultados.</p>
+                  <p className="mt-1 text-sm text-neutral-500">
+                    Prueba con otra búsqueda o limpia los filtros.
+                  </p>
+                </div>
+              )}
 
-            {pedidosFiltrados.map((pedido) => (
-              <PedidoCard
-                key={pedido.id}
-                pedido={pedido}
-                abierto={pedidoAbierto === pedido.id}
-                onCambiarAbierto={cambiarPedidoAbierto}
-                onEditarPedido={abrirEditorPedido}
-                onEliminarPedido={eliminarPedido}
-                onEditarProducto={abrirEditorProducto}
-                onEliminarProducto={eliminarProducto}
-                onAlternarPagoProducto={alternarPagoProducto}
-                onAlternarEntregaProducto={alternarEntregaProducto}
-              />
-            ))}
+            {!cargandoPedidos &&
+              !errorCarga &&
+              pedidosFiltrados.map((pedido) => (
+                <PedidoCard
+                  key={pedido.id}
+                  pedido={pedido}
+                  abierto={pedidoAbierto === pedido.id}
+                  onCambiarAbierto={cambiarPedidoAbierto}
+                  onEditarPedido={abrirEditorPedido}
+                  onEliminarPedido={eliminarPedido}
+                  onEditarProducto={abrirEditorProducto}
+                  onEliminarProducto={eliminarProducto}
+                  onAlternarPagoProducto={alternarPagoProducto}
+                  onAlternarEntregaProducto={alternarEntregaProducto}
+                />
+              ))}
           </div>
         </section>
       </div>

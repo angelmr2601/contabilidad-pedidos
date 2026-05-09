@@ -1,0 +1,212 @@
+import { supabase } from "./supabase";
+import type { Pedido, Producto } from "../types";
+
+type ProductoDB = {
+  id: number;
+  pedido_id: number;
+  cliente: string;
+  nombre: string;
+  talla: string;
+  tipo: string;
+  manga: string;
+  personalizacion: boolean;
+  nombre_personalizacion: string;
+  numero_personalizacion: string;
+  pagado: boolean;
+  entregado: boolean;
+};
+
+type PedidoDB = {
+  id: number;
+  nombre: string;
+  productos: ProductoDB[];
+};
+
+function productoDesdeDB(producto: ProductoDB): Producto {
+  return {
+    id: producto.id,
+    cliente: producto.cliente,
+    nombre: producto.nombre,
+    talla: producto.talla as Producto["talla"],
+    tipo: producto.tipo as Producto["tipo"],
+    manga: producto.manga as Producto["manga"],
+    personalizacion: producto.personalizacion,
+    nombrePersonalizacion: producto.nombre_personalizacion,
+    numeroPersonalizacion: producto.numero_personalizacion,
+    pagado: producto.pagado,
+    entregado: producto.entregado,
+  };
+}
+
+function productoParaDB(producto: Producto, pedidoId: number) {
+  return {
+    pedido_id: pedidoId,
+    cliente: producto.cliente,
+    nombre: producto.nombre,
+    talla: producto.talla,
+    tipo: producto.tipo,
+    manga: producto.manga,
+    personalizacion: producto.personalizacion,
+    nombre_personalizacion: producto.nombrePersonalizacion,
+    numero_personalizacion: producto.numeroPersonalizacion,
+    pagado: producto.pagado,
+    entregado: producto.entregado,
+  };
+}
+
+export async function cargarPedidos(): Promise<Pedido[]> {
+  const { data, error } = await supabase
+    .from("pedidos")
+    .select(
+      `
+      id,
+      nombre,
+      productos (
+        id,
+        pedido_id,
+        cliente,
+        nombre,
+        talla,
+        tipo,
+        manga,
+        personalizacion,
+        nombre_personalizacion,
+        numero_personalizacion,
+        pagado,
+        entregado
+      )
+    `
+    )
+    .order("id", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return ((data ?? []) as PedidoDB[]).map((pedido) => ({
+    id: pedido.id,
+    nombre: pedido.nombre,
+    productos: pedido.productos.map(productoDesdeDB),
+  }));
+}
+
+export async function crearPedidoConProductos(
+  nombre: string,
+  productos: Producto[]
+): Promise<Pedido> {
+  const { data: pedidoCreado, error: errorPedido } = await supabase
+    .from("pedidos")
+    .insert({ nombre })
+    .select("id, nombre")
+    .single();
+
+  if (errorPedido) {
+    throw errorPedido;
+  }
+
+  const productosParaInsertar = productos.map((producto) =>
+    productoParaDB(producto, pedidoCreado.id)
+  );
+
+  const { data: productosCreados, error: errorProductos } = await supabase
+    .from("productos")
+    .insert(productosParaInsertar)
+    .select(
+      `
+      id,
+      pedido_id,
+      cliente,
+      nombre,
+      talla,
+      tipo,
+      manga,
+      personalizacion,
+      nombre_personalizacion,
+      numero_personalizacion,
+      pagado,
+      entregado
+    `
+    );
+
+  if (errorProductos) {
+    throw errorProductos;
+  }
+
+  return {
+    id: pedidoCreado.id,
+    nombre: pedidoCreado.nombre,
+    productos: ((productosCreados ?? []) as ProductoDB[]).map(productoDesdeDB),
+  };
+}
+
+export async function actualizarPedidoNombre(
+  pedidoId: number,
+  nombre: string
+) {
+  const { error } = await supabase
+    .from("pedidos")
+    .update({ nombre })
+    .eq("id", pedidoId);
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function eliminarPedidoDB(pedidoId: number) {
+  const { error } = await supabase.from("pedidos").delete().eq("id", pedidoId);
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function actualizarProductoDB(producto: Producto) {
+  const { error } = await supabase
+    .from("productos")
+    .update({
+      cliente: producto.cliente,
+      nombre: producto.nombre,
+      talla: producto.talla,
+      tipo: producto.tipo,
+      manga: producto.manga,
+      personalizacion: producto.personalizacion,
+      nombre_personalizacion: producto.nombrePersonalizacion,
+      numero_personalizacion: producto.numeroPersonalizacion,
+      pagado: producto.pagado,
+      entregado: producto.entregado,
+    })
+    .eq("id", producto.id);
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function eliminarProductoDB(productoId: number) {
+  const { error } = await supabase
+    .from("productos")
+    .delete()
+    .eq("id", productoId);
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function actualizarEstadoProductoDB(
+  productoId: number,
+  campos: {
+    pagado?: boolean;
+    entregado?: boolean;
+  }
+) {
+  const { error } = await supabase
+    .from("productos")
+    .update(campos)
+    .eq("id", productoId);
+
+  if (error) {
+    throw error;
+  }
+}

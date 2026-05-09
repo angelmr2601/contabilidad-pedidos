@@ -10,6 +10,11 @@ function unauthorized() {
 }
 
 export function proxy(request: NextRequest) {
+  // En local no pedimos contraseña
+  if (process.env.NODE_ENV === "development") {
+    return NextResponse.next();
+  }
+
   const username = process.env.BASIC_AUTH_USER;
   const password = process.env.BASIC_AUTH_PASSWORD;
 
@@ -40,10 +45,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Protege todo excepto archivos internos de Next y assets estáticos.
-     */
-    "/((?!_next/static|_next/image|favicon.ico).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
