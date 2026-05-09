@@ -1,15 +1,17 @@
-import type { FiltroEntrega, FiltroPago } from "../types";
+import type { FiltroArchivo, FiltroEntrega, FiltroPago } from "../types";
 
 type Props = {
   busqueda: string;
   filtroPago: FiltroPago;
   filtroEntrega: FiltroEntrega;
+  filtroArchivo: FiltroArchivo;
   filtroMes: string;
   totalPedidos: number;
   totalFiltrados: number;
   onBusquedaChange: (valor: string) => void;
   onFiltroPagoChange: (valor: FiltroPago) => void;
   onFiltroEntregaChange: (valor: FiltroEntrega) => void;
+  onFiltroArchivoChange: (valor: FiltroArchivo) => void;
   onFiltroMesChange: (valor: string) => void;
   onLimpiarFiltros: () => void;
 };
@@ -18,12 +20,14 @@ export default function FiltrosPedidos({
   busqueda,
   filtroPago,
   filtroEntrega,
+  filtroArchivo,
   filtroMes,
   totalPedidos,
   totalFiltrados,
   onBusquedaChange,
   onFiltroPagoChange,
   onFiltroEntregaChange,
+  onFiltroArchivoChange,
   onFiltroMesChange,
   onLimpiarFiltros,
 }: Props) {
@@ -47,6 +51,21 @@ export default function FiltrosPedidos({
           onChange={(event) => onFiltroMesChange(event.target.value)}
           className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
         />
+      </div>
+
+      <div>
+        <label className="mb-2 block text-sm font-medium">Archivo</label>
+        <select
+          value={filtroArchivo}
+          onChange={(event) =>
+            onFiltroArchivoChange(event.target.value as FiltroArchivo)
+          }
+          className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
+        >
+          <option value="activos">Activos</option>
+          <option value="archivados">Archivados</option>
+          <option value="todos">Todos</option>
+        </select>
       </div>
 
       <div>

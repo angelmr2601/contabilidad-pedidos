@@ -22,6 +22,7 @@ type PedidoDB = {
   id: number;
   nombre: string;
   fecha_pedido: string;
+  archivado: boolean;
   productos: ProductoDB[];
 };
 
@@ -82,6 +83,13 @@ function productoParaDB(producto: Producto, pedidoId: number) {
   };
 }
 
+export function calcularArchivadoPedido(productos: Producto[]) {
+  return (
+    productos.length > 0 &&
+    productos.every((producto) => producto.pagado && producto.entregado)
+  );
+}
+
 export async function cargarPedidos(): Promise<Pedido[]> {
   const { data, error } = await supabase
     .from("pedidos")
@@ -90,6 +98,7 @@ export async function cargarPedidos(): Promise<Pedido[]> {
       id,
       nombre,
       fecha_pedido,
+      archivado,
       productos (
         ${PRODUCTOS_SELECT}
       )
@@ -106,6 +115,7 @@ export async function cargarPedidos(): Promise<Pedido[]> {
     id: pedido.id,
     nombre: pedido.nombre,
     fechaPedido: pedido.fecha_pedido,
+    archivado: pedido.archivado,
     productos: pedido.productos.map(productoDesdeDB),
   }));
 }
@@ -115,13 +125,16 @@ export async function crearPedidoConProductos(
   fechaPedido: string,
   productos: Producto[]
 ): Promise<Pedido> {
+  const archivado = calcularArchivadoPedido(productos);
+
   const { data: pedidoCreado, error: errorPedido } = await supabase
     .from("pedidos")
     .insert({
       nombre,
       fecha_pedido: fechaPedido,
+      archivado,
     })
-    .select("id, nombre, fecha_pedido")
+    .select("id, nombre, fecha_pedido, archivado")
     .single();
 
   if (errorPedido) {
@@ -145,6 +158,7 @@ export async function crearPedidoConProductos(
     id: pedidoCreado.id,
     nombre: pedidoCreado.nombre,
     fechaPedido: pedidoCreado.fecha_pedido,
+    archivado: pedidoCreado.archivado,
     productos: ((productosCreados ?? []) as ProductoDB[]).map(productoDesdeDB),
   };
 }
@@ -177,6 +191,20 @@ export async function actualizarPedidoDB(
       nombre,
       fecha_pedido: fechaPedido,
     })
+    .eq("id", pedidoId);
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function actualizarArchivadoPedidoDB(
+  pedidoId: number,
+  archivado: boolean
+) {
+  const { error } = await supabase
+    .from("pedidos")
+    .update({ archivado })
     .eq("id", pedidoId);
 
   if (error) {

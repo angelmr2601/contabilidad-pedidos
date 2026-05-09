@@ -4,6 +4,7 @@ export type TallaProducto = "S" | "M" | "L" | "XL" | "XXL";
 
 export type FiltroPago = "todos" | "pagado" | "pendiente";
 export type FiltroEntrega = "todos" | "entregado" | "pendiente";
+export type FiltroArchivo = "activos" | "archivados" | "todos";
 
 export type Producto = {
   id: number;
@@ -25,6 +26,7 @@ export type Pedido = {
   id: number;
   nombre: string;
   fechaPedido: string;
+  archivado: boolean;
   productos: Producto[];
 };
 

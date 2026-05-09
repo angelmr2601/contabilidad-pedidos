@@ -13,9 +13,11 @@ import ResumenDetalle from "../components/ResumenDetalle";
 
 import { calcularPedidosConTotales, calcularResumen } from "../lib/calculos";
 import {
+  actualizarArchivadoPedidoDB,
   actualizarEstadoProductoDB,
   actualizarPedidoDB,
   actualizarProductoDB,
+  calcularArchivadoPedido,
   cargarPedidos,
   crearPedidoConProductos,
   crearProductoEnPedido,
@@ -31,6 +33,7 @@ import {
 } from "../lib/validaciones";
 
 import type {
+  FiltroArchivo,
   FiltroEntrega,
   FiltroPago,
   Pedido,
@@ -82,6 +85,8 @@ export default function Home() {
   const [filtroPago, setFiltroPago] = useState<FiltroPago>("todos");
   const [filtroEntrega, setFiltroEntrega] =
     useState<FiltroEntrega>("todos");
+  const [filtroArchivo, setFiltroArchivo] =
+    useState<FiltroArchivo>("activos");
 
   const [filtroMesResumen, setFiltroMesResumen] = useState("");
 
@@ -151,6 +156,11 @@ export default function Home() {
     const coincideMes =
       filtroMes === "" || pedido.fechaPedido.startsWith(filtroMes);
 
+    const coincideArchivo =
+      filtroArchivo === "todos" ||
+      (filtroArchivo === "activos" && !pedido.archivado) ||
+      (filtroArchivo === "archivados" && pedido.archivado);
+
     const coincidePago =
       filtroPago === "todos" ||
       pedido.productos.some((producto) =>
@@ -165,7 +175,13 @@ export default function Home() {
           : !producto.entregado
       );
 
-    return coincideBusqueda && coincideMes && coincidePago && coincideEntrega;
+    return (
+      coincideBusqueda &&
+      coincideMes &&
+      coincideArchivo &&
+      coincidePago &&
+      coincideEntrega
+    );
   });
 
   const pedidosResumen = pedidosConTotales.filter((pedido) => {
@@ -176,11 +192,32 @@ export default function Home() {
 
   const resumen = calcularResumen(pedidosResumen);
 
+  async function actualizarArchivadoPedidoLocalYDB(
+    pedidoId: number,
+    productos: Producto[]
+  ) {
+    const archivado = calcularArchivadoPedido(productos);
+
+    setPedidos((pedidosActuales) =>
+      pedidosActuales.map((pedido) =>
+        pedido.id === pedidoId
+          ? {
+              ...pedido,
+              archivado,
+            }
+          : pedido
+      )
+    );
+
+    await actualizarArchivadoPedidoDB(pedidoId, archivado);
+  }
+
   function limpiarFiltros() {
     setBusqueda("");
     setFiltroMes("");
     setFiltroPago("todos");
     setFiltroEntrega("todos");
+    setFiltroArchivo("activos");
   }
 
   function abrirModalNuevoPedido() {
@@ -231,22 +268,27 @@ export default function Home() {
       (productoActual) => productoActual.id === productoId
     );
 
-    if (!producto) {
+    if (!pedido || !producto) {
       return;
     }
 
     const nuevoPagado = !producto.pagado;
+
+    const productosActualizados = pedido.productos.map((productoActual) =>
+      productoActual.id === productoId
+        ? { ...productoActual, pagado: nuevoPagado }
+        : productoActual
+    );
+
+    const nuevoArchivado = calcularArchivadoPedido(productosActualizados);
 
     setPedidos((pedidosActuales) =>
       pedidosActuales.map((pedidoActual) =>
         pedidoActual.id === pedidoId
           ? {
               ...pedidoActual,
-              productos: pedidoActual.productos.map((productoActual) =>
-                productoActual.id === productoId
-                  ? { ...productoActual, pagado: nuevoPagado }
-                  : productoActual
-              ),
+              archivado: nuevoArchivado,
+              productos: productosActualizados,
             }
           : pedidoActual
       )
@@ -254,22 +296,13 @@ export default function Home() {
 
     try {
       await actualizarEstadoProductoDB(productoId, { pagado: nuevoPagado });
+      await actualizarArchivadoPedidoDB(pedidoId, nuevoArchivado);
     } catch (error) {
       console.error(error);
       alert("No se pudo actualizar el pago.");
-
       setPedidos((pedidosActuales) =>
         pedidosActuales.map((pedidoActual) =>
-          pedidoActual.id === pedidoId
-            ? {
-                ...pedidoActual,
-                productos: pedidoActual.productos.map((productoActual) =>
-                  productoActual.id === productoId
-                    ? { ...productoActual, pagado: producto.pagado }
-                    : productoActual
-                ),
-              }
-            : pedidoActual
+          pedidoActual.id === pedidoId ? pedido : pedidoActual
         )
       );
     }
@@ -281,22 +314,27 @@ export default function Home() {
       (productoActual) => productoActual.id === productoId
     );
 
-    if (!producto) {
+    if (!pedido || !producto) {
       return;
     }
 
     const nuevoEntregado = !producto.entregado;
+
+    const productosActualizados = pedido.productos.map((productoActual) =>
+      productoActual.id === productoId
+        ? { ...productoActual, entregado: nuevoEntregado }
+        : productoActual
+    );
+
+    const nuevoArchivado = calcularArchivadoPedido(productosActualizados);
 
     setPedidos((pedidosActuales) =>
       pedidosActuales.map((pedidoActual) =>
         pedidoActual.id === pedidoId
           ? {
               ...pedidoActual,
-              productos: pedidoActual.productos.map((productoActual) =>
-                productoActual.id === productoId
-                  ? { ...productoActual, entregado: nuevoEntregado }
-                  : productoActual
-              ),
+              archivado: nuevoArchivado,
+              productos: productosActualizados,
             }
           : pedidoActual
       )
@@ -306,22 +344,13 @@ export default function Home() {
       await actualizarEstadoProductoDB(productoId, {
         entregado: nuevoEntregado,
       });
+      await actualizarArchivadoPedidoDB(pedidoId, nuevoArchivado);
     } catch (error) {
       console.error(error);
       alert("No se pudo actualizar la entrega.");
-
       setPedidos((pedidosActuales) =>
         pedidosActuales.map((pedidoActual) =>
-          pedidoActual.id === pedidoId
-            ? {
-                ...pedidoActual,
-                productos: pedidoActual.productos.map((productoActual) =>
-                  productoActual.id === productoId
-                    ? { ...productoActual, entregado: producto.entregado }
-                    : productoActual
-                ),
-              }
-            : pedidoActual
+          pedidoActual.id === pedidoId ? pedido : pedidoActual
         )
       );
     }
@@ -336,23 +365,35 @@ export default function Home() {
 
     const pedidosAntes = pedidos;
 
+    const pedido = pedidos.find((pedidoActual) => pedidoActual.id === pedidoId);
+
+    const productosRestantes =
+      pedido?.productos.filter((producto) => producto.id !== productoId) ?? [];
+
+    const nuevoArchivado = calcularArchivadoPedido(productosRestantes);
+
     setPedidos((pedidosActuales) =>
       pedidosActuales
-        .map((pedido) =>
-          pedido.id === pedidoId
+        .map((pedidoActual) =>
+          pedidoActual.id === pedidoId
             ? {
-                ...pedido,
-                productos: pedido.productos.filter(
+                ...pedidoActual,
+                archivado: nuevoArchivado,
+                productos: pedidoActual.productos.filter(
                   (producto) => producto.id !== productoId
                 ),
               }
-            : pedido
+            : pedidoActual
         )
-        .filter((pedido) => pedido.productos.length > 0)
+        .filter((pedidoActual) => pedidoActual.productos.length > 0)
     );
 
     try {
       await eliminarProductoDB(productoId);
+
+      if (productosRestantes.length > 0) {
+        await actualizarArchivadoPedidoDB(pedidoId, nuevoArchivado);
+      }
     } catch (error) {
       console.error(error);
       alert("No se pudo eliminar el producto.");
@@ -364,6 +405,12 @@ export default function Home() {
     const confirmar = confirm("¿Quieres duplicar este producto?");
 
     if (!confirmar) {
+      return;
+    }
+
+    const pedido = pedidos.find((pedidoActual) => pedidoActual.id === pedidoId);
+
+    if (!pedido) {
       return;
     }
 
@@ -382,16 +429,22 @@ export default function Home() {
         productoDuplicado
       );
 
+      const productosActualizados = [...pedido.productos, productoCreado];
+      const nuevoArchivado = calcularArchivadoPedido(productosActualizados);
+
       setPedidos((pedidosActuales) =>
-        pedidosActuales.map((pedido) =>
-          pedido.id === pedidoId
+        pedidosActuales.map((pedidoActual) =>
+          pedidoActual.id === pedidoId
             ? {
-                ...pedido,
-                productos: [...pedido.productos, productoCreado],
+                ...pedidoActual,
+                archivado: nuevoArchivado,
+                productos: productosActualizados,
               }
-            : pedido
+            : pedidoActual
         )
       );
+
+      await actualizarArchivadoPedidoDB(pedidoId, nuevoArchivado);
 
       setPedidoAbierto(pedidoId);
     } catch (error) {
@@ -440,23 +493,40 @@ export default function Home() {
 
     const pedidosAntes = pedidos;
 
+    const pedido = pedidos.find(
+      (pedidoActual) => pedidoActual.id === productoEditando.pedidoId
+    );
+
+    if (!pedido) {
+      return;
+    }
+
+    const productosActualizados = pedido.productos.map((producto) =>
+      producto.id === productoEditando.producto.id
+        ? productoEditando.producto
+        : producto
+    );
+
+    const nuevoArchivado = calcularArchivadoPedido(productosActualizados);
+
     setPedidos((pedidosActuales) =>
-      pedidosActuales.map((pedido) =>
-        pedido.id === productoEditando.pedidoId
+      pedidosActuales.map((pedidoActual) =>
+        pedidoActual.id === productoEditando.pedidoId
           ? {
-              ...pedido,
-              productos: pedido.productos.map((producto) =>
-                producto.id === productoEditando.producto.id
-                  ? productoEditando.producto
-                  : producto
-              ),
+              ...pedidoActual,
+              archivado: nuevoArchivado,
+              productos: productosActualizados,
             }
-          : pedido
+          : pedidoActual
       )
     );
 
     try {
       await actualizarProductoDB(productoEditando.producto);
+      await actualizarArchivadoPedidoDB(
+        productoEditando.pedidoId,
+        nuevoArchivado
+      );
       setProductoEditando(null);
     } catch (error) {
       console.error(error);
@@ -512,15 +582,28 @@ export default function Home() {
         productoAñadiendo.producto
       );
 
+      const productosActualizados = [
+        ...productoAñadiendo.pedido.productos,
+        productoCreado,
+      ];
+
+      const nuevoArchivado = calcularArchivadoPedido(productosActualizados);
+
       setPedidos((pedidosActuales) =>
         pedidosActuales.map((pedido) =>
           pedido.id === productoAñadiendo.pedido.id
             ? {
                 ...pedido,
-                productos: [...pedido.productos, productoCreado],
+                archivado: nuevoArchivado,
+                productos: productosActualizados,
               }
             : pedido
         )
+      );
+
+      await actualizarArchivadoPedidoDB(
+        productoAñadiendo.pedido.id,
+        nuevoArchivado
       );
 
       setPedidoAbierto(productoAñadiendo.pedido.id);
@@ -780,12 +863,14 @@ export default function Home() {
               busqueda={busqueda}
               filtroPago={filtroPago}
               filtroEntrega={filtroEntrega}
+              filtroArchivo={filtroArchivo}
               filtroMes={filtroMes}
               totalPedidos={pedidosConTotales.length}
               totalFiltrados={pedidosFiltrados.length}
               onBusquedaChange={setBusqueda}
               onFiltroPagoChange={setFiltroPago}
               onFiltroEntregaChange={setFiltroEntrega}
+              onFiltroArchivoChange={setFiltroArchivo}
               onFiltroMesChange={setFiltroMes}
               onLimpiarFiltros={limpiarFiltros}
             />

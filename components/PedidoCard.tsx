@@ -46,7 +46,11 @@ export default function PedidoCard({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-neutral-200">
+    <div
+      className={`overflow-hidden rounded-2xl border ${
+        pedido.archivado ? "border-green-200" : "border-neutral-200"
+      }`}
+    >
       <div className="flex flex-col gap-4 bg-white p-5 md:flex-row md:items-center md:justify-between">
         <button
           type="button"
@@ -54,8 +58,15 @@ export default function PedidoCard({
           className="flex flex-1 flex-col gap-4 text-left md:flex-row md:items-center md:justify-between"
         >
           <div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <h3 className="text-lg font-bold">Pedido #{pedido.id}</h3>
+
+              {pedido.archivado && (
+                <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
+                  Archivado
+                </span>
+              )}
+
               <span className="text-lg">{abierto ? "−" : "+"}</span>
             </div>
 
@@ -168,6 +179,12 @@ export default function PedidoCard({
                         {!producto.entregado && (
                           <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">
                             Pendiente entrega
+                          </span>
+                        )}
+
+                        {producto.pagado && producto.entregado && (
+                          <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
+                            Completo
                           </span>
                         )}
                       </div>
