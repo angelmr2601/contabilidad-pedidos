@@ -149,6 +149,23 @@ export async function crearPedidoConProductos(
   };
 }
 
+export async function crearProductoEnPedido(
+  pedidoId: number,
+  producto: Producto
+): Promise<Producto> {
+  const { data, error } = await supabase
+    .from("productos")
+    .insert(productoParaDB(producto, pedidoId))
+    .select(PRODUCTOS_SELECT)
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return productoDesdeDB(data as ProductoDB);
+}
+
 export async function actualizarPedidoDB(
   pedidoId: number,
   nombre: string,

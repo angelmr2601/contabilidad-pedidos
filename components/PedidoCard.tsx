@@ -12,6 +12,7 @@ type Props = {
   onCambiarAbierto: (id: number) => void;
   onEditarPedido: (pedido: Pedido) => void;
   onEliminarPedido: (pedidoId: number) => void;
+  onAñadirProducto: (pedido: Pedido) => void;
   onEditarProducto: (pedidoId: number, producto: Producto) => void;
   onEliminarProducto: (pedidoId: number, productoId: number) => void;
   onAlternarPagoProducto: (pedidoId: number, productoId: number) => void;
@@ -24,6 +25,7 @@ export default function PedidoCard({
   onCambiarAbierto,
   onEditarPedido,
   onEliminarPedido,
+  onAñadirProducto,
   onEditarProducto,
   onEliminarProducto,
   onAlternarPagoProducto,
@@ -83,7 +85,15 @@ export default function PedidoCard({
           </div>
         </button>
 
-        <div className="flex gap-2 md:ml-4">
+        <div className="flex flex-wrap gap-2 md:ml-4">
+          <button
+            type="button"
+            onClick={() => onAñadirProducto(pedido)}
+            className="rounded-full bg-black px-3 py-1 text-xs font-medium text-white"
+          >
+            Añadir producto
+          </button>
+
           <button
             type="button"
             onClick={() => onEditarPedido(pedido)}
@@ -226,9 +236,7 @@ export default function PedidoCard({
                         <div className="flex gap-2">
                           <button
                             type="button"
-                            onClick={() =>
-                              onEditarProducto(pedido.id, producto)
-                            }
+                            onClick={() => onEditarProducto(pedido.id, producto)}
                             className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700"
                           >
                             Editar

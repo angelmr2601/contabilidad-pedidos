@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import FiltrosPedidos from "../components/FiltrosPedidos";
 import ModalAñadirPedido from "../components/ModalAñadirPedido";
+import ModalAñadirProductoPedido from "../components/ModalAñadirProductoPedido";
 import ModalEditarPedido from "../components/ModalEditarPedido";
 import ModalEditarProducto from "../components/ModalEditarProducto";
 import PedidoCard from "../components/PedidoCard";
@@ -17,6 +18,7 @@ import {
   actualizarProductoDB,
   cargarPedidos,
   crearPedidoConProductos,
+  crearProductoEnPedido,
   eliminarPedidoDB,
   eliminarProductoDB,
 } from "../lib/pedidos-db";
@@ -38,6 +40,11 @@ import type {
 } from "../types";
 
 type PestañaActiva = "historial" | "resumen";
+
+type ProductoAñadiendo = {
+  pedido: Pedido;
+  producto: Producto;
+};
 
 function fechaHoy() {
   return new Date().toISOString().slice(0, 10);
@@ -80,6 +87,9 @@ export default function Home() {
 
   const [productoEditando, setProductoEditando] =
     useState<ProductoEditando | null>(null);
+
+  const [productoAñadiendo, setProductoAñadiendo] =
+    useState<ProductoAñadiendo | null>(null);
 
   const [pedidoEditando, setPedidoEditando] =
     useState<PedidoEditando | null>(null);
@@ -413,6 +423,74 @@ export default function Home() {
     }
   }
 
+  function abrirAñadirProductoPedido(pedido: Pedido) {
+    setProductoAñadiendo({
+      pedido,
+      producto: crearProductoVacio(1),
+    });
+  }
+
+  function actualizarProductoAñadiendo(
+    campo: keyof Producto,
+    valor: string | number | boolean
+  ) {
+    setProductoAñadiendo((actual) =>
+      actual
+        ? {
+            ...actual,
+            producto: {
+              ...actual.producto,
+              [campo]: valor,
+            },
+          }
+        : actual
+    );
+  }
+
+  async function guardarProductoAñadido() {
+    if (!productoAñadiendo) {
+      return;
+    }
+
+    const error = validarProductoEditando({
+      pedidoId: productoAñadiendo.pedido.id,
+      producto: productoAñadiendo.producto,
+    });
+
+    if (error) {
+      alert(error);
+      return;
+    }
+
+    try {
+      setGuardando(true);
+
+      const productoCreado = await crearProductoEnPedido(
+        productoAñadiendo.pedido.id,
+        productoAñadiendo.producto
+      );
+
+      setPedidos((pedidosActuales) =>
+        pedidosActuales.map((pedido) =>
+          pedido.id === productoAñadiendo.pedido.id
+            ? {
+                ...pedido,
+                productos: [...pedido.productos, productoCreado],
+              }
+            : pedido
+        )
+      );
+
+      setPedidoAbierto(productoAñadiendo.pedido.id);
+      setProductoAñadiendo(null);
+    } catch (error) {
+      console.error(error);
+      alert("No se pudo añadir el producto.");
+    } finally {
+      setGuardando(false);
+    }
+  }
+
   function abrirEditorPedido(pedido: Pedido) {
     setPedidoEditando({
       id: pedido.id,
@@ -716,6 +794,7 @@ export default function Home() {
                     onCambiarAbierto={cambiarPedidoAbierto}
                     onEditarPedido={abrirEditorPedido}
                     onEliminarPedido={eliminarPedido}
+                    onAñadirProducto={abrirAñadirProductoPedido}
                     onEditarProducto={abrirEditorProducto}
                     onEliminarProducto={eliminarProducto}
                     onAlternarPagoProducto={alternarPagoProducto}
@@ -740,6 +819,16 @@ export default function Home() {
           onAñadirProducto={añadirProductoFormulario}
           onCambiarProductoAbierto={cambiarProductoFormularioAbierto}
           onActualizarProducto={actualizarProductoFormulario}
+        />
+      )}
+
+      {productoAñadiendo && (
+        <ModalAñadirProductoPedido
+          pedido={productoAñadiendo.pedido}
+          producto={productoAñadiendo.producto}
+          onCerrar={() => setProductoAñadiendo(null)}
+          onGuardar={guardarProductoAñadido}
+          onActualizarProducto={actualizarProductoAñadiendo}
         />
       )}
 
