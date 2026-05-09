@@ -18,10 +18,15 @@ function productoOtroSinPrecios(producto: Producto) {
 
 export function validarNuevoPedido(
   nombrePedido: string,
+  fechaPedido: string,
   productosFormulario: Producto[]
 ) {
   if (!nombrePedido.trim()) {
     return "Añade un nombre para el pedido.";
+  }
+
+  if (!fechaPedido) {
+    return "Añade una fecha para el pedido.";
   }
 
   const productosValidos = productosFormulario.filter(
@@ -78,6 +83,10 @@ export function validarProductoEditando(productoEditando: ProductoEditando) {
 export function validarPedidoEditando(pedidoEditando: PedidoEditando) {
   if (!pedidoEditando.nombre.trim()) {
     return "El pedido necesita un nombre.";
+  }
+
+  if (!pedidoEditando.fechaPedido) {
+    return "El pedido necesita una fecha.";
   }
 
   return null;

@@ -1,4 +1,9 @@
-import { COSTE_FIJO_PEDIDO, calcularProducto, formatoEuros } from "../lib/calculos";
+import {
+  COSTE_FIJO_PEDIDO,
+  calcularProducto,
+  formatoEuros,
+  formatoFecha,
+} from "../lib/calculos";
 import type { Pedido, PedidoConTotales, Producto } from "../types";
 
 type Props = {
@@ -39,6 +44,10 @@ export default function PedidoCard({
             </div>
 
             <p className="mt-1 font-medium">{pedido.nombre}</p>
+
+            <p className="mt-1 text-sm text-neutral-500">
+              Fecha: {formatoFecha(pedido.fechaPedido)}
+            </p>
 
             <p className="mt-1 text-sm text-neutral-500">
               {pedido.productos.length} producto
@@ -217,7 +226,9 @@ export default function PedidoCard({
                         <div className="flex gap-2">
                           <button
                             type="button"
-                            onClick={() => onEditarProducto(pedido.id, producto)}
+                            onClick={() =>
+                              onEditarProducto(pedido.id, producto)
+                            }
                             className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700"
                           >
                             Editar

@@ -12,7 +12,7 @@ import ResumenCards from "../components/ResumenCards";
 import { calcularPedidosConTotales, calcularResumen } from "../lib/calculos";
 import {
   actualizarEstadoProductoDB,
-  actualizarPedidoNombre,
+  actualizarPedidoDB,
   actualizarProductoDB,
   cargarPedidos,
   crearPedidoConProductos,
@@ -36,6 +36,10 @@ import type {
   ProductoEditando,
 } from "../types";
 
+function fechaHoy() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export default function Home() {
   const [pedidoAbierto, setPedidoAbierto] = useState<number | null>(null);
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -47,6 +51,7 @@ export default function Home() {
   const [errorCarga, setErrorCarga] = useState("");
 
   const [busqueda, setBusqueda] = useState("");
+  const [filtroMes, setFiltroMes] = useState("");
   const [filtroPago, setFiltroPago] = useState<FiltroPago>("todos");
   const [filtroEntrega, setFiltroEntrega] =
     useState<FiltroEntrega>("todos");
@@ -60,6 +65,7 @@ export default function Home() {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
 
   const [nombrePedido, setNombrePedido] = useState("");
+  const [fechaPedido, setFechaPedido] = useState(fechaHoy());
   const [productosFormulario, setProductosFormulario] = useState<Producto[]>([
     crearProductoVacio(1),
   ]);
@@ -94,6 +100,7 @@ export default function Home() {
       textoBusqueda === "" ||
       pedido.nombre.toLowerCase().includes(textoBusqueda) ||
       String(pedido.id).includes(textoBusqueda) ||
+      pedido.fechaPedido.includes(textoBusqueda) ||
       pedido.productos.some((producto) => {
         const textoProducto = [
           producto.cliente,
@@ -110,6 +117,9 @@ export default function Home() {
         return textoProducto.includes(textoBusqueda);
       });
 
+    const coincideMes =
+      filtroMes === "" || pedido.fechaPedido.startsWith(filtroMes);
+
     const coincidePago =
       filtroPago === "todos" ||
       pedido.productos.some((producto) =>
@@ -124,20 +134,20 @@ export default function Home() {
           : !producto.entregado
       );
 
-    return coincideBusqueda && coincidePago && coincideEntrega;
+    return coincideBusqueda && coincideMes && coincidePago && coincideEntrega;
   });
 
   function limpiarFiltros() {
     setBusqueda("");
+    setFiltroMes("");
     setFiltroPago("todos");
     setFiltroEntrega("todos");
   }
 
   function abrirModalNuevoPedido() {
-  console.log("Abriendo modal");
-  setModalAbierto(true);
-  setProductoFormularioAbierto(1);
-}
+    setModalAbierto(true);
+    setProductoFormularioAbierto(1);
+  }
 
   function cerrarModalNuevoPedido() {
     setModalAbierto(false);
@@ -378,6 +388,7 @@ export default function Home() {
     setPedidoEditando({
       id: pedido.id,
       nombre: pedido.nombre,
+      fechaPedido: pedido.fechaPedido,
     });
   }
 
@@ -387,6 +398,17 @@ export default function Home() {
         ? {
             ...actual,
             nombre,
+          }
+        : actual
+    );
+  }
+
+  function actualizarFechaPedidoEditando(fechaPedidoNueva: string) {
+    setPedidoEditando((actual) =>
+      actual
+        ? {
+            ...actual,
+            fechaPedido: fechaPedidoNueva,
           }
         : actual
     );
@@ -412,13 +434,18 @@ export default function Home() {
           ? {
               ...pedido,
               nombre: pedidoEditando.nombre,
+              fechaPedido: pedidoEditando.fechaPedido,
             }
           : pedido
       )
     );
 
     try {
-      await actualizarPedidoNombre(pedidoEditando.id, pedidoEditando.nombre);
+      await actualizarPedidoDB(
+        pedidoEditando.id,
+        pedidoEditando.nombre,
+        pedidoEditando.fechaPedido
+      );
       setPedidoEditando(null);
     } catch (error) {
       console.error(error);
@@ -454,7 +481,11 @@ export default function Home() {
   }
 
   async function guardarPedido() {
-    const error = validarNuevoPedido(nombrePedido, productosFormulario);
+    const error = validarNuevoPedido(
+      nombrePedido,
+      fechaPedido,
+      productosFormulario
+    );
 
     if (error) {
       alert(error);
@@ -468,13 +499,15 @@ export default function Home() {
 
       const nuevoPedido = await crearPedidoConProductos(
         nombrePedido,
+        fechaPedido,
         productosValidos
       );
 
-      setPedidos((actuales) => [...actuales, nuevoPedido]);
+      setPedidos((actuales) => [nuevoPedido, ...actuales]);
       setPedidoAbierto(nuevoPedido.id);
       setModalAbierto(false);
       setNombrePedido("");
+      setFechaPedido(fechaHoy());
       setProductosFormulario([crearProductoVacio(1)]);
       setProductoFormularioAbierto(1);
     } catch (error) {
@@ -507,23 +540,26 @@ export default function Home() {
             </div>
 
             <button
-  type="button"
-  onClick={abrirModalNuevoPedido}
-  className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white"
->
-  Añadir pedido
-</button>
+              type="button"
+              onClick={abrirModalNuevoPedido}
+              disabled={guardando}
+              className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Añadir pedido
+            </button>
           </div>
 
           <FiltrosPedidos
             busqueda={busqueda}
             filtroPago={filtroPago}
             filtroEntrega={filtroEntrega}
+            filtroMes={filtroMes}
             totalPedidos={pedidosConTotales.length}
             totalFiltrados={pedidosFiltrados.length}
             onBusquedaChange={setBusqueda}
             onFiltroPagoChange={setFiltroPago}
             onFiltroEntregaChange={setFiltroEntrega}
+            onFiltroMesChange={setFiltroMes}
             onLimpiarFiltros={limpiarFiltros}
           />
 
@@ -584,9 +620,11 @@ export default function Home() {
       {modalAbierto && (
         <ModalAñadirPedido
           nombrePedido={nombrePedido}
+          fechaPedido={fechaPedido}
           productosFormulario={productosFormulario}
           productoFormularioAbierto={productoFormularioAbierto}
           onNombrePedidoChange={setNombrePedido}
+          onFechaPedidoChange={setFechaPedido}
           onCerrar={cerrarModalNuevoPedido}
           onGuardarPedido={guardarPedido}
           onAñadirProducto={añadirProductoFormulario}
@@ -608,6 +646,7 @@ export default function Home() {
         <ModalEditarPedido
           pedidoEditando={pedidoEditando}
           onChangeNombre={actualizarNombrePedidoEditando}
+          onChangeFecha={actualizarFechaPedidoEditando}
           onCerrar={() => setPedidoEditando(null)}
           onGuardar={guardarPedidoEditado}
         />

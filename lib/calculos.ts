@@ -121,3 +121,15 @@ export function formatoEuros(valor: number) {
     currency: "EUR",
   }).format(valor);
 }
+
+export function formatoFecha(fecha: string) {
+  if (!fecha) {
+    return "Sin fecha";
+  }
+
+  return new Intl.DateTimeFormat("es-ES", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(new Date(`${fecha}T00:00:00`));
+}

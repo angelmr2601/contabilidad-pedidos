@@ -24,6 +24,7 @@ export type Producto = {
 export type Pedido = {
   id: number;
   nombre: string;
+  fechaPedido: string;
   productos: Producto[];
 };
 
@@ -45,4 +46,5 @@ export type ProductoEditando = {
 export type PedidoEditando = {
   id: number;
   nombre: string;
+  fechaPedido: string;
 };

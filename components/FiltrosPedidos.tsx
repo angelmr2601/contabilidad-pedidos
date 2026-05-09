@@ -4,11 +4,13 @@ type Props = {
   busqueda: string;
   filtroPago: FiltroPago;
   filtroEntrega: FiltroEntrega;
+  filtroMes: string;
   totalPedidos: number;
   totalFiltrados: number;
   onBusquedaChange: (valor: string) => void;
   onFiltroPagoChange: (valor: FiltroPago) => void;
   onFiltroEntregaChange: (valor: FiltroEntrega) => void;
+  onFiltroMesChange: (valor: string) => void;
   onLimpiarFiltros: () => void;
 };
 
@@ -16,21 +18,33 @@ export default function FiltrosPedidos({
   busqueda,
   filtroPago,
   filtroEntrega,
+  filtroMes,
   totalPedidos,
   totalFiltrados,
   onBusquedaChange,
   onFiltroPagoChange,
   onFiltroEntregaChange,
+  onFiltroMesChange,
   onLimpiarFiltros,
 }: Props) {
   return (
-    <div className="mb-5 grid gap-3 rounded-2xl bg-neutral-50 p-4 md:grid-cols-4">
+    <div className="mb-5 grid gap-3 rounded-2xl bg-neutral-50 p-4 md:grid-cols-5">
       <div className="md:col-span-2">
         <label className="mb-2 block text-sm font-medium">Buscar</label>
         <input
           value={busqueda}
           onChange={(event) => onBusquedaChange(event.target.value)}
           placeholder="Cliente, producto, pedido, dorsal..."
+          className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
+        />
+      </div>
+
+      <div>
+        <label className="mb-2 block text-sm font-medium">Mes</label>
+        <input
+          type="month"
+          value={filtroMes}
+          onChange={(event) => onFiltroMesChange(event.target.value)}
           className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
         />
       </div>
@@ -65,7 +79,7 @@ export default function FiltrosPedidos({
         </select>
       </div>
 
-      <div className="flex items-center justify-between gap-3 md:col-span-4">
+      <div className="flex items-center justify-between gap-3 md:col-span-5">
         <p className="text-sm text-neutral-500">
           Mostrando {totalFiltrados} de {totalPedidos} pedido
           {totalPedidos === 1 ? "" : "s"}.

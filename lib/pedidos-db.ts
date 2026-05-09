@@ -21,6 +21,7 @@ type ProductoDB = {
 type PedidoDB = {
   id: number;
   nombre: string;
+  fecha_pedido: string;
   productos: ProductoDB[];
 };
 
@@ -67,7 +68,8 @@ function productoParaDB(producto: Producto, pedidoId: number) {
     talla: producto.talla,
     tipo: producto.tipo,
     manga: producto.manga,
-    personalizacion: producto.tipo === "Otro" ? false : producto.personalizacion,
+    personalizacion:
+      producto.tipo === "Otro" ? false : producto.personalizacion,
     nombre_personalizacion:
       producto.tipo === "Otro" ? "" : producto.nombrePersonalizacion,
     numero_personalizacion:
@@ -87,12 +89,14 @@ export async function cargarPedidos(): Promise<Pedido[]> {
       `
       id,
       nombre,
+      fecha_pedido,
       productos (
         ${PRODUCTOS_SELECT}
       )
     `
     )
-    .order("id", { ascending: true });
+    .order("fecha_pedido", { ascending: false })
+    .order("id", { ascending: false });
 
   if (error) {
     throw error;
@@ -101,18 +105,23 @@ export async function cargarPedidos(): Promise<Pedido[]> {
   return ((data ?? []) as PedidoDB[]).map((pedido) => ({
     id: pedido.id,
     nombre: pedido.nombre,
+    fechaPedido: pedido.fecha_pedido,
     productos: pedido.productos.map(productoDesdeDB),
   }));
 }
 
 export async function crearPedidoConProductos(
   nombre: string,
+  fechaPedido: string,
   productos: Producto[]
 ): Promise<Pedido> {
   const { data: pedidoCreado, error: errorPedido } = await supabase
     .from("pedidos")
-    .insert({ nombre })
-    .select("id, nombre")
+    .insert({
+      nombre,
+      fecha_pedido: fechaPedido,
+    })
+    .select("id, nombre, fecha_pedido")
     .single();
 
   if (errorPedido) {
@@ -135,17 +144,22 @@ export async function crearPedidoConProductos(
   return {
     id: pedidoCreado.id,
     nombre: pedidoCreado.nombre,
+    fechaPedido: pedidoCreado.fecha_pedido,
     productos: ((productosCreados ?? []) as ProductoDB[]).map(productoDesdeDB),
   };
 }
 
-export async function actualizarPedidoNombre(
+export async function actualizarPedidoDB(
   pedidoId: number,
-  nombre: string
+  nombre: string,
+  fechaPedido: string
 ) {
   const { error } = await supabase
     .from("pedidos")
-    .update({ nombre })
+    .update({
+      nombre,
+      fecha_pedido: fechaPedido,
+    })
     .eq("id", pedidoId);
 
   if (error) {

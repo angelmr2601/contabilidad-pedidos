@@ -3,6 +3,7 @@ import type { PedidoEditando } from "../types";
 type Props = {
   pedidoEditando: PedidoEditando;
   onChangeNombre: (valor: string) => void;
+  onChangeFecha: (valor: string) => void;
   onCerrar: () => void;
   onGuardar: () => void;
 };
@@ -10,6 +11,7 @@ type Props = {
 export default function ModalEditarPedido({
   pedidoEditando,
   onChangeNombre,
+  onChangeFecha,
   onCerrar,
   onGuardar,
 }: Props) {
@@ -20,7 +22,7 @@ export default function ModalEditarPedido({
           <div>
             <h2 className="text-2xl font-bold">Editar pedido</h2>
             <p className="text-sm text-neutral-500">
-              Cambia el nombre del pedido.
+              Cambia el nombre y la fecha del pedido.
             </p>
           </div>
 
@@ -32,16 +34,30 @@ export default function ModalEditarPedido({
           </button>
         </div>
 
-        <div>
-          <label className="mb-2 block text-sm font-medium">
-            Nombre del pedido
-          </label>
-          <input
-            value={pedidoEditando.nombre}
-            onChange={(event) => onChangeNombre(event.target.value)}
-            placeholder="Ej: Pedido proveedor mayo"
-            className="w-full rounded-xl border border-neutral-300 px-4 py-3 outline-none focus:border-black"
-          />
+        <div className="space-y-4">
+          <div>
+            <label className="mb-2 block text-sm font-medium">
+              Nombre del pedido
+            </label>
+            <input
+              value={pedidoEditando.nombre}
+              onChange={(event) => onChangeNombre(event.target.value)}
+              placeholder="Ej: Pedido proveedor mayo"
+              className="w-full rounded-xl border border-neutral-300 px-4 py-3 outline-none focus:border-black"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium">
+              Fecha del pedido
+            </label>
+            <input
+              type="date"
+              value={pedidoEditando.fechaPedido}
+              onChange={(event) => onChangeFecha(event.target.value)}
+              className="w-full rounded-xl border border-neutral-300 px-4 py-3 outline-none focus:border-black"
+            />
+          </div>
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
