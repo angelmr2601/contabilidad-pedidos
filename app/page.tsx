@@ -36,11 +36,30 @@ import type {
   ProductoEditando,
 } from "../types";
 
+type PestañaActiva = "historial" | "resumen";
+
 function fechaHoy() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function nombreMes(fechaMes: string) {
+  if (!fechaMes) {
+    return "Todos los pedidos";
+  }
+
+  const [year, month] = fechaMes.split("-");
+  const fecha = new Date(Number(year), Number(month) - 1, 1);
+
+  return new Intl.DateTimeFormat("es-ES", {
+    month: "long",
+    year: "numeric",
+  }).format(fecha);
+}
+
 export default function Home() {
+  const [pestañaActiva, setPestañaActiva] =
+    useState<PestañaActiva>("historial");
+
   const [pedidoAbierto, setPedidoAbierto] = useState<number | null>(null);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [productoFormularioAbierto, setProductoFormularioAbierto] =
@@ -55,6 +74,8 @@ export default function Home() {
   const [filtroPago, setFiltroPago] = useState<FiltroPago>("todos");
   const [filtroEntrega, setFiltroEntrega] =
     useState<FiltroEntrega>("todos");
+
+  const [filtroMesResumen, setFiltroMesResumen] = useState("");
 
   const [productoEditando, setProductoEditando] =
     useState<ProductoEditando | null>(null);
@@ -91,7 +112,6 @@ export default function Home() {
   }, []);
 
   const pedidosConTotales = calcularPedidosConTotales(pedidos);
-  const resumen = calcularResumen(pedidosConTotales);
 
   const pedidosFiltrados = pedidosConTotales.filter((pedido) => {
     const textoBusqueda = busqueda.trim().toLowerCase();
@@ -136,6 +156,14 @@ export default function Home() {
 
     return coincideBusqueda && coincideMes && coincidePago && coincideEntrega;
   });
+
+  const pedidosResumen = pedidosConTotales.filter((pedido) => {
+    return (
+      filtroMesResumen === "" || pedido.fechaPedido.startsWith(filtroMesResumen)
+    );
+  });
+
+  const resumen = calcularResumen(pedidosResumen);
 
   function limpiarFiltros() {
     setBusqueda("");
@@ -528,93 +556,170 @@ export default function Home() {
           <h1 className="mt-2 text-3xl font-bold">Dashboard</h1>
         </header>
 
-        <ResumenCards resumen={resumen} />
-
-        <section className="rounded-2xl bg-white p-5 shadow-sm">
-          <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-xl font-bold">Pedidos</h2>
-              <p className="text-sm text-neutral-500">
-                Gestiona pedidos, productos, pagos y entregas.
-              </p>
-            </div>
+        <div className="rounded-2xl bg-white p-2 shadow-sm">
+          <div className="grid gap-2 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => setPestañaActiva("historial")}
+              className={`rounded-xl px-4 py-3 text-sm font-medium transition ${
+                pestañaActiva === "historial"
+                  ? "bg-black text-white"
+                  : "bg-white text-neutral-600 hover:bg-neutral-100"
+              }`}
+            >
+              Historial de pedidos
+            </button>
 
             <button
               type="button"
-              onClick={abrirModalNuevoPedido}
-              disabled={guardando}
-              className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => setPestañaActiva("resumen")}
+              className={`rounded-xl px-4 py-3 text-sm font-medium transition ${
+                pestañaActiva === "resumen"
+                  ? "bg-black text-white"
+                  : "bg-white text-neutral-600 hover:bg-neutral-100"
+              }`}
             >
-              Añadir pedido
+              Resumen
             </button>
           </div>
+        </div>
 
-          <FiltrosPedidos
-            busqueda={busqueda}
-            filtroPago={filtroPago}
-            filtroEntrega={filtroEntrega}
-            filtroMes={filtroMes}
-            totalPedidos={pedidosConTotales.length}
-            totalFiltrados={pedidosFiltrados.length}
-            onBusquedaChange={setBusqueda}
-            onFiltroPagoChange={setFiltroPago}
-            onFiltroEntregaChange={setFiltroEntrega}
-            onFiltroMesChange={setFiltroMes}
-            onLimpiarFiltros={limpiarFiltros}
-          />
-
-          <div className="space-y-3">
-            {cargandoPedidos && (
-              <div className="rounded-2xl border border-dashed border-neutral-300 p-8 text-center">
-                <p className="font-medium">Cargando pedidos...</p>
-              </div>
-            )}
-
-            {errorCarga && (
-              <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center text-red-700">
-                <p className="font-medium">{errorCarga}</p>
-              </div>
-            )}
-
-            {!cargandoPedidos && !errorCarga && pedidosConTotales.length === 0 && (
-              <div className="rounded-2xl border border-dashed border-neutral-300 p-8 text-center">
-                <p className="font-medium">Todavía no hay pedidos.</p>
-                <p className="mt-1 text-sm text-neutral-500">
-                  Pulsa “Añadir pedido” para crear el primero.
+        {pestañaActiva === "resumen" && (
+          <section className="space-y-5 rounded-2xl bg-white p-5 shadow-sm">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h2 className="text-xl font-bold">Resumen</h2>
+                <p className="text-sm text-neutral-500">
+                  Mostrando: {nombreMes(filtroMesResumen)}
                 </p>
               </div>
-            )}
 
-            {!cargandoPedidos &&
-              !errorCarga &&
-              pedidosConTotales.length > 0 &&
-              pedidosFiltrados.length === 0 && (
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Filtrar por mes
+                  </label>
+                  <input
+                    type="month"
+                    value={filtroMesResumen}
+                    onChange={(event) => setFiltroMesResumen(event.target.value)}
+                    className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setFiltroMesResumen("")}
+                  className="rounded-xl bg-neutral-100 px-4 py-3 text-sm font-medium"
+                >
+                  Ver total
+                </button>
+              </div>
+            </div>
+
+            <ResumenCards resumen={resumen} />
+
+            <div className="rounded-2xl bg-neutral-50 p-5 text-sm text-neutral-600">
+              <p>
+                Este resumen se calcula sobre{" "}
+                <span className="font-semibold text-neutral-900">
+                  {pedidosResumen.length}
+                </span>{" "}
+                pedido{pedidosResumen.length === 1 ? "" : "s"}.
+              </p>
+            </div>
+          </section>
+        )}
+
+        {pestañaActiva === "historial" && (
+          <section className="rounded-2xl bg-white p-5 shadow-sm">
+            <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h2 className="text-xl font-bold">Historial de pedidos</h2>
+                <p className="text-sm text-neutral-500">
+                  Gestiona pedidos, productos, pagos y entregas.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={abrirModalNuevoPedido}
+                disabled={guardando}
+                className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Añadir pedido
+              </button>
+            </div>
+
+            <FiltrosPedidos
+              busqueda={busqueda}
+              filtroPago={filtroPago}
+              filtroEntrega={filtroEntrega}
+              filtroMes={filtroMes}
+              totalPedidos={pedidosConTotales.length}
+              totalFiltrados={pedidosFiltrados.length}
+              onBusquedaChange={setBusqueda}
+              onFiltroPagoChange={setFiltroPago}
+              onFiltroEntregaChange={setFiltroEntrega}
+              onFiltroMesChange={setFiltroMes}
+              onLimpiarFiltros={limpiarFiltros}
+            />
+
+            <div className="space-y-3">
+              {cargandoPedidos && (
                 <div className="rounded-2xl border border-dashed border-neutral-300 p-8 text-center">
-                  <p className="font-medium">No hay resultados.</p>
-                  <p className="mt-1 text-sm text-neutral-500">
-                    Prueba con otra búsqueda o limpia los filtros.
-                  </p>
+                  <p className="font-medium">Cargando pedidos...</p>
                 </div>
               )}
 
-            {!cargandoPedidos &&
-              !errorCarga &&
-              pedidosFiltrados.map((pedido) => (
-                <PedidoCard
-                  key={pedido.id}
-                  pedido={pedido}
-                  abierto={pedidoAbierto === pedido.id}
-                  onCambiarAbierto={cambiarPedidoAbierto}
-                  onEditarPedido={abrirEditorPedido}
-                  onEliminarPedido={eliminarPedido}
-                  onEditarProducto={abrirEditorProducto}
-                  onEliminarProducto={eliminarProducto}
-                  onAlternarPagoProducto={alternarPagoProducto}
-                  onAlternarEntregaProducto={alternarEntregaProducto}
-                />
-              ))}
-          </div>
-        </section>
+              {errorCarga && (
+                <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center text-red-700">
+                  <p className="font-medium">{errorCarga}</p>
+                </div>
+              )}
+
+              {!cargandoPedidos &&
+                !errorCarga &&
+                pedidosConTotales.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-neutral-300 p-8 text-center">
+                    <p className="font-medium">Todavía no hay pedidos.</p>
+                    <p className="mt-1 text-sm text-neutral-500">
+                      Pulsa “Añadir pedido” para crear el primero.
+                    </p>
+                  </div>
+                )}
+
+              {!cargandoPedidos &&
+                !errorCarga &&
+                pedidosConTotales.length > 0 &&
+                pedidosFiltrados.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-neutral-300 p-8 text-center">
+                    <p className="font-medium">No hay resultados.</p>
+                    <p className="mt-1 text-sm text-neutral-500">
+                      Prueba con otra búsqueda o limpia los filtros.
+                    </p>
+                  </div>
+                )}
+
+              {!cargandoPedidos &&
+                !errorCarga &&
+                pedidosFiltrados.map((pedido) => (
+                  <PedidoCard
+                    key={pedido.id}
+                    pedido={pedido}
+                    abierto={pedidoAbierto === pedido.id}
+                    onCambiarAbierto={cambiarPedidoAbierto}
+                    onEditarPedido={abrirEditorPedido}
+                    onEliminarPedido={eliminarPedido}
+                    onEditarProducto={abrirEditorProducto}
+                    onEliminarProducto={eliminarProducto}
+                    onAlternarPagoProducto={alternarPagoProducto}
+                    onAlternarEntregaProducto={alternarEntregaProducto}
+                  />
+                ))}
+            </div>
+          </section>
+        )}
       </div>
 
       {modalAbierto && (
