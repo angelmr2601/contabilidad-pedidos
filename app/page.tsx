@@ -10,6 +10,7 @@ import ModalEditarProducto from "../components/ModalEditarProducto";
 import PedidoCard from "../components/PedidoCard";
 import ResumenCards from "../components/ResumenCards";
 import ResumenDetalle from "../components/ResumenDetalle";
+import SimuladorPedido from "../components/SimuladorPedido";
 
 import { calcularPedidosConTotales, calcularResumen } from "../lib/calculos";
 import {
@@ -42,7 +43,7 @@ import type {
   ProductoEditando,
 } from "../types";
 
-type PestañaActiva = "historial" | "resumen";
+type PestañaActiva = "historial" | "resumen" | "borrador";
 
 type ProductoAñadiendo = {
   pedido: Pedido;
@@ -191,26 +192,6 @@ export default function Home() {
   });
 
   const resumen = calcularResumen(pedidosResumen);
-
-  async function actualizarArchivadoPedidoLocalYDB(
-    pedidoId: number,
-    productos: Producto[]
-  ) {
-    const archivado = calcularArchivadoPedido(productos);
-
-    setPedidos((pedidosActuales) =>
-      pedidosActuales.map((pedido) =>
-        pedido.id === pedidoId
-          ? {
-              ...pedido,
-              archivado,
-            }
-          : pedido
-      )
-    );
-
-    await actualizarArchivadoPedidoDB(pedidoId, archivado);
-  }
 
   function limpiarFiltros() {
     setBusqueda("");
@@ -761,7 +742,7 @@ export default function Home() {
         </header>
 
         <div className="rounded-2xl bg-white p-2 shadow-sm">
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid gap-2 sm:grid-cols-3">
             <button
               type="button"
               onClick={() => setPestañaActiva("historial")}
@@ -785,8 +766,22 @@ export default function Home() {
             >
               Resumen
             </button>
+
+            <button
+              type="button"
+              onClick={() => setPestañaActiva("borrador")}
+              className={`rounded-xl px-4 py-3 text-sm font-medium transition ${
+                pestañaActiva === "borrador"
+                  ? "bg-black text-white"
+                  : "bg-white text-neutral-600 hover:bg-neutral-100"
+              }`}
+            >
+              Borrador
+            </button>
           </div>
         </div>
+
+        {pestañaActiva === "borrador" && <SimuladorPedido />}
 
         {pestañaActiva === "resumen" && (
           <section className="space-y-5 rounded-2xl bg-white p-5 shadow-sm">
