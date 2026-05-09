@@ -12,6 +12,8 @@ type ProductoDB = {
   personalizacion: boolean;
   nombre_personalizacion: string;
   numero_personalizacion: string;
+  precio_venta_manual: number | null;
+  coste_manual: number | null;
   pagado: boolean;
   entregado: boolean;
 };
@@ -21,6 +23,23 @@ type PedidoDB = {
   nombre: string;
   productos: ProductoDB[];
 };
+
+const PRODUCTOS_SELECT = `
+  id,
+  pedido_id,
+  cliente,
+  nombre,
+  talla,
+  tipo,
+  manga,
+  personalizacion,
+  nombre_personalizacion,
+  numero_personalizacion,
+  precio_venta_manual,
+  coste_manual,
+  pagado,
+  entregado
+`;
 
 function productoDesdeDB(producto: ProductoDB): Producto {
   return {
@@ -33,6 +52,8 @@ function productoDesdeDB(producto: ProductoDB): Producto {
     personalizacion: producto.personalizacion,
     nombrePersonalizacion: producto.nombre_personalizacion,
     numeroPersonalizacion: producto.numero_personalizacion,
+    precioVentaManual: Number(producto.precio_venta_manual ?? 0),
+    costeManual: Number(producto.coste_manual ?? 0),
     pagado: producto.pagado,
     entregado: producto.entregado,
   };
@@ -46,9 +67,14 @@ function productoParaDB(producto: Producto, pedidoId: number) {
     talla: producto.talla,
     tipo: producto.tipo,
     manga: producto.manga,
-    personalizacion: producto.personalizacion,
-    nombre_personalizacion: producto.nombrePersonalizacion,
-    numero_personalizacion: producto.numeroPersonalizacion,
+    personalizacion: producto.tipo === "Otro" ? false : producto.personalizacion,
+    nombre_personalizacion:
+      producto.tipo === "Otro" ? "" : producto.nombrePersonalizacion,
+    numero_personalizacion:
+      producto.tipo === "Otro" ? "" : producto.numeroPersonalizacion,
+    precio_venta_manual:
+      producto.tipo === "Otro" ? producto.precioVentaManual : null,
+    coste_manual: producto.tipo === "Otro" ? producto.costeManual : null,
     pagado: producto.pagado,
     entregado: producto.entregado,
   };
@@ -62,18 +88,7 @@ export async function cargarPedidos(): Promise<Pedido[]> {
       id,
       nombre,
       productos (
-        id,
-        pedido_id,
-        cliente,
-        nombre,
-        talla,
-        tipo,
-        manga,
-        personalizacion,
-        nombre_personalizacion,
-        numero_personalizacion,
-        pagado,
-        entregado
+        ${PRODUCTOS_SELECT}
       )
     `
     )
@@ -111,22 +126,7 @@ export async function crearPedidoConProductos(
   const { data: productosCreados, error: errorProductos } = await supabase
     .from("productos")
     .insert(productosParaInsertar)
-    .select(
-      `
-      id,
-      pedido_id,
-      cliente,
-      nombre,
-      talla,
-      tipo,
-      manga,
-      personalizacion,
-      nombre_personalizacion,
-      numero_personalizacion,
-      pagado,
-      entregado
-    `
-    );
+    .select(PRODUCTOS_SELECT);
 
   if (errorProductos) {
     throw errorProductos;
@@ -170,9 +170,15 @@ export async function actualizarProductoDB(producto: Producto) {
       talla: producto.talla,
       tipo: producto.tipo,
       manga: producto.manga,
-      personalizacion: producto.personalizacion,
-      nombre_personalizacion: producto.nombrePersonalizacion,
-      numero_personalizacion: producto.numeroPersonalizacion,
+      personalizacion:
+        producto.tipo === "Otro" ? false : producto.personalizacion,
+      nombre_personalizacion:
+        producto.tipo === "Otro" ? "" : producto.nombrePersonalizacion,
+      numero_personalizacion:
+        producto.tipo === "Otro" ? "" : producto.numeroPersonalizacion,
+      precio_venta_manual:
+        producto.tipo === "Otro" ? producto.precioVentaManual : null,
+      coste_manual: producto.tipo === "Otro" ? producto.costeManual : null,
       pagado: producto.pagado,
       entregado: producto.entregado,
     })

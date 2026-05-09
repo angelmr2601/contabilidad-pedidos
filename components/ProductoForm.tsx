@@ -16,6 +16,7 @@ type Props = {
 
 export default function ProductoForm({ producto, onChange }: Props) {
   const calculo = calcularProducto(producto);
+  const esOtro = producto.tipo === "Otro";
 
   return (
     <>
@@ -68,6 +69,7 @@ export default function ProductoForm({ producto, onChange }: Props) {
           >
             <option value="Fan">Fan</option>
             <option value="Retro/Player">Retro/Player</option>
+            <option value="Otro">Otro</option>
           </select>
         </div>
 
@@ -78,7 +80,8 @@ export default function ProductoForm({ producto, onChange }: Props) {
             onChange={(event) =>
               onChange("manga", event.target.value as MangaProducto)
             }
-            className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
+            disabled={esOtro}
+            className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-400"
           >
             <option value="Corta">Corta</option>
             <option value="Larga">Larga</option>
@@ -86,11 +89,48 @@ export default function ProductoForm({ producto, onChange }: Props) {
         </div>
       </div>
 
+      {esOtro && (
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="mb-2 block text-sm font-medium">
+              Precio venta manual €
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={producto.precioVentaManual}
+              onChange={(event) =>
+                onChange("precioVentaManual", Number(event.target.value))
+              }
+              className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium">
+              Coste manual €
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={producto.costeManual}
+              onChange={(event) =>
+                onChange("costeManual", Number(event.target.value))
+              }
+              className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
+            />
+          </div>
+        </div>
+      )}
+
       <div className="mt-4 flex flex-wrap gap-4">
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
             checked={producto.personalizacion}
+            disabled={esOtro}
             onChange={(event) =>
               onChange("personalizacion", event.target.checked)
             }
@@ -117,7 +157,7 @@ export default function ProductoForm({ producto, onChange }: Props) {
         </label>
       </div>
 
-      {producto.personalizacion && (
+      {!esOtro && producto.personalizacion && (
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div>
             <label className="mb-2 block text-sm font-medium">
@@ -150,6 +190,14 @@ export default function ProductoForm({ producto, onChange }: Props) {
             />
           </div>
         </div>
+      )}
+
+      {esOtro && (
+        <p className="mt-3 text-sm text-neutral-500">
+          En productos de tipo “Otro”, el coste y la venta se introducen
+          manualmente. No se aplican extras automáticos por manga larga ni
+          personalización.
+        </p>
       )}
 
       <div className="mt-4 grid gap-3 rounded-xl bg-white p-4 text-sm md:grid-cols-3">

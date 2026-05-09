@@ -1,4 +1,4 @@
-export type TipoProducto = "Fan" | "Retro/Player";
+export type TipoProducto = "Fan" | "Retro/Player" | "Otro";
 export type MangaProducto = "Corta" | "Larga";
 export type TallaProducto = "S" | "M" | "L" | "XL" | "XXL";
 
@@ -15,6 +15,8 @@ export type Producto = {
   personalizacion: boolean;
   nombrePersonalizacion: string;
   numeroPersonalizacion: string;
+  precioVentaManual: number;
+  costeManual: number;
   pagado: boolean;
   entregado: boolean;
 };

@@ -3,17 +3,34 @@ import type { Pedido, PedidoConTotales, Producto } from "../types";
 export const COSTE_FIJO_PEDIDO = 4;
 
 export function calcularProducto(producto: Producto) {
-  let costeUnidad = producto.tipo === "Fan" ? 6.5 : 9.4;
-  let ventaUnidad = producto.tipo === "Fan" ? 15 : 18;
+  let costeUnidad = 0;
+  let ventaUnidad = 0;
 
-  if (producto.personalizacion) {
-    costeUnidad += 2;
-    ventaUnidad += 2;
+  if (producto.tipo === "Fan") {
+    costeUnidad = 6.5;
+    ventaUnidad = 15;
   }
 
-  if (producto.manga === "Larga") {
-    costeUnidad += 2;
-    ventaUnidad += 2;
+  if (producto.tipo === "Retro/Player") {
+    costeUnidad = 9.4;
+    ventaUnidad = 18;
+  }
+
+  if (producto.tipo === "Otro") {
+    costeUnidad = producto.costeManual || 0;
+    ventaUnidad = producto.precioVentaManual || 0;
+  }
+
+  if (producto.tipo !== "Otro") {
+    if (producto.personalizacion) {
+      costeUnidad += 2;
+      ventaUnidad += 2;
+    }
+
+    if (producto.manga === "Larga") {
+      costeUnidad += 2;
+      ventaUnidad += 2;
+    }
   }
 
   const costeTotal = costeUnidad;
