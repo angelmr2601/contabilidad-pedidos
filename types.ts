@@ -1,0 +1,46 @@
+export type TipoProducto = "Fan" | "Retro/Player";
+export type MangaProducto = "Corta" | "Larga";
+export type TallaProducto = "S" | "M" | "L" | "XL" | "XXL";
+
+export type FiltroPago = "todos" | "pagado" | "pendiente";
+export type FiltroEntrega = "todos" | "entregado" | "pendiente";
+
+export type Producto = {
+  id: number;
+  cliente: string;
+  nombre: string;
+  talla: TallaProducto;
+  tipo: TipoProducto;
+  manga: MangaProducto;
+  personalizacion: boolean;
+  nombrePersonalizacion: string;
+  numeroPersonalizacion: string;
+  pagado: boolean;
+  entregado: boolean;
+};
+
+export type Pedido = {
+  id: number;
+  nombre: string;
+  productos: Producto[];
+};
+
+export type PedidoConTotales = Pedido & {
+  totalVenta: number;
+  costeProductos: number;
+  totalCoste: number;
+  beneficio: number;
+  pendienteCobro: number;
+  productosPendientesPago: number;
+  productosPendientesEntrega: number;
+};
+
+export type ProductoEditando = {
+  pedidoId: number;
+  producto: Producto;
+};
+
+export type PedidoEditando = {
+  id: number;
+  nombre: string;
+};
