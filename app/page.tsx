@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-import Image from "next/image";
-
 import FiltrosPedidos from "../components/FiltrosPedidos";
 import ModalAñadirPedido from "../components/ModalAñadirPedido";
 import ModalAñadirProductoPedido from "../components/ModalAñadirProductoPedido";
@@ -11,6 +9,7 @@ import ModalEditarPedido from "../components/ModalEditarPedido";
 import ModalEditarProducto from "../components/ModalEditarProducto";
 import PedidoCard from "../components/PedidoCard";
 import ResumenCards from "../components/ResumenCards";
+import ResumenClienteBusqueda from "../components/ResumenClienteBusqueda";
 import ResumenDetalle from "../components/ResumenDetalle";
 import SimuladorPedido from "../components/SimuladorPedido";
 
@@ -132,29 +131,44 @@ export default function Home() {
 
   const pedidosConTotales = calcularPedidosConTotales(pedidos);
 
+  const textoBusquedaGlobal = busqueda.trim().toLowerCase();
+
+  const busquedaCoincideConCliente =
+    textoBusquedaGlobal !== "" &&
+    pedidosConTotales.some((pedido) =>
+      pedido.productos.some((producto) =>
+        producto.cliente.toLowerCase().includes(textoBusquedaGlobal)
+      )
+    );
+
   const pedidosFiltrados = pedidosConTotales.filter((pedido) => {
     const textoBusqueda = busqueda.trim().toLowerCase();
 
     const coincideBusqueda =
-      textoBusqueda === "" ||
-      pedido.nombre.toLowerCase().includes(textoBusqueda) ||
-      String(pedido.id).includes(textoBusqueda) ||
-      pedido.fechaPedido.includes(textoBusqueda) ||
-      pedido.productos.some((producto) => {
-        const textoProducto = [
-          producto.cliente,
-          producto.nombre,
-          producto.talla,
-          producto.tipo,
-          producto.manga,
-          producto.nombrePersonalizacion,
-          producto.numeroPersonalizacion,
-        ]
-          .join(" ")
-          .toLowerCase();
+      textoBusqueda === ""
+        ? true
+        : busquedaCoincideConCliente
+          ? pedido.productos.some((producto) =>
+              producto.cliente.toLowerCase().includes(textoBusqueda)
+            )
+          : pedido.nombre.toLowerCase().includes(textoBusqueda) ||
+            String(pedido.id).includes(textoBusqueda) ||
+            pedido.fechaPedido.includes(textoBusqueda) ||
+            pedido.productos.some((producto) => {
+              const textoProducto = [
+                producto.cliente,
+                producto.nombre,
+                producto.talla,
+                producto.tipo,
+                producto.manga,
+                producto.nombrePersonalizacion,
+                producto.numeroPersonalizacion,
+              ]
+                .join(" ")
+                .toLowerCase();
 
-        return textoProducto.includes(textoBusqueda);
-      });
+              return textoProducto.includes(textoBusqueda);
+            });
 
     const coincideMes =
       filtroMes === "" || pedido.fechaPedido.startsWith(filtroMes);
@@ -736,25 +750,12 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-neutral-100 p-6 text-neutral-900">
       <div className="mx-auto max-w-7xl space-y-8">
-        <header className="flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-sm sm:flex-row sm:items-center">
-  <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-white">
-    <Image
-      src="/logo-vistetede-futbol.png"
-      alt="Logo Vístetede Fútbol"
-      width={80}
-      height={80}
-      className="h-auto w-auto object-contain"
-      priority
-    />
-  </div>
-
-  <div>
-    <p className="text-sm font-medium text-neutral-500">
-      Contabilidad de pedidos
-    </p>
-    <h1 className="mt-1 text-3xl font-bold">Vístetede Fútbol</h1>
-  </div>
-</header>
+        <header>
+          <p className="text-sm font-medium text-neutral-500">
+            Contabilidad de pedidos
+          </p>
+          <h1 className="mt-2 text-3xl font-bold">Dashboard</h1>
+        </header>
 
         <div className="rounded-2xl bg-white p-2 shadow-sm">
           <div className="grid gap-2 sm:grid-cols-3">
@@ -883,6 +884,11 @@ export default function Home() {
               onFiltroArchivoChange={setFiltroArchivo}
               onFiltroMesChange={setFiltroMes}
               onLimpiarFiltros={limpiarFiltros}
+            />
+
+            <ResumenClienteBusqueda
+              busqueda={busqueda}
+              pedidos={pedidosFiltrados}
             />
 
             <div className="space-y-3">
