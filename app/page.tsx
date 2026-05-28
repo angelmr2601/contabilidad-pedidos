@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import FiltrosPedidos from "../components/FiltrosPedidos";
@@ -750,12 +751,25 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-neutral-100 p-6 text-neutral-900">
       <div className="mx-auto max-w-7xl space-y-8">
-        <header>
-          <p className="text-sm font-medium text-neutral-500">
-            Contabilidad de pedidos
-          </p>
-          <h1 className="mt-2 text-3xl font-bold">Dashboard</h1>
-        </header>
+        <header className="flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-sm sm:flex-row sm:items-center">
+  <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-black">
+    <Image
+      src="/logo-app.png"
+      alt="Logo Offside Club"
+      width={80}
+      height={80}
+      className="h-auto w-auto object-contain"
+      priority
+    />
+  </div>
+
+  <div>
+    <p className="text-sm font-medium text-neutral-500">
+      Contabilidad de pedidos
+    </p>
+    <h1 className="mt-1 text-3xl font-bold">Offside Club</h1>
+  </div>
+</header>
 
         <div className="rounded-2xl bg-white p-2 shadow-sm">
           <div className="grid gap-2 sm:grid-cols-3">
