@@ -1,6 +1,6 @@
 export type TipoProducto = "Fan" | "Retro/Player" | "Otro";
 export type MangaProducto = "Corta" | "Larga";
-export type TallaProducto = "S" | "M" | "L" | "XL" | "XXL";
+export type TallaProducto = "S" | "M" | "L" | "XL" | "2XL" | "3XL" | "4XL";
 
 export type FiltroPago = "todos" | "pagado" | "pendiente";
 export type FiltroEntrega = "todos" | "entregado" | "pendiente";
