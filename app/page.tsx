@@ -247,6 +247,33 @@ export default function Home() {
     );
   }
 
+  function importarProductosFormulario(productosImportados: Producto[]) {
+  setProductosFormulario((productosActuales) => {
+    const productoInicialVacio =
+      productosActuales.length === 1 &&
+      !productosActuales[0].cliente.trim() &&
+      !productosActuales[0].nombre.trim();
+
+    const base = productoInicialVacio ? [] : productosActuales;
+
+    const maxId =
+      base.length === 0
+        ? 0
+        : Math.max(...base.map((producto) => producto.id));
+
+    const productosConIds = productosImportados.map((producto, index) => ({
+      ...producto,
+      id: maxId + index + 1,
+    }));
+
+    if (productosConIds.length > 0) {
+      setProductoFormularioAbierto(productosConIds[0].id);
+    }
+
+    return [...base, ...productosConIds];
+  });
+}
+
   function añadirProductoFormulario() {
     setProductosFormulario((productos) => {
       const nuevoId =
@@ -977,6 +1004,7 @@ export default function Home() {
           onAñadirProducto={añadirProductoFormulario}
           onCambiarProductoAbierto={cambiarProductoFormularioAbierto}
           onActualizarProducto={actualizarProductoFormulario}
+          onImportarProductos={importarProductosFormulario}
         />
       )}
 

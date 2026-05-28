@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ModalImportarProductos from "./ModalImportarProductos";
 
 import {
   calcularPedidosConTotales,
@@ -22,6 +23,7 @@ export default function SimuladorPedido() {
   const [productos, setProductos] = useState<Producto[]>([
     crearProductoVacio(1),
   ]);
+  const [modalImportarAbierto, setModalImportarAbierto] = useState(false);
 
   const pedidoBorrador: Pedido = {
     id: 0,
@@ -107,6 +109,33 @@ export default function SimuladorPedido() {
 
   function cambiarProductoAbierto(id: number) {
     setProductoAbierto((actual) => (actual === id ? 0 : id));
+  }
+
+  function importarProductos(productosImportados: Producto[]) {
+    setProductos((productosActuales) => {
+      const productoInicialVacio =
+        productosActuales.length === 1 &&
+        !productosActuales[0].cliente.trim() &&
+        !productosActuales[0].nombre.trim();
+
+      const base = productoInicialVacio ? [] : productosActuales;
+
+      const maxId =
+        base.length === 0
+          ? 0
+          : Math.max(...base.map((producto) => producto.id));
+
+      const productosConIds = productosImportados.map((producto, index) => ({
+        ...producto,
+        id: maxId + index + 1,
+      }));
+
+      if (productosConIds.length > 0) {
+        setProductoAbierto(productosConIds[0].id);
+      }
+
+      return [...base, ...productosConIds];
+    });
   }
 
   return (
@@ -271,7 +300,15 @@ export default function SimuladorPedido() {
         })}
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex flex-col justify-end gap-3 sm:flex-row">
+        <button
+          type="button"
+          onClick={() => setModalImportarAbierto(true)}
+          className="rounded-xl bg-neutral-100 px-5 py-3 text-sm font-medium"
+        >
+          Importar desde tabla
+        </button>
+
         <button
           type="button"
           onClick={añadirProducto}
@@ -287,6 +324,13 @@ export default function SimuladorPedido() {
           datos de la simulación.
         </p>
       </div>
+
+      {modalImportarAbierto && (
+        <ModalImportarProductos
+          onCerrar={() => setModalImportarAbierto(false)}
+          onImportar={importarProductos}
+        />
+      )}
     </section>
   );
 }

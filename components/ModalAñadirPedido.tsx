@@ -1,5 +1,14 @@
-import { COSTE_FIJO_PEDIDO, calcularProducto, formatoEuros } from "../lib/calculos";
+"use client";
+
+import { useState } from "react";
+
+import {
+  COSTE_FIJO_PEDIDO,
+  calcularProducto,
+  formatoEuros,
+} from "../lib/calculos";
 import type { Producto } from "../types";
+import ModalImportarProductos from "./ModalImportarProductos";
 import ProductoForm from "./ProductoForm";
 
 type Props = {
@@ -12,6 +21,7 @@ type Props = {
   onCerrar: () => void;
   onGuardarPedido: () => void;
   onAñadirProducto: () => void;
+  onImportarProductos: (productos: Producto[]) => void;
   onCambiarProductoAbierto: (id: number) => void;
   onActualizarProducto: (
     id: number,
@@ -30,9 +40,12 @@ export default function ModalAñadirPedido({
   onCerrar,
   onGuardarPedido,
   onAñadirProducto,
+  onImportarProductos,
   onCambiarProductoAbierto,
   onActualizarProducto,
 }: Props) {
+  const [modalImportarAbierto, setModalImportarAbierto] = useState(false);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
@@ -46,6 +59,7 @@ export default function ModalAñadirPedido({
           </div>
 
           <button
+            type="button"
             onClick={onCerrar}
             className="rounded-xl bg-neutral-100 px-3 py-2 text-sm font-medium"
           >
@@ -146,14 +160,26 @@ export default function ModalAñadirPedido({
         </div>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
-          <button
-            onClick={onAñadirProducto}
-            className="rounded-xl bg-neutral-100 px-4 py-3 text-sm font-medium"
-          >
-            Añadir producto
-          </button>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => setModalImportarAbierto(true)}
+              className="rounded-xl bg-neutral-100 px-4 py-3 text-sm font-medium"
+            >
+              Importar desde tabla
+            </button>
+
+            <button
+              type="button"
+              onClick={onAñadirProducto}
+              className="rounded-xl bg-neutral-100 px-4 py-3 text-sm font-medium"
+            >
+              Añadir producto
+            </button>
+          </div>
 
           <button
+            type="button"
             onClick={onGuardarPedido}
             className="rounded-xl bg-black px-5 py-3 text-sm font-medium text-white"
           >
@@ -161,6 +187,13 @@ export default function ModalAñadirPedido({
           </button>
         </div>
       </div>
+
+      {modalImportarAbierto && (
+        <ModalImportarProductos
+          onCerrar={() => setModalImportarAbierto(false)}
+          onImportar={onImportarProductos}
+        />
+      )}
     </div>
   );
 }

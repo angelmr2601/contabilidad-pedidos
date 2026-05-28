@@ -55,6 +55,8 @@ export default function ProductoForm({ producto, onChange }: Props) {
             <option value="L">L</option>
             <option value="XL">XL</option>
             <option value="XXL">XXL</option>
+            <option value="3XL">3XL</option>
+            <option value="4XL">4XL</option>
           </select>
         </div>
 
