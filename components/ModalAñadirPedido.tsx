@@ -7,6 +7,7 @@ import type { ConfiguracionPrecios, Producto } from "../types";
 import ModalImportarProductos from "./ModalImportarProductos";
 import ProductoForm from "./ProductoForm";
 
+import Icon from "./Icon";
 type Props = {
   precios: ConfiguracionPrecios;
   nombrePedido: string;
@@ -59,9 +60,12 @@ export default function ModalAñadirPedido({
           <button
             type="button"
             onClick={onCerrar}
-            className="rounded-xl bg-surface-subtle px-3 py-2 text-sm font-medium"
+            aria-label="Cerrar"
+            title="Cerrar"
+            className="inline-flex items-center justify-center rounded-xl bg-surface-subtle px-3 py-2 text-sm font-medium"
           >
-            Cerrar
+            <Icon name="close" />
+            <span className="sr-only">Cerrar</span>
           </button>
         </div>
 
@@ -163,26 +167,35 @@ export default function ModalAñadirPedido({
             <button
               type="button"
               onClick={() => setModalImportarAbierto(true)}
-              className="rounded-xl bg-surface-subtle px-4 py-3 text-sm font-medium"
+              aria-label="Importar desde tabla"
+              title="Importar desde tabla"
+              className="inline-flex items-center justify-center rounded-xl bg-surface-subtle px-4 py-3 text-sm font-medium"
             >
-              Importar desde tabla
+              <Icon name="import" className="h-5 w-5" />
+              <span className="sr-only">Importar desde tabla</span>
             </button>
 
             <button
               type="button"
               onClick={onAñadirProducto}
-              className="rounded-xl bg-surface-subtle px-4 py-3 text-sm font-medium"
+              aria-label="Añadir producto"
+              title="Añadir producto"
+              className="inline-flex items-center justify-center rounded-xl bg-surface-subtle px-4 py-3 text-sm font-medium"
             >
-              Añadir producto
+              <Icon name="add" className="h-5 w-5" />
+              <span className="sr-only">Añadir producto</span>
             </button>
           </div>
 
           <button
             type="button"
             onClick={onGuardarPedido}
-            className="rounded-xl bg-black px-5 py-3 text-sm font-medium text-white"
+            aria-label="Guardar pedido"
+            title="Guardar pedido"
+            className="inline-flex items-center justify-center rounded-xl bg-black px-5 py-3 text-sm font-medium text-white"
           >
-            Guardar pedido
+            <Icon name="save" className="h-5 w-5" />
+            <span className="sr-only">Guardar pedido</span>
           </button>
         </div>
       </div>

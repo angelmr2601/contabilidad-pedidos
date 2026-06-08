@@ -2,6 +2,7 @@ import { calcularProducto, formatoEuros } from "../lib/calculos";
 import type { ConfiguracionPrecios, Pedido, Producto } from "../types";
 import ProductoForm from "./ProductoForm";
 
+import Icon from "./Icon";
 type Props = {
   precios: ConfiguracionPrecios;
   pedido: Pedido;
@@ -41,9 +42,12 @@ export default function ModalAñadirProductoPedido({
           <button
             type="button"
             onClick={onCerrar}
-            className="rounded-xl bg-surface-subtle px-3 py-2 text-sm font-medium"
+            aria-label="Cerrar"
+            title="Cerrar"
+            className="inline-flex items-center justify-center rounded-xl bg-surface-subtle px-3 py-2 text-sm font-medium"
           >
-            Cerrar
+            <Icon name="close" />
+            <span className="sr-only">Cerrar</span>
           </button>
         </div>
 
@@ -74,17 +78,23 @@ export default function ModalAñadirProductoPedido({
           <button
             type="button"
             onClick={onCerrar}
-            className="rounded-xl bg-surface-subtle px-5 py-3 text-sm font-medium"
+            aria-label="Cancelar"
+            title="Cancelar"
+            className="inline-flex items-center justify-center rounded-xl bg-surface-subtle px-5 py-3 text-sm font-medium"
           >
-            Cancelar
+            <Icon name="close" className="h-5 w-5" />
+            <span className="sr-only">Cancelar</span>
           </button>
 
           <button
             type="button"
             onClick={onGuardar}
-            className="rounded-xl bg-black px-5 py-3 text-sm font-medium text-white"
+            aria-label="Guardar producto"
+            title="Guardar producto"
+            className="inline-flex items-center justify-center rounded-xl bg-black px-5 py-3 text-sm font-medium text-white"
           >
-            Guardar producto
+            <Icon name="save" className="h-5 w-5" />
+            <span className="sr-only">Guardar producto</span>
           </button>
         </div>
       </div>

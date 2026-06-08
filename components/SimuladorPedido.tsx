@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ModalImportarProductos from "./ModalImportarProductos";
+import Icon from "./Icon";
 
 import {
   calcularPedidosConTotales,
@@ -204,18 +205,26 @@ export default function SimuladorPedido({ precios, onPedidoGuardado }: Props) {
             type="button"
             onClick={limpiarBorrador}
             disabled={guardando}
-            className="rounded-xl bg-red-100 dark:bg-red-950 px-4 py-2 text-sm font-medium text-red-700 dark:text-red-300 disabled:opacity-50"
+            aria-label="Limpiar borrador"
+            title="Limpiar borrador"
+            className="inline-flex items-center justify-center rounded-xl bg-red-100 dark:bg-red-950 px-4 py-2 text-sm font-medium text-red-700 dark:text-red-300 disabled:opacity-50"
           >
-            Limpiar borrador
+            <Icon name="delete" className="h-5 w-5" />
+            <span className="sr-only">Limpiar borrador</span>
           </button>
 
           <button
             type="button"
             onClick={guardarComoPedido}
             disabled={guardando}
-            className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            aria-label={guardando ? "Guardando" : "Guardar como pedido"}
+            title={guardando ? "Guardando" : "Guardar como pedido"}
+            className="inline-flex items-center justify-center rounded-xl bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
-            {guardando ? "Guardando..." : "Guardar como pedido"}
+            <Icon name="save" className="h-5 w-5" />
+            <span className="sr-only">
+              {guardando ? "Guardando" : "Guardar como pedido"}
+            </span>
           </button>
         </div>
       </div>
@@ -352,17 +361,23 @@ export default function SimuladorPedido({ precios, onPedidoGuardado }: Props) {
                     <button
                       type="button"
                       onClick={() => duplicarProducto(producto)}
-                      className="rounded-xl bg-blue-100 dark:bg-blue-950 px-4 py-2 text-sm font-medium text-blue-700 dark:text-blue-300"
+                      aria-label="Duplicar producto"
+                      title="Duplicar producto"
+                      className="inline-flex items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-950 px-4 py-2 text-sm font-medium text-blue-700 dark:text-blue-300"
                     >
-                      Duplicar producto
+                      <Icon name="copy" />
+                      <span className="sr-only">Duplicar producto</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => eliminarProducto(producto.id)}
-                      className="rounded-xl bg-red-100 dark:bg-red-950 px-4 py-2 text-sm font-medium text-red-700 dark:text-red-300"
+                      aria-label="Eliminar producto"
+                      title="Eliminar producto"
+                      className="inline-flex items-center justify-center rounded-xl bg-red-100 dark:bg-red-950 px-4 py-2 text-sm font-medium text-red-700 dark:text-red-300"
                     >
-                      Eliminar producto
+                      <Icon name="delete" />
+                      <span className="sr-only">Eliminar producto</span>
                     </button>
                   </div>
                 </div>
@@ -377,18 +392,24 @@ export default function SimuladorPedido({ precios, onPedidoGuardado }: Props) {
           type="button"
           onClick={() => setModalImportarAbierto(true)}
           disabled={guardando}
-          className="rounded-xl bg-surface-subtle px-5 py-3 text-sm font-medium disabled:opacity-50"
+          aria-label="Importar desde tabla"
+          title="Importar desde tabla"
+          className="inline-flex items-center justify-center rounded-xl bg-surface-subtle px-5 py-3 text-sm font-medium disabled:opacity-50"
         >
-          Importar desde tabla
+          <Icon name="import" className="h-5 w-5" />
+          <span className="sr-only">Importar desde tabla</span>
         </button>
 
         <button
           type="button"
           onClick={añadirProducto}
           disabled={guardando}
-          className="rounded-xl bg-surface-subtle px-5 py-3 text-sm font-medium disabled:opacity-50"
+          aria-label="Añadir producto al borrador"
+          title="Añadir producto al borrador"
+          className="inline-flex items-center justify-center rounded-xl bg-surface-subtle px-5 py-3 text-sm font-medium disabled:opacity-50"
         >
-          Añadir producto al borrador
+          <Icon name="add" className="h-5 w-5" />
+          <span className="sr-only">Añadir producto al borrador</span>
         </button>
 
         <button

@@ -8,6 +8,7 @@ import {
 } from "../lib/configuracion-precios-db";
 import { PRECIOS_POR_DEFECTO } from "../lib/precios";
 import type { ConfiguracionPrecios } from "../types";
+import Icon from "./Icon";
 
 type CampoPrecio = keyof ConfiguracionPrecios;
 
@@ -78,7 +79,7 @@ export default function ConfiguracionPrecios({
   const [mensaje, setMensaje] = useState("");
 
   useEffect(() => {
-    setFormulario(precios);
+    queueMicrotask(() => setFormulario(precios));
   }, [precios]);
 
   function actualizarCampo(campo: CampoPrecio, valor: string) {
@@ -188,27 +189,38 @@ export default function ConfiguracionPrecios({
             type="button"
             onClick={recargarDesdeDB}
             disabled={guardando}
-            className="rounded-xl bg-surface-subtle px-4 py-2 text-sm font-medium disabled:opacity-50"
+            aria-label="Recargar"
+            title="Recargar"
+            className="inline-flex items-center justify-center rounded-xl bg-surface-subtle px-4 py-2 text-sm font-medium disabled:opacity-50"
           >
-            Recargar
+            <Icon name="refresh" className="h-5 w-5" />
+            <span className="sr-only">Recargar</span>
           </button>
 
           <button
             type="button"
             onClick={restaurarDefecto}
             disabled={guardando}
-            className="rounded-xl bg-red-100 dark:bg-red-950 px-4 py-2 text-sm font-medium text-red-700 dark:text-red-300 disabled:opacity-50"
+            aria-label="Restaurar defecto"
+            title="Restaurar defecto"
+            className="inline-flex items-center justify-center rounded-xl bg-red-100 dark:bg-red-950 px-4 py-2 text-sm font-medium text-red-700 dark:text-red-300 disabled:opacity-50"
           >
-            Restaurar defecto
+            <Icon name="reset" className="h-5 w-5" />
+            <span className="sr-only">Restaurar defecto</span>
           </button>
 
           <button
             type="button"
             onClick={guardar}
             disabled={guardando}
-            className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            aria-label={guardando ? "Guardando" : "Guardar cambios"}
+            title={guardando ? "Guardando" : "Guardar cambios"}
+            className="inline-flex items-center justify-center rounded-xl bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
-            {guardando ? "Guardando..." : "Guardar cambios"}
+            <Icon name="save" className="h-5 w-5" />
+            <span className="sr-only">
+              {guardando ? "Guardando" : "Guardar cambios"}
+            </span>
           </button>
         </div>
       </div>

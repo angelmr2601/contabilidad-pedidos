@@ -6,6 +6,7 @@ import { calcularProducto, formatoEuros } from "../lib/calculos";
 import { importarProductosDesdeTexto } from "../lib/importar-productos";
 import type { ConfiguracionPrecios, Producto } from "../types";
 
+import Icon from "./Icon";
 type Props = {
   precios: ConfiguracionPrecios;
   onCerrar: () => void;
@@ -48,9 +49,12 @@ export default function ModalImportarProductos({
           <button
             type="button"
             onClick={onCerrar}
-            className="rounded-xl bg-surface-subtle px-3 py-2 text-sm font-medium"
+            aria-label="Cerrar"
+            title="Cerrar"
+            className="inline-flex items-center justify-center rounded-xl bg-surface-subtle px-3 py-2 text-sm font-medium"
           >
-            Cerrar
+            <Icon name="close" />
+            <span className="sr-only">Cerrar</span>
           </button>
         </div>
 
@@ -144,17 +148,23 @@ export default function ModalImportarProductos({
           <button
             type="button"
             onClick={onCerrar}
-            className="rounded-xl bg-surface-subtle px-5 py-3 text-sm font-medium"
+            aria-label="Cancelar"
+            title="Cancelar"
+            className="inline-flex items-center justify-center rounded-xl bg-surface-subtle px-5 py-3 text-sm font-medium"
           >
-            Cancelar
+            <Icon name="close" className="h-5 w-5" />
+            <span className="sr-only">Cancelar</span>
           </button>
 
           <button
             type="button"
             onClick={confirmarImportacion}
-            className="rounded-xl bg-black px-5 py-3 text-sm font-medium text-white"
+            aria-label="Importar productos"
+            title="Importar productos"
+            className="inline-flex items-center justify-center rounded-xl bg-black px-5 py-3 text-sm font-medium text-white"
           >
-            Importar productos
+            <Icon name="import" className="h-5 w-5" />
+            <span className="sr-only">Importar productos</span>
           </button>
         </div>
       </div>
