@@ -8,15 +8,25 @@ import {
   calcularProducto,
   formatoEuros,
 } from "../lib/calculos";
+import { crearPedidoConProductos } from "../lib/pedidos-db";
 import { crearProductoVacio } from "../lib/productos";
-import type { Pedido, Producto } from "../types";
+import {
+  obtenerProductosValidos,
+  validarNuevoPedido,
+} from "../lib/validaciones";
+import type { ConfiguracionPrecios, Pedido, Producto } from "../types";
 import ProductoForm from "./ProductoForm";
+
+type Props = {
+  precios: ConfiguracionPrecios;
+  onPedidoGuardado: (pedido: Pedido) => void;
+};
 
 function fechaHoy() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export default function SimuladorPedido() {
+export default function SimuladorPedido({ precios, onPedidoGuardado }: Props) {
   const [nombreBorrador, setNombreBorrador] = useState("Borrador");
   const [fechaBorrador, setFechaBorrador] = useState(fechaHoy());
   const [productoAbierto, setProductoAbierto] = useState<number>(1);
@@ -24,6 +34,8 @@ export default function SimuladorPedido() {
     crearProductoVacio(1),
   ]);
   const [modalImportarAbierto, setModalImportarAbierto] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+  const [mensaje, setMensaje] = useState("");
 
   const pedidoBorrador: Pedido = {
     id: 0,
@@ -33,7 +45,10 @@ export default function SimuladorPedido() {
     productos,
   };
 
-  const pedidoConTotales = calcularPedidosConTotales([pedidoBorrador])[0];
+  const pedidoConTotales = calcularPedidosConTotales(
+    [pedidoBorrador],
+    precios
+  )[0];
 
   function actualizarProducto(
     id: number,
@@ -94,6 +109,14 @@ export default function SimuladorPedido() {
     setProductoAbierto((actual) => (actual === id ? 0 : actual));
   }
 
+  function reiniciarBorrador() {
+    setNombreBorrador("Borrador");
+    setFechaBorrador(fechaHoy());
+    setProductos([crearProductoVacio(1)]);
+    setProductoAbierto(1);
+    setMensaje("");
+  }
+
   function limpiarBorrador() {
     const confirmar = confirm("¿Seguro que quieres limpiar este borrador?");
 
@@ -101,10 +124,38 @@ export default function SimuladorPedido() {
       return;
     }
 
-    setNombreBorrador("Borrador");
-    setFechaBorrador(fechaHoy());
-    setProductos([crearProductoVacio(1)]);
-    setProductoAbierto(1);
+    reiniciarBorrador();
+  }
+
+  async function guardarComoPedido() {
+    const error = validarNuevoPedido(nombreBorrador, fechaBorrador, productos);
+
+    if (error) {
+      alert(error);
+      return;
+    }
+
+    const productosValidos = obtenerProductosValidos(productos);
+
+    try {
+      setGuardando(true);
+      setMensaje("");
+
+      const nuevoPedido = await crearPedidoConProductos(
+        nombreBorrador.trim(),
+        fechaBorrador,
+        productosValidos
+      );
+
+      reiniciarBorrador();
+      onPedidoGuardado(nuevoPedido);
+    } catch (error) {
+      console.error(error);
+      setMensaje("No se pudo guardar el pedido.");
+      alert("No se pudo guardar el pedido.");
+    } finally {
+      setGuardando(false);
+    }
   }
 
   function cambiarProductoAbierto(id: number) {
@@ -139,25 +190,43 @@ export default function SimuladorPedido() {
   }
 
   return (
-    <section className="space-y-5 rounded-2xl bg-white p-5 shadow-sm">
+    <section className="space-y-5 rounded-2xl bg-surface p-5 shadow-sm">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h2 className="text-xl font-bold">Borrador de pedido</h2>
-          <p className="text-sm text-neutral-500">
-            Simula un pedido sin guardarlo en la base de datos.
+          <p className="text-sm text-muted">
+            Simula un pedido y guárdalo en el historial cuando esté listo.
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={limpiarBorrador}
-          className="rounded-xl bg-red-100 px-4 py-2 text-sm font-medium text-red-700"
-        >
-          Limpiar borrador
-        </button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <button
+            type="button"
+            onClick={limpiarBorrador}
+            disabled={guardando}
+            className="rounded-xl bg-red-100 dark:bg-red-950 px-4 py-2 text-sm font-medium text-red-700 dark:text-red-300 disabled:opacity-50"
+          >
+            Limpiar borrador
+          </button>
+
+          <button
+            type="button"
+            onClick={guardarComoPedido}
+            disabled={guardando}
+            className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          >
+            {guardando ? "Guardando..." : "Guardar como pedido"}
+          </button>
+        </div>
       </div>
 
-      <div className="grid gap-4 rounded-2xl bg-neutral-50 p-4 md:grid-cols-2">
+      {mensaje && (
+        <div className="rounded-2xl bg-red-50 dark:bg-red-950/40 p-4 text-sm text-red-700 dark:text-red-300">
+          {mensaje}
+        </div>
+      )}
+
+      <div className="grid gap-4 rounded-2xl bg-surface-muted p-4 md:grid-cols-2">
         <div>
           <label className="mb-2 block text-sm font-medium">
             Nombre del borrador
@@ -166,7 +235,7 @@ export default function SimuladorPedido() {
             value={nombreBorrador}
             onChange={(event) => setNombreBorrador(event.target.value)}
             placeholder="Ej: Simulación pedido mayo"
-            className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
+            className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
           />
         </div>
 
@@ -178,58 +247,60 @@ export default function SimuladorPedido() {
             type="date"
             value={fechaBorrador}
             onChange={(event) => setFechaBorrador(event.target.value)}
-            className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
+            className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
           />
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-5">
-        <div className="rounded-2xl bg-neutral-50 p-5">
-          <p className="text-sm text-neutral-500">Venta estimada</p>
+        <div className="rounded-2xl bg-surface-muted p-5">
+          <p className="text-sm text-muted">Venta estimada</p>
           <p className="mt-2 text-2xl font-bold">
             {formatoEuros(pedidoConTotales.totalVenta)}
           </p>
         </div>
 
-        <div className="rounded-2xl bg-neutral-50 p-5">
-          <p className="text-sm text-neutral-500">Coste estimado</p>
+        <div className="rounded-2xl bg-surface-muted p-5">
+          <p className="text-sm text-muted">Coste estimado</p>
           <p className="mt-2 text-2xl font-bold">
             {formatoEuros(pedidoConTotales.totalCoste)}
           </p>
         </div>
 
-        <div className="rounded-2xl bg-neutral-50 p-5">
-          <p className="text-sm text-neutral-500">Beneficio estimado</p>
+        <div className="rounded-2xl bg-surface-muted p-5">
+          <p className="text-sm text-muted">Beneficio estimado</p>
           <p className="mt-2 text-2xl font-bold">
             {formatoEuros(pedidoConTotales.beneficio)}
           </p>
         </div>
 
-        <div className="rounded-2xl bg-neutral-50 p-5">
-          <p className="text-sm text-neutral-500">Productos</p>
+        <div className="rounded-2xl bg-surface-muted p-5">
+          <p className="text-sm text-muted">Productos</p>
           <p className="mt-2 text-2xl font-bold">{productos.length}</p>
         </div>
 
-        <div className="rounded-2xl bg-neutral-50 p-5">
-          <p className="text-sm text-neutral-500">Coste fijo pedido</p>
-          <p className="mt-2 text-2xl font-bold">{formatoEuros(4)}</p>
+        <div className="rounded-2xl bg-surface-muted p-5">
+          <p className="text-sm text-muted">Coste fijo pedido</p>
+          <p className="mt-2 text-2xl font-bold">
+            {formatoEuros(precios.costeFijoPedido)}
+          </p>
         </div>
       </div>
 
       <div className="space-y-3">
         {productos.map((producto, index) => {
-          const calculo = calcularProducto(producto);
+          const calculo = calcularProducto(producto, precios);
           const abierto = productoAbierto === producto.id;
 
           return (
             <div
               key={producto.id}
-              className="overflow-hidden rounded-2xl border border-neutral-200"
+              className="overflow-hidden rounded-2xl border border-border"
             >
               <button
                 type="button"
                 onClick={() => cambiarProductoAbierto(producto.id)}
-                className="flex w-full flex-col gap-3 bg-white p-4 text-left transition hover:bg-neutral-50 md:flex-row md:items-center md:justify-between"
+                className="flex w-full flex-col gap-3 bg-surface p-4 text-left transition hover:bg-surface-muted md:flex-row md:items-center md:justify-between"
               >
                 <div>
                   <div className="flex items-center gap-3">
@@ -237,7 +308,7 @@ export default function SimuladorPedido() {
                     <span>{abierto ? "−" : "+"}</span>
                   </div>
 
-                  <p className="mt-1 text-sm text-neutral-500">
+                  <p className="mt-1 text-sm text-muted">
                     {producto.nombre || "Producto sin nombre"} ·{" "}
                     {producto.cliente || "Cliente sin indicar"}
                   </p>
@@ -245,21 +316,21 @@ export default function SimuladorPedido() {
 
                 <div className="grid grid-cols-3 gap-3 text-sm md:text-right">
                   <div>
-                    <p className="text-neutral-500">Venta</p>
+                    <p className="text-muted">Venta</p>
                     <p className="font-bold">
                       {formatoEuros(calculo.ventaTotal)}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-neutral-500">Coste</p>
+                    <p className="text-muted">Coste</p>
                     <p className="font-bold">
                       {formatoEuros(calculo.costeTotal)}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-neutral-500">Beneficio</p>
+                    <p className="text-muted">Beneficio</p>
                     <p className="font-bold">
                       {formatoEuros(calculo.beneficio)}
                     </p>
@@ -268,9 +339,10 @@ export default function SimuladorPedido() {
               </button>
 
               {abierto && (
-                <div className="border-t border-neutral-200 bg-neutral-50 p-4">
+                <div className="border-t border-border bg-surface-muted p-4">
                   <ProductoForm
                     producto={producto}
+                    precios={precios}
                     onChange={(campo, valor) =>
                       actualizarProducto(producto.id, campo, valor)
                     }
@@ -280,7 +352,7 @@ export default function SimuladorPedido() {
                     <button
                       type="button"
                       onClick={() => duplicarProducto(producto)}
-                      className="rounded-xl bg-blue-100 px-4 py-2 text-sm font-medium text-blue-700"
+                      className="rounded-xl bg-blue-100 dark:bg-blue-950 px-4 py-2 text-sm font-medium text-blue-700 dark:text-blue-300"
                     >
                       Duplicar producto
                     </button>
@@ -288,7 +360,7 @@ export default function SimuladorPedido() {
                     <button
                       type="button"
                       onClick={() => eliminarProducto(producto.id)}
-                      className="rounded-xl bg-red-100 px-4 py-2 text-sm font-medium text-red-700"
+                      className="rounded-xl bg-red-100 dark:bg-red-950 px-4 py-2 text-sm font-medium text-red-700 dark:text-red-300"
                     >
                       Eliminar producto
                     </button>
@@ -304,7 +376,8 @@ export default function SimuladorPedido() {
         <button
           type="button"
           onClick={() => setModalImportarAbierto(true)}
-          className="rounded-xl bg-neutral-100 px-5 py-3 text-sm font-medium"
+          disabled={guardando}
+          className="rounded-xl bg-surface-subtle px-5 py-3 text-sm font-medium disabled:opacity-50"
         >
           Importar desde tabla
         </button>
@@ -312,21 +385,33 @@ export default function SimuladorPedido() {
         <button
           type="button"
           onClick={añadirProducto}
-          className="rounded-xl bg-black px-5 py-3 text-sm font-medium text-white"
+          disabled={guardando}
+          className="rounded-xl bg-surface-subtle px-5 py-3 text-sm font-medium disabled:opacity-50"
         >
           Añadir producto al borrador
         </button>
+
+        <button
+          type="button"
+          onClick={guardarComoPedido}
+          disabled={guardando}
+          className="rounded-xl bg-black px-5 py-3 text-sm font-medium text-white disabled:opacity-50"
+        >
+          {guardando ? "Guardando..." : "Guardar como pedido"}
+        </button>
       </div>
 
-      <div className="rounded-2xl bg-neutral-50 p-5 text-sm text-neutral-600">
+      <div className="rounded-2xl bg-surface-muted p-5 text-sm text-muted">
         <p>
-          Este borrador no se guarda. Si recargas la página, se perderán los
-          datos de la simulación.
+          El borrador no se guarda automáticamente. Usa &quot;Guardar como
+          pedido&quot; para añadirlo al historial o recarga la página para
+          empezar de nuevo.
         </p>
       </div>
 
       {modalImportarAbierto && (
         <ModalImportarProductos
+          precios={precios}
           onCerrar={() => setModalImportarAbierto(false)}
           onImportar={importarProductos}
         />

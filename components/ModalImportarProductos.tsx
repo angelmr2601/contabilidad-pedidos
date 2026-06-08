@@ -4,22 +4,24 @@ import { useMemo, useState } from "react";
 
 import { calcularProducto, formatoEuros } from "../lib/calculos";
 import { importarProductosDesdeTexto } from "../lib/importar-productos";
-import type { Producto } from "../types";
+import type { ConfiguracionPrecios, Producto } from "../types";
 
 type Props = {
+  precios: ConfiguracionPrecios;
   onCerrar: () => void;
   onImportar: (productos: Producto[]) => void;
 };
 
 export default function ModalImportarProductos({
+  precios,
   onCerrar,
   onImportar,
 }: Props) {
   const [texto, setTexto] = useState("");
 
   const resultado = useMemo(
-    () => importarProductosDesdeTexto(texto, 1),
-    [texto]
+    () => importarProductosDesdeTexto(texto, 1, precios),
+    [texto, precios]
   );
 
   function confirmarImportacion() {
@@ -34,11 +36,11 @@ export default function ModalImportarProductos({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4">
-      <div className="max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+      <div className="max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-2xl bg-surface p-6 shadow-xl">
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold">Importar productos</h2>
-            <p className="text-sm text-neutral-500">
+            <p className="text-sm text-muted">
               Copia filas desde Excel, Google Sheets o una tabla y pégalas aquí.
             </p>
           </div>
@@ -46,7 +48,7 @@ export default function ModalImportarProductos({
           <button
             type="button"
             onClick={onCerrar}
-            className="rounded-xl bg-neutral-100 px-3 py-2 text-sm font-medium"
+            className="rounded-xl bg-surface-subtle px-3 py-2 text-sm font-medium"
           >
             Cerrar
           </button>
@@ -61,12 +63,12 @@ export default function ModalImportarProductos({
             value={texto}
             onChange={(event) => setTexto(event.target.value)}
             placeholder={`Antonio\tBetis 26/27\tS\tFan\tCorta\tNo\t€ 6,50\t€ 15,00\t€ 8,50\nAntonio\tBetis 26/27\tXL\tFan\tCorta\tNo\tParche Champions\t€ 7,00\t€ 17,00\t€ 10,00`}
-            className="min-h-48 w-full rounded-xl border border-neutral-300 px-4 py-3 font-mono text-sm outline-none focus:border-black"
+            className="min-h-48 w-full rounded-xl border border-border-strong px-4 py-3 font-mono text-sm outline-none focus:border-foreground"
           />
         </div>
 
         {resultado.errores.length > 0 && (
-          <div className="mt-4 rounded-2xl bg-yellow-50 p-4 text-sm text-yellow-800">
+          <div className="mt-4 rounded-2xl bg-yellow-50 dark:bg-yellow-950/40 p-4 text-sm text-yellow-800 dark:text-yellow-300">
             <p className="font-bold">Avisos de importación</p>
 
             <ul className="mt-2 list-inside list-disc space-y-1">
@@ -80,7 +82,7 @@ export default function ModalImportarProductos({
         <div className="mt-6">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="font-bold">Previsualización</h3>
-            <p className="text-sm text-neutral-500">
+            <p className="text-sm text-muted">
               {resultado.productos.length} producto
               {resultado.productos.length === 1 ? "" : "s"} detectado
               {resultado.productos.length === 1 ? "" : "s"}
@@ -88,14 +90,14 @@ export default function ModalImportarProductos({
           </div>
 
           {resultado.productos.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-neutral-300 p-6 text-center text-sm text-neutral-500">
+            <div className="rounded-2xl border border-dashed border-border-strong p-6 text-center text-sm text-muted">
               Pega una tabla para ver la previsualización.
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-2xl border border-neutral-200">
+            <div className="overflow-x-auto rounded-2xl border border-border">
               <table className="w-full border-collapse text-left text-sm">
                 <thead>
-                  <tr className="border-b bg-neutral-50 text-neutral-500">
+                  <tr className="border-b bg-surface-muted text-muted">
                     <th className="px-4 py-3">Cliente</th>
                     <th className="px-4 py-3">Producto</th>
                     <th className="px-4 py-3">Talla</th>
@@ -109,7 +111,7 @@ export default function ModalImportarProductos({
 
                 <tbody>
                   {resultado.productos.map((producto) => {
-                    const calculo = calcularProducto(producto);
+                    const calculo = calcularProducto(producto, precios);
 
                     return (
                       <tr key={producto.id} className="border-b last:border-0">
@@ -142,7 +144,7 @@ export default function ModalImportarProductos({
           <button
             type="button"
             onClick={onCerrar}
-            className="rounded-xl bg-neutral-100 px-5 py-3 text-sm font-medium"
+            className="rounded-xl bg-surface-subtle px-5 py-3 text-sm font-medium"
           >
             Cancelar
           </button>

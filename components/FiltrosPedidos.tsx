@@ -32,14 +32,14 @@ export default function FiltrosPedidos({
   onLimpiarFiltros,
 }: Props) {
   return (
-    <div className="mb-5 grid gap-3 rounded-2xl bg-neutral-50 p-4 md:grid-cols-5">
+    <div className="mb-5 grid gap-3 rounded-2xl bg-surface-muted p-4 md:grid-cols-5">
       <div className="md:col-span-2">
         <label className="mb-2 block text-sm font-medium">Buscar</label>
         <input
           value={busqueda}
           onChange={(event) => onBusquedaChange(event.target.value)}
           placeholder="Cliente, producto, pedido, dorsal..."
-          className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
+          className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
         />
       </div>
 
@@ -49,7 +49,7 @@ export default function FiltrosPedidos({
           type="month"
           value={filtroMes}
           onChange={(event) => onFiltroMesChange(event.target.value)}
-          className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
+          className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
         />
       </div>
 
@@ -60,7 +60,7 @@ export default function FiltrosPedidos({
           onChange={(event) =>
             onFiltroArchivoChange(event.target.value as FiltroArchivo)
           }
-          className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
+          className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
         >
           <option value="activos">Activos</option>
           <option value="archivados">Archivados</option>
@@ -75,7 +75,7 @@ export default function FiltrosPedidos({
           onChange={(event) =>
             onFiltroPagoChange(event.target.value as FiltroPago)
           }
-          className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
+          className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
         >
           <option value="todos">Todos</option>
           <option value="pendiente">Con pendientes</option>
@@ -90,7 +90,7 @@ export default function FiltrosPedidos({
           onChange={(event) =>
             onFiltroEntregaChange(event.target.value as FiltroEntrega)
           }
-          className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
+          className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
         >
           <option value="todos">Todos</option>
           <option value="pendiente">Con pendientes</option>
@@ -99,7 +99,7 @@ export default function FiltrosPedidos({
       </div>
 
       <div className="flex items-center justify-between gap-3 md:col-span-5">
-        <p className="text-sm text-neutral-500">
+        <p className="text-sm text-muted">
           Mostrando {totalFiltrados} de {totalPedidos} pedido
           {totalPedidos === 1 ? "" : "s"}.
         </p>
@@ -107,7 +107,7 @@ export default function FiltrosPedidos({
         <button
           type="button"
           onClick={onLimpiarFiltros}
-          className="rounded-xl bg-white px-4 py-2 text-sm font-medium"
+          className="rounded-xl bg-surface px-4 py-2 text-sm font-medium"
         >
           Limpiar filtros
         </button>

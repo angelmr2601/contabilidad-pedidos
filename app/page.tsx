@@ -13,11 +13,17 @@ import ResumenCards from "../components/ResumenCards";
 import ResumenClienteBusqueda from "../components/ResumenClienteBusqueda";
 import ResumenDetalle from "../components/ResumenDetalle";
 import SimuladorPedido from "../components/SimuladorPedido";
+import ConfiguracionPrecios from "../components/ConfiguracionPrecios";
+import ThemeToggle from "../components/ThemeToggle";
+import { cargarConfiguracionPrecios } from "../lib/configuracion-precios-db";
+import { PRECIOS_POR_DEFECTO } from "../lib/precios";
+import type { ConfiguracionPrecios as TipoConfiguracionPrecios } from "../types";
 
 import { calcularPedidosConTotales, calcularResumen } from "../lib/calculos";
 import {
   actualizarArchivadoPedidoDB,
   actualizarEstadoProductoDB,
+  marcarTodosProductosPedidoDB,
   actualizarPedidoDB,
   actualizarProductoDB,
   calcularArchivadoPedido,
@@ -45,7 +51,7 @@ import type {
   ProductoEditando,
 } from "../types";
 
-type PestañaActiva = "historial" | "resumen" | "borrador";
+type PestañaActiva = "historial" | "resumen" | "borrador" | "configuracion";
 
 type ProductoAñadiendo = {
   pedido: Pedido;
@@ -73,6 +79,9 @@ function nombreMes(fechaMes: string) {
 export default function Home() {
   const [pestañaActiva, setPestañaActiva] =
     useState<PestañaActiva>("historial");
+
+  const [precios, setPrecios] =
+    useState<TipoConfiguracionPrecios>(PRECIOS_POR_DEFECTO);
 
   const [pedidoAbierto, setPedidoAbierto] = useState<number | null>(null);
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -116,9 +125,13 @@ export default function Home() {
         setCargandoPedidos(true);
         setErrorCarga("");
 
-        const pedidosDB = await cargarPedidos();
+        const [pedidosDB, preciosDB] = await Promise.all([
+          cargarPedidos(),
+          cargarConfiguracionPrecios(),
+        ]);
 
         setPedidos(pedidosDB);
+        setPrecios(preciosDB);
       } catch (error) {
         console.error(error);
         setErrorCarga("No se pudieron cargar los pedidos.");
@@ -130,7 +143,7 @@ export default function Home() {
     cargarDatos();
   }, []);
 
-  const pedidosConTotales = calcularPedidosConTotales(pedidos);
+  const pedidosConTotales = calcularPedidosConTotales(pedidos, precios);
 
   const textoBusquedaGlobal = busqueda.trim().toLowerCase();
 
@@ -150,26 +163,26 @@ export default function Home() {
         ? true
         : busquedaCoincideConCliente
           ? pedido.productos.some((producto) =>
-              producto.cliente.toLowerCase().includes(textoBusqueda)
-            )
+            producto.cliente.toLowerCase().includes(textoBusqueda)
+          )
           : pedido.nombre.toLowerCase().includes(textoBusqueda) ||
-            String(pedido.id).includes(textoBusqueda) ||
-            pedido.fechaPedido.includes(textoBusqueda) ||
-            pedido.productos.some((producto) => {
-              const textoProducto = [
-                producto.cliente,
-                producto.nombre,
-                producto.talla,
-                producto.tipo,
-                producto.manga,
-                producto.nombrePersonalizacion,
-                producto.numeroPersonalizacion,
-              ]
-                .join(" ")
-                .toLowerCase();
+          String(pedido.id).includes(textoBusqueda) ||
+          pedido.fechaPedido.includes(textoBusqueda) ||
+          pedido.productos.some((producto) => {
+            const textoProducto = [
+              producto.cliente,
+              producto.nombre,
+              producto.talla,
+              producto.tipo,
+              producto.manga,
+              producto.nombrePersonalizacion,
+              producto.numeroPersonalizacion,
+            ]
+              .join(" ")
+              .toLowerCase();
 
-              return textoProducto.includes(textoBusqueda);
-            });
+            return textoProducto.includes(textoBusqueda);
+          });
 
     const coincideMes =
       filtroMes === "" || pedido.fechaPedido.startsWith(filtroMes);
@@ -248,31 +261,31 @@ export default function Home() {
   }
 
   function importarProductosFormulario(productosImportados: Producto[]) {
-  setProductosFormulario((productosActuales) => {
-    const productoInicialVacio =
-      productosActuales.length === 1 &&
-      !productosActuales[0].cliente.trim() &&
-      !productosActuales[0].nombre.trim();
+    setProductosFormulario((productosActuales) => {
+      const productoInicialVacio =
+        productosActuales.length === 1 &&
+        !productosActuales[0].cliente.trim() &&
+        !productosActuales[0].nombre.trim();
 
-    const base = productoInicialVacio ? [] : productosActuales;
+      const base = productoInicialVacio ? [] : productosActuales;
 
-    const maxId =
-      base.length === 0
-        ? 0
-        : Math.max(...base.map((producto) => producto.id));
+      const maxId =
+        base.length === 0
+          ? 0
+          : Math.max(...base.map((producto) => producto.id));
 
-    const productosConIds = productosImportados.map((producto, index) => ({
-      ...producto,
-      id: maxId + index + 1,
-    }));
+      const productosConIds = productosImportados.map((producto, index) => ({
+        ...producto,
+        id: maxId + index + 1,
+      }));
 
-    if (productosConIds.length > 0) {
-      setProductoFormularioAbierto(productosConIds[0].id);
-    }
+      if (productosConIds.length > 0) {
+        setProductoFormularioAbierto(productosConIds[0].id);
+      }
 
-    return [...base, ...productosConIds];
-  });
-}
+      return [...base, ...productosConIds];
+    });
+  }
 
   function añadirProductoFormulario() {
     setProductosFormulario((productos) => {
@@ -311,10 +324,10 @@ export default function Home() {
       pedidosActuales.map((pedidoActual) =>
         pedidoActual.id === pedidoId
           ? {
-              ...pedidoActual,
-              archivado: nuevoArchivado,
-              productos: productosActualizados,
-            }
+            ...pedidoActual,
+            archivado: nuevoArchivado,
+            productos: productosActualizados,
+          }
           : pedidoActual
       )
     );
@@ -357,10 +370,10 @@ export default function Home() {
       pedidosActuales.map((pedidoActual) =>
         pedidoActual.id === pedidoId
           ? {
-              ...pedidoActual,
-              archivado: nuevoArchivado,
-              productos: productosActualizados,
-            }
+            ...pedidoActual,
+            archivado: nuevoArchivado,
+            productos: productosActualizados,
+          }
           : pedidoActual
       )
     );
@@ -373,6 +386,109 @@ export default function Home() {
     } catch (error) {
       console.error(error);
       alert("No se pudo actualizar la entrega.");
+      setPedidos((pedidosActuales) =>
+        pedidosActuales.map((pedidoActual) =>
+          pedidoActual.id === pedidoId ? pedido : pedidoActual
+        )
+      );
+    }
+  }
+
+  async function marcarTodoPagadoPedido(pedidoId: number) {
+    const pedido = pedidos.find((pedidoActual) => pedidoActual.id === pedidoId);
+
+    if (!pedido || pedido.productos.every((producto) => producto.pagado)) {
+      return;
+    }
+
+    const pendientes = pedido.productos.filter((producto) => !producto.pagado)
+      .length;
+
+    const confirmar = confirm(
+      `¿Marcar como pagados los ${pendientes} producto${pendientes === 1 ? "" : "s"} pendiente${pendientes === 1 ? "" : "s"} del pedido #${pedidoId}?`
+    );
+
+    if (!confirmar) {
+      return;
+    }
+
+    const productosActualizados = pedido.productos.map((producto) => ({
+      ...producto,
+      pagado: true,
+    }));
+
+    const nuevoArchivado = calcularArchivadoPedido(productosActualizados);
+
+    setPedidos((pedidosActuales) =>
+      pedidosActuales.map((pedidoActual) =>
+        pedidoActual.id === pedidoId
+          ? {
+            ...pedidoActual,
+            archivado: nuevoArchivado,
+            productos: productosActualizados,
+          }
+          : pedidoActual
+      )
+    );
+
+    try {
+      await marcarTodosProductosPedidoDB(pedidoId, "pagado");
+      await actualizarArchivadoPedidoDB(pedidoId, nuevoArchivado);
+    } catch (error) {
+      console.error(error);
+      alert("No se pudo marcar todo como pagado.");
+      setPedidos((pedidosActuales) =>
+        pedidosActuales.map((pedidoActual) =>
+          pedidoActual.id === pedidoId ? pedido : pedidoActual
+        )
+      );
+    }
+  }
+
+  async function marcarTodoEntregadoPedido(pedidoId: number) {
+    const pedido = pedidos.find((pedidoActual) => pedidoActual.id === pedidoId);
+
+    if (!pedido || pedido.productos.every((producto) => producto.entregado)) {
+      return;
+    }
+
+    const pendientes = pedido.productos.filter(
+      (producto) => !producto.entregado
+    ).length;
+
+    const confirmar = confirm(
+      `¿Marcar como entregados los ${pendientes} producto${pendientes === 1 ? "" : "s"} pendiente${pendientes === 1 ? "" : "s"} del pedido #${pedidoId}?`
+    );
+
+    if (!confirmar) {
+      return;
+    }
+
+    const productosActualizados = pedido.productos.map((producto) => ({
+      ...producto,
+      entregado: true,
+    }));
+
+    const nuevoArchivado = calcularArchivadoPedido(productosActualizados);
+
+    setPedidos((pedidosActuales) =>
+      pedidosActuales.map((pedidoActual) =>
+        pedidoActual.id === pedidoId
+          ? {
+            ...pedidoActual,
+            archivado: nuevoArchivado,
+            productos: productosActualizados,
+          }
+          : pedidoActual
+      )
+    );
+
+    try {
+      await marcarTodosProductosPedidoDB(pedidoId, "entregado");
+      await actualizarArchivadoPedidoDB(pedidoId, nuevoArchivado);
+    } catch (error) {
+      console.error(error);
+      alert("No se pudo marcar todo como entregado.");
       setPedidos((pedidosActuales) =>
         pedidosActuales.map((pedidoActual) =>
           pedidoActual.id === pedidoId ? pedido : pedidoActual
@@ -402,12 +518,12 @@ export default function Home() {
         .map((pedidoActual) =>
           pedidoActual.id === pedidoId
             ? {
-                ...pedidoActual,
-                archivado: nuevoArchivado,
-                productos: pedidoActual.productos.filter(
-                  (producto) => producto.id !== productoId
-                ),
-              }
+              ...pedidoActual,
+              archivado: nuevoArchivado,
+              productos: pedidoActual.productos.filter(
+                (producto) => producto.id !== productoId
+              ),
+            }
             : pedidoActual
         )
         .filter((pedidoActual) => pedidoActual.productos.length > 0)
@@ -461,10 +577,10 @@ export default function Home() {
         pedidosActuales.map((pedidoActual) =>
           pedidoActual.id === pedidoId
             ? {
-                ...pedidoActual,
-                archivado: nuevoArchivado,
-                productos: productosActualizados,
-              }
+              ...pedidoActual,
+              archivado: nuevoArchivado,
+              productos: productosActualizados,
+            }
             : pedidoActual
         )
       );
@@ -494,12 +610,12 @@ export default function Home() {
     setProductoEditando((actual) =>
       actual
         ? {
-            ...actual,
-            producto: {
-              ...actual.producto,
-              [campo]: valor,
-            },
-          }
+          ...actual,
+          producto: {
+            ...actual.producto,
+            [campo]: valor,
+          },
+        }
         : actual
     );
   }
@@ -538,10 +654,10 @@ export default function Home() {
       pedidosActuales.map((pedidoActual) =>
         pedidoActual.id === productoEditando.pedidoId
           ? {
-              ...pedidoActual,
-              archivado: nuevoArchivado,
-              productos: productosActualizados,
-            }
+            ...pedidoActual,
+            archivado: nuevoArchivado,
+            productos: productosActualizados,
+          }
           : pedidoActual
       )
     );
@@ -574,12 +690,12 @@ export default function Home() {
     setProductoAñadiendo((actual) =>
       actual
         ? {
-            ...actual,
-            producto: {
-              ...actual.producto,
-              [campo]: valor,
-            },
-          }
+          ...actual,
+          producto: {
+            ...actual.producto,
+            [campo]: valor,
+          },
+        }
         : actual
     );
   }
@@ -618,10 +734,10 @@ export default function Home() {
         pedidosActuales.map((pedido) =>
           pedido.id === productoAñadiendo.pedido.id
             ? {
-                ...pedido,
-                archivado: nuevoArchivado,
-                productos: productosActualizados,
-              }
+              ...pedido,
+              archivado: nuevoArchivado,
+              productos: productosActualizados,
+            }
             : pedido
         )
       );
@@ -653,9 +769,9 @@ export default function Home() {
     setPedidoEditando((actual) =>
       actual
         ? {
-            ...actual,
-            nombre,
-          }
+          ...actual,
+          nombre,
+        }
         : actual
     );
   }
@@ -664,9 +780,9 @@ export default function Home() {
     setPedidoEditando((actual) =>
       actual
         ? {
-            ...actual,
-            fechaPedido: fechaPedidoNueva,
-          }
+          ...actual,
+          fechaPedido: fechaPedidoNueva,
+        }
         : actual
     );
   }
@@ -689,10 +805,10 @@ export default function Home() {
       pedidosActuales.map((pedido) =>
         pedido.id === pedidoEditando.id
           ? {
-              ...pedido,
-              nombre: pedidoEditando.nombre,
-              fechaPedido: pedidoEditando.fechaPedido,
-            }
+            ...pedido,
+            nombre: pedidoEditando.nombre,
+            fechaPedido: pedidoEditando.fechaPedido,
+          }
           : pedido
       )
     );
@@ -776,38 +892,41 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-neutral-100 p-6 text-neutral-900">
+    <main className="min-h-screen bg-background p-6 text-foreground">
       <div className="mx-auto max-w-7xl space-y-8">
-        <header className="flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-sm sm:flex-row sm:items-center">
-  <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-black">
-    <Image
-      src="/logo-app.png"
-      alt="Logo Offside Club"
-      width={80}
-      height={80}
-      className="h-auto w-auto object-contain"
-      priority
-    />
-  </div>
+        <header className="flex flex-col gap-4 rounded-2xl bg-surface p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-black">
+              <Image
+                src="/logo-app.png"
+                alt="Logo Offside Club"
+                width={80}
+                height={80}
+                className="h-auto w-auto object-contain"
+                priority
+              />
+            </div>
 
-  <div>
-    <p className="text-sm font-medium text-neutral-500">
-      Contabilidad de pedidos
-    </p>
-    <h1 className="mt-1 text-3xl font-bold">Offside Club</h1>
-  </div>
-</header>
+            <div>
+              <p className="text-sm font-medium text-muted">
+                Contabilidad de pedidos
+              </p>
+              <h1 className="mt-1 text-3xl font-bold">Offside Club</h1>
+            </div>
+          </div>
 
-        <div className="rounded-2xl bg-white p-2 shadow-sm">
-          <div className="grid gap-2 sm:grid-cols-3">
+          <ThemeToggle />
+        </header>
+
+        <div className="rounded-2xl bg-surface p-2 shadow-sm">
+          <div className="grid gap-2 sm:grid-cols-4">
             <button
               type="button"
               onClick={() => setPestañaActiva("historial")}
-              className={`rounded-xl px-4 py-3 text-sm font-medium transition ${
-                pestañaActiva === "historial"
-                  ? "bg-black text-white"
-                  : "bg-white text-neutral-600 hover:bg-neutral-100"
-              }`}
+              className={`rounded-xl px-4 py-3 text-sm font-medium transition ${pestañaActiva === "historial"
+                ? "bg-black text-white"
+                : "bg-surface text-muted hover:bg-surface-subtle"
+                }`}
             >
               Historial de pedidos
             </button>
@@ -815,11 +934,10 @@ export default function Home() {
             <button
               type="button"
               onClick={() => setPestañaActiva("resumen")}
-              className={`rounded-xl px-4 py-3 text-sm font-medium transition ${
-                pestañaActiva === "resumen"
-                  ? "bg-black text-white"
-                  : "bg-white text-neutral-600 hover:bg-neutral-100"
-              }`}
+              className={`rounded-xl px-4 py-3 text-sm font-medium transition ${pestañaActiva === "resumen"
+                ? "bg-black text-white"
+                : "bg-surface text-muted hover:bg-surface-subtle"
+                }`}
             >
               Resumen
             </button>
@@ -827,25 +945,44 @@ export default function Home() {
             <button
               type="button"
               onClick={() => setPestañaActiva("borrador")}
-              className={`rounded-xl px-4 py-3 text-sm font-medium transition ${
-                pestañaActiva === "borrador"
-                  ? "bg-black text-white"
-                  : "bg-white text-neutral-600 hover:bg-neutral-100"
-              }`}
+              className={`rounded-xl px-4 py-3 text-sm font-medium transition ${pestañaActiva === "borrador"
+                ? "bg-black text-white"
+                : "bg-surface text-muted hover:bg-surface-subtle"
+                }`}
             >
               Borrador
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setPestañaActiva("configuracion")}
+              className={`rounded-xl px-4 py-3 text-sm font-medium transition ${pestañaActiva === "configuracion"
+                  ? "bg-black text-white"
+                  : "bg-surface text-muted hover:bg-surface-subtle"
+                }`}
+            >
+              Configuración
             </button>
           </div>
         </div>
 
-        {pestañaActiva === "borrador" && <SimuladorPedido />}
+        {pestañaActiva === "borrador" && (
+          <SimuladorPedido
+            precios={precios}
+            onPedidoGuardado={(nuevoPedido) => {
+              setPedidos((actuales) => [nuevoPedido, ...actuales]);
+              setPedidoAbierto(nuevoPedido.id);
+              setPestañaActiva("historial");
+            }}
+          />
+        )}
 
         {pestañaActiva === "resumen" && (
-          <section className="space-y-5 rounded-2xl bg-white p-5 shadow-sm">
+          <section className="space-y-5 rounded-2xl bg-surface p-5 shadow-sm">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <h2 className="text-xl font-bold">Resumen</h2>
-                <p className="text-sm text-neutral-500">
+                <p className="text-sm text-muted">
                   Mostrando: {nombreMes(filtroMesResumen)}
                 </p>
               </div>
@@ -861,14 +998,14 @@ export default function Home() {
                     onChange={(event) =>
                       setFiltroMesResumen(event.target.value)
                     }
-                    className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
+                    className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
                   />
                 </div>
 
                 <button
                   type="button"
                   onClick={() => setFiltroMesResumen("")}
-                  className="rounded-xl bg-neutral-100 px-4 py-3 text-sm font-medium"
+                  className="rounded-xl bg-surface-subtle px-4 py-3 text-sm font-medium"
                 >
                   Ver total
                 </button>
@@ -879,10 +1016,10 @@ export default function Home() {
 
             <ResumenDetalle pedidos={pedidosResumen} />
 
-            <div className="rounded-2xl bg-neutral-50 p-5 text-sm text-neutral-600">
+            <div className="rounded-2xl bg-surface-muted p-5 text-sm text-muted">
               <p>
                 Este resumen se calcula sobre{" "}
-                <span className="font-semibold text-neutral-900">
+                <span className="font-semibold text-foreground">
                   {pedidosResumen.length}
                 </span>{" "}
                 pedido{pedidosResumen.length === 1 ? "" : "s"}.
@@ -892,11 +1029,11 @@ export default function Home() {
         )}
 
         {pestañaActiva === "historial" && (
-          <section className="rounded-2xl bg-white p-5 shadow-sm">
+          <section className="rounded-2xl bg-surface p-5 shadow-sm">
             <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <h2 className="text-xl font-bold">Historial de pedidos</h2>
-                <p className="text-sm text-neutral-500">
+                <p className="text-sm text-muted">
                   Gestiona pedidos, productos, pagos y entregas.
                 </p>
               </div>
@@ -930,17 +1067,18 @@ export default function Home() {
             <ResumenClienteBusqueda
               busqueda={busqueda}
               pedidos={pedidosFiltrados}
+              precios={precios}
             />
 
             <div className="space-y-3">
               {cargandoPedidos && (
-                <div className="rounded-2xl border border-dashed border-neutral-300 p-8 text-center">
+                <div className="rounded-2xl border border-dashed border-border-strong p-8 text-center">
                   <p className="font-medium">Cargando pedidos...</p>
                 </div>
               )}
 
               {errorCarga && (
-                <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center text-red-700">
+                <div className="rounded-2xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 p-8 text-center text-red-700 dark:text-red-300">
                   <p className="font-medium">{errorCarga}</p>
                 </div>
               )}
@@ -948,9 +1086,9 @@ export default function Home() {
               {!cargandoPedidos &&
                 !errorCarga &&
                 pedidosConTotales.length === 0 && (
-                  <div className="rounded-2xl border border-dashed border-neutral-300 p-8 text-center">
+                  <div className="rounded-2xl border border-dashed border-border-strong p-8 text-center">
                     <p className="font-medium">Todavía no hay pedidos.</p>
-                    <p className="mt-1 text-sm text-neutral-500">
+                    <p className="mt-1 text-sm text-muted">
                       Pulsa “Añadir pedido” para crear el primero.
                     </p>
                   </div>
@@ -960,9 +1098,9 @@ export default function Home() {
                 !errorCarga &&
                 pedidosConTotales.length > 0 &&
                 pedidosFiltrados.length === 0 && (
-                  <div className="rounded-2xl border border-dashed border-neutral-300 p-8 text-center">
+                  <div className="rounded-2xl border border-dashed border-border-strong p-8 text-center">
                     <p className="font-medium">No hay resultados.</p>
-                    <p className="mt-1 text-sm text-neutral-500">
+                    <p className="mt-1 text-sm text-muted">
                       Prueba con otra búsqueda o limpia los filtros.
                     </p>
                   </div>
@@ -974,6 +1112,7 @@ export default function Home() {
                   <PedidoCard
                     key={pedido.id}
                     pedido={pedido}
+                    precios={precios}
                     abierto={pedidoAbierto === pedido.id}
                     onCambiarAbierto={cambiarPedidoAbierto}
                     onEditarPedido={abrirEditorPedido}
@@ -984,15 +1123,25 @@ export default function Home() {
                     onEliminarProducto={eliminarProducto}
                     onAlternarPagoProducto={alternarPagoProducto}
                     onAlternarEntregaProducto={alternarEntregaProducto}
+                    onMarcarTodoPagado={marcarTodoPagadoPedido}
+                    onMarcarTodoEntregado={marcarTodoEntregadoPedido}
                   />
                 ))}
             </div>
           </section>
         )}
+
+        {pestañaActiva === "configuracion" && (
+  <ConfiguracionPrecios
+    precios={precios}
+    onPreciosChange={setPrecios}
+  />
+)}
       </div>
 
       {modalAbierto && (
         <ModalAñadirPedido
+          precios={precios}
           nombrePedido={nombrePedido}
           fechaPedido={fechaPedido}
           productosFormulario={productosFormulario}
@@ -1010,6 +1159,7 @@ export default function Home() {
 
       {productoAñadiendo && (
         <ModalAñadirProductoPedido
+          precios={precios}
           pedido={productoAñadiendo.pedido}
           producto={productoAñadiendo.producto}
           onCerrar={() => setProductoAñadiendo(null)}
@@ -1020,6 +1170,7 @@ export default function Home() {
 
       {productoEditando && (
         <ModalEditarProducto
+          precios={precios}
           productoEditando={productoEditando}
           onCerrar={() => setProductoEditando(null)}
           onGuardar={guardarProductoEditado}

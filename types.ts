@@ -6,6 +6,18 @@ export type FiltroPago = "todos" | "pagado" | "pendiente";
 export type FiltroEntrega = "todos" | "entregado" | "pendiente";
 export type FiltroArchivo = "activos" | "archivados" | "todos";
 
+export type ConfiguracionPrecios = {
+  costeFan: number;
+  ventaFan: number;
+  costeRetroPlayer: number;
+  ventaRetroPlayer: number;
+  costePersonalizacion: number;
+  ventaPersonalizacion: number;
+  costeMangaLarga: number;
+  ventaMangaLarga: number;
+  costeFijoPedido: number;
+};
+
 export type Producto = {
   id: number;
   cliente: string;

@@ -67,7 +67,7 @@ export default function ResumenDetalle({ pedidos }: Props) {
     <section>
       <div className="mb-4">
         <h3 className="text-lg font-bold">Detalle del periodo</h3>
-        <p className="text-sm text-neutral-500">
+        <p className="text-sm text-muted">
           Resumen operativo de pedidos, productos, pagos y entregas.
         </p>
       </div>
@@ -76,9 +76,9 @@ export default function ResumenDetalle({ pedidos }: Props) {
         {tarjetas.map((tarjeta) => (
           <div
             key={tarjeta.titulo}
-            className="rounded-2xl bg-neutral-50 p-5"
+            className="rounded-2xl bg-surface-muted p-5"
           >
-            <p className="text-sm text-neutral-500">{tarjeta.titulo}</p>
+            <p className="text-sm text-muted">{tarjeta.titulo}</p>
             <p className="mt-2 text-2xl font-bold">{tarjeta.valor}</p>
           </div>
         ))}

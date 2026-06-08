@@ -1,5 +1,6 @@
 import { calcularProducto, formatoEuros } from "../lib/calculos";
 import type {
+  ConfiguracionPrecios,
   MangaProducto,
   Producto,
   TallaProducto,
@@ -8,14 +9,15 @@ import type {
 
 type Props = {
   producto: Producto;
+  precios: ConfiguracionPrecios;
   onChange: (
     campo: keyof Producto,
     valor: string | number | boolean
   ) => void;
 };
 
-export default function ProductoForm({ producto, onChange }: Props) {
-  const calculo = calcularProducto(producto);
+export default function ProductoForm({ producto, precios, onChange }: Props) {
+  const calculo = calcularProducto(producto, precios);
   const esOtro = producto.tipo === "Otro";
 
   return (
@@ -27,7 +29,7 @@ export default function ProductoForm({ producto, onChange }: Props) {
             value={producto.cliente}
             onChange={(event) => onChange("cliente", event.target.value)}
             placeholder="Cliente"
-            className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
+            className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
           />
         </div>
 
@@ -37,7 +39,7 @@ export default function ProductoForm({ producto, onChange }: Props) {
             value={producto.nombre}
             onChange={(event) => onChange("nombre", event.target.value)}
             placeholder="Camiseta..."
-            className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
+            className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
           />
         </div>
 
@@ -48,7 +50,7 @@ export default function ProductoForm({ producto, onChange }: Props) {
             onChange={(event) =>
               onChange("talla", event.target.value as TallaProducto)
             }
-            className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
+            className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
           >
             <option value="S">S</option>
             <option value="M">M</option>
@@ -67,7 +69,7 @@ export default function ProductoForm({ producto, onChange }: Props) {
             onChange={(event) =>
               onChange("tipo", event.target.value as TipoProducto)
             }
-            className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
+            className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
           >
             <option value="Fan">Fan</option>
             <option value="Retro/Player">Retro/Player</option>
@@ -83,7 +85,7 @@ export default function ProductoForm({ producto, onChange }: Props) {
               onChange("manga", event.target.value as MangaProducto)
             }
             disabled={esOtro}
-            className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-400"
+            className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:text-muted/70"
           >
             <option value="Corta">Corta</option>
             <option value="Larga">Larga</option>
@@ -105,7 +107,7 @@ export default function ProductoForm({ producto, onChange }: Props) {
               onChange={(event) =>
                 onChange("precioVentaManual", Number(event.target.value))
               }
-              className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
+              className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
             />
           </div>
 
@@ -121,7 +123,7 @@ export default function ProductoForm({ producto, onChange }: Props) {
               onChange={(event) =>
                 onChange("costeManual", Number(event.target.value))
               }
-              className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
+              className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
             />
           </div>
         </div>
@@ -174,7 +176,7 @@ export default function ProductoForm({ producto, onChange }: Props) {
                 )
               }
               placeholder="Ej: MESSI"
-              className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
+              className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
             />
           </div>
 
@@ -188,33 +190,33 @@ export default function ProductoForm({ producto, onChange }: Props) {
                 onChange("numeroPersonalizacion", event.target.value)
               }
               placeholder="Ej: 10"
-              className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 outline-none focus:border-black"
+              className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
             />
           </div>
         </div>
       )}
 
       {esOtro && (
-        <p className="mt-3 text-sm text-neutral-500">
+        <p className="mt-3 text-sm text-muted">
           En productos de tipo “Otro”, el coste y la venta se introducen
           manualmente. No se aplican extras automáticos por manga larga ni
           personalización.
         </p>
       )}
 
-      <div className="mt-4 grid gap-3 rounded-xl bg-white p-4 text-sm md:grid-cols-3">
+      <div className="mt-4 grid gap-3 rounded-xl bg-surface p-4 text-sm md:grid-cols-3">
         <div>
-          <p className="text-neutral-500">Venta</p>
+          <p className="text-muted">Venta</p>
           <p className="font-bold">{formatoEuros(calculo.ventaTotal)}</p>
         </div>
 
         <div>
-          <p className="text-neutral-500">Coste producto</p>
+          <p className="text-muted">Coste producto</p>
           <p className="font-bold">{formatoEuros(calculo.costeTotal)}</p>
         </div>
 
         <div>
-          <p className="text-neutral-500">Beneficio producto</p>
+          <p className="text-muted">Beneficio producto</p>
           <p className="font-bold">{formatoEuros(calculo.beneficio)}</p>
         </div>
       </div>

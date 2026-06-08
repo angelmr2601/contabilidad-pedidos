@@ -1,9 +1,10 @@
 import { calcularProducto, formatoEuros } from "../lib/calculos";
-import type { PedidoConTotales, Producto } from "../types";
+import type { ConfiguracionPrecios, PedidoConTotales, Producto } from "../types";
 
 type Props = {
   busqueda: string;
   pedidos: PedidoConTotales[];
+  precios: ConfiguracionPrecios;
 };
 
 type ProductoConPedido = {
@@ -12,7 +13,11 @@ type ProductoConPedido = {
   producto: Producto;
 };
 
-export default function ResumenClienteBusqueda({ busqueda, pedidos }: Props) {
+export default function ResumenClienteBusqueda({
+  busqueda,
+  pedidos,
+  precios,
+}: Props) {
   const textoBusqueda = busqueda.trim().toLowerCase();
 
   if (!textoBusqueda) {
@@ -48,17 +53,17 @@ export default function ResumenClienteBusqueda({ busqueda, pedidos }: Props) {
   );
 
   const ventaTotal = productosCliente.reduce((total, item) => {
-    return total + calcularProducto(item.producto).ventaTotal;
+    return total + calcularProducto(item.producto, precios).ventaTotal;
   }, 0);
 
   const costeTotalProductos = productosCliente.reduce((total, item) => {
-    return total + calcularProducto(item.producto).costeTotal;
+    return total + calcularProducto(item.producto, precios).costeTotal;
   }, 0);
 
   const beneficioProductos = ventaTotal - costeTotalProductos;
 
   const pendienteCobro = productosPendientesPago.reduce((total, item) => {
-    return total + calcularProducto(item.producto).ventaTotal;
+    return total + calcularProducto(item.producto, precios).ventaTotal;
   }, 0);
 
   const pedidosConPendientePago = new Set(
@@ -70,9 +75,9 @@ export default function ResumenClienteBusqueda({ busqueda, pedidos }: Props) {
   ).size;
 
   return (
-    <div className="mb-5 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+    <div className="mb-5 rounded-2xl border border-border bg-surface p-5 shadow-sm">
       <div className="mb-4">
-        <p className="text-sm font-medium text-neutral-500">
+        <p className="text-sm font-medium text-muted">
           Resumen de cliente
         </p>
         <h3 className="mt-1 text-xl font-bold">
@@ -81,66 +86,66 @@ export default function ResumenClienteBusqueda({ busqueda, pedidos }: Props) {
       </div>
 
       <div className="grid gap-3 md:grid-cols-4">
-        <div className="rounded-2xl bg-neutral-50 p-4">
-          <p className="text-sm text-neutral-500">Pedidos encontrados</p>
+        <div className="rounded-2xl bg-surface-muted p-4">
+          <p className="text-sm text-muted">Pedidos encontrados</p>
           <p className="mt-2 text-2xl font-bold">{pedidosUnicos}</p>
         </div>
 
-        <div className="rounded-2xl bg-neutral-50 p-4">
-          <p className="text-sm text-neutral-500">Productos del cliente</p>
+        <div className="rounded-2xl bg-surface-muted p-4">
+          <p className="text-sm text-muted">Productos del cliente</p>
           <p className="mt-2 text-2xl font-bold">{productosCliente.length}</p>
         </div>
 
-        <div className="rounded-2xl bg-yellow-50 p-4">
-          <p className="text-sm text-yellow-700">Pendientes de pago</p>
-          <p className="mt-2 text-2xl font-bold text-yellow-800">
+        <div className="rounded-2xl bg-yellow-50 dark:bg-yellow-950/40 p-4">
+          <p className="text-sm text-yellow-700 dark:text-yellow-300">Pendientes de pago</p>
+          <p className="mt-2 text-2xl font-bold text-yellow-800 dark:text-yellow-300">
             {productosPendientesPago.length}
           </p>
-          <p className="mt-1 text-xs text-yellow-700">
+          <p className="mt-1 text-xs text-yellow-700 dark:text-yellow-300">
             En {pedidosConPendientePago} pedido
             {pedidosConPendientePago === 1 ? "" : "s"}
           </p>
         </div>
 
-        <div className="rounded-2xl bg-red-50 p-4">
-          <p className="text-sm text-red-700">Pendientes de entrega</p>
-          <p className="mt-2 text-2xl font-bold text-red-800">
+        <div className="rounded-2xl bg-red-50 dark:bg-red-950/40 p-4">
+          <p className="text-sm text-red-700 dark:text-red-300">Pendientes de entrega</p>
+          <p className="mt-2 text-2xl font-bold text-red-800 dark:text-red-300">
             {productosPendientesEntrega.length}
           </p>
-          <p className="mt-1 text-xs text-red-700">
+          <p className="mt-1 text-xs text-red-700 dark:text-red-300">
             En {pedidosConPendienteEntrega} pedido
             {pedidosConPendienteEntrega === 1 ? "" : "s"}
           </p>
         </div>
 
-        <div className="rounded-2xl bg-neutral-50 p-4">
-          <p className="text-sm text-neutral-500">Venta total cliente</p>
+        <div className="rounded-2xl bg-surface-muted p-4">
+          <p className="text-sm text-muted">Venta total cliente</p>
           <p className="mt-2 text-2xl font-bold">{formatoEuros(ventaTotal)}</p>
         </div>
 
-        <div className="rounded-2xl bg-neutral-50 p-4">
-          <p className="text-sm text-neutral-500">Coste productos</p>
+        <div className="rounded-2xl bg-surface-muted p-4">
+          <p className="text-sm text-muted">Coste productos</p>
           <p className="mt-2 text-2xl font-bold">
             {formatoEuros(costeTotalProductos)}
           </p>
         </div>
 
-        <div className="rounded-2xl bg-neutral-50 p-4">
-          <p className="text-sm text-neutral-500">Beneficio productos</p>
+        <div className="rounded-2xl bg-surface-muted p-4">
+          <p className="text-sm text-muted">Beneficio productos</p>
           <p className="mt-2 text-2xl font-bold">
             {formatoEuros(beneficioProductos)}
           </p>
         </div>
 
-        <div className="rounded-2xl bg-orange-50 p-4">
-          <p className="text-sm text-orange-700">Queda por cobrar</p>
-          <p className="mt-2 text-2xl font-bold text-orange-800">
+        <div className="rounded-2xl bg-orange-50 dark:bg-orange-950/40 p-4">
+          <p className="text-sm text-orange-700 dark:text-orange-300">Queda por cobrar</p>
+          <p className="mt-2 text-2xl font-bold text-orange-800 dark:text-orange-300">
             {formatoEuros(pendienteCobro)}
           </p>
         </div>
       </div>
 
-      <p className="mt-4 text-xs text-neutral-500">
+      <p className="mt-4 text-xs text-muted">
         Este resumen cuenta solo los productos cuyo cliente coincide con la
         búsqueda. El coste fijo del pedido no se reparte por cliente.
       </p>

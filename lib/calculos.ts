@@ -1,19 +1,26 @@
-import type { Pedido, PedidoConTotales, Producto } from "../types";
+import type {
+  ConfiguracionPrecios,
+  Pedido,
+  PedidoConTotales,
+  Producto,
+} from "../types";
+import { PRECIOS_POR_DEFECTO } from "./precios";
 
-export const COSTE_FIJO_PEDIDO = 4;
-
-export function calcularProducto(producto: Producto) {
+export function calcularProducto(
+  producto: Producto,
+  precios: ConfiguracionPrecios = PRECIOS_POR_DEFECTO
+) {
   let costeUnidad = 0;
   let ventaUnidad = 0;
 
   if (producto.tipo === "Fan") {
-    costeUnidad = 6.5;
-    ventaUnidad = 15;
+    costeUnidad = precios.costeFan;
+    ventaUnidad = precios.ventaFan;
   }
 
   if (producto.tipo === "Retro/Player") {
-    costeUnidad = 9.4;
-    ventaUnidad = 18;
+    costeUnidad = precios.costeRetroPlayer;
+    ventaUnidad = precios.ventaRetroPlayer;
   }
 
   if (producto.tipo === "Otro") {
@@ -23,13 +30,13 @@ export function calcularProducto(producto: Producto) {
 
   if (producto.tipo !== "Otro") {
     if (producto.personalizacion) {
-      costeUnidad += 2;
-      ventaUnidad += 2;
+      costeUnidad += precios.costePersonalizacion;
+      ventaUnidad += precios.ventaPersonalizacion;
     }
 
     if (producto.manga === "Larga") {
-      costeUnidad += 2;
-      ventaUnidad += 2;
+      costeUnidad += precios.costeMangaLarga;
+      ventaUnidad += precios.ventaMangaLarga;
     }
   }
 
@@ -47,27 +54,28 @@ export function calcularProducto(producto: Producto) {
 }
 
 export function calcularPedidosConTotales(
-  pedidos: Pedido[]
+  pedidos: Pedido[],
+  precios: ConfiguracionPrecios = PRECIOS_POR_DEFECTO
 ): PedidoConTotales[] {
   return pedidos.map((pedido: Pedido) => {
     const totalVenta = pedido.productos.reduce(
       (total: number, producto: Producto) =>
-        total + calcularProducto(producto).ventaTotal,
+        total + calcularProducto(producto, precios).ventaTotal,
       0
     );
 
     const costeProductos = pedido.productos.reduce(
       (total: number, producto: Producto) =>
-        total + calcularProducto(producto).costeTotal,
+        total + calcularProducto(producto, precios).costeTotal,
       0
     );
 
-    const totalCoste = costeProductos + COSTE_FIJO_PEDIDO;
+    const totalCoste = costeProductos + precios.costeFijoPedido;
     const beneficio = totalVenta - totalCoste;
 
     const pendienteCobro = pedido.productos.reduce(
       (total: number, producto: Producto) => {
-        const calculo = calcularProducto(producto);
+        const calculo = calcularProducto(producto, precios);
         return total + (producto.pagado ? 0 : calculo.ventaTotal);
       },
       0

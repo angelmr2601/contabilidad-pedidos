@@ -1,4 +1,7 @@
+import { calcularProducto } from "./calculos";
+import { PRECIOS_POR_DEFECTO } from "./precios";
 import type {
+  ConfiguracionPrecios,
   MangaProducto,
   Producto,
   TallaProducto,
@@ -101,31 +104,16 @@ function parsearBooleano(valor: string) {
   );
 }
 
-function calcularPrecioRegla(producto: Producto) {
-  let coste = 0;
-  let venta = 0;
+function calcularPrecioRegla(
+  producto: Producto,
+  precios: ConfiguracionPrecios
+) {
+  const calculo = calcularProducto(producto, precios);
 
-  if (producto.tipo === "Fan") {
-    coste = 6.5;
-    venta = 15;
-  }
-
-  if (producto.tipo === "Retro/Player") {
-    coste = 9.4;
-    venta = 18;
-  }
-
-  if (producto.personalizacion) {
-    coste += 2;
-    venta += 2;
-  }
-
-  if (producto.manga === "Larga") {
-    coste += 2;
-    venta += 2;
-  }
-
-  return { coste, venta };
+  return {
+    coste: calculo.costeTotal,
+    venta: calculo.ventaTotal,
+  };
 }
 
 function numerosIguales(a: number, b: number) {
@@ -144,7 +132,8 @@ function esFilaCabecera(columnas: string[]) {
 
 export function importarProductosDesdeTexto(
   texto: string,
-  idInicial = 1
+  idInicial = 1,
+  precios: ConfiguracionPrecios = PRECIOS_POR_DEFECTO
 ): ResultadoImportacion {
   const lineas = texto
     .split(/\r?\n/)
@@ -228,7 +217,7 @@ export function importarProductosDesdeTexto(
       ventaManual !== null &&
       producto.tipo !== "Otro"
     ) {
-      const precioRegla = calcularPrecioRegla(producto);
+      const precioRegla = calcularPrecioRegla(producto, precios);
 
       const coincideConReglas =
         numerosIguales(precioRegla.coste, costeManual) &&

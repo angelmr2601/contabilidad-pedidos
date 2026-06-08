@@ -17,18 +17,18 @@ export default function ModalEditarPedido({
 }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+      <div className="w-full max-w-lg rounded-2xl bg-surface p-6 shadow-xl">
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold">Editar pedido</h2>
-            <p className="text-sm text-neutral-500">
+            <p className="text-sm text-muted">
               Cambia el nombre y la fecha del pedido.
             </p>
           </div>
 
           <button
             onClick={onCerrar}
-            className="rounded-xl bg-neutral-100 px-3 py-2 text-sm font-medium"
+            className="rounded-xl bg-surface-subtle px-3 py-2 text-sm font-medium"
           >
             Cerrar
           </button>
@@ -43,7 +43,7 @@ export default function ModalEditarPedido({
               value={pedidoEditando.nombre}
               onChange={(event) => onChangeNombre(event.target.value)}
               placeholder="Ej: Pedido proveedor mayo"
-              className="w-full rounded-xl border border-neutral-300 px-4 py-3 outline-none focus:border-black"
+              className="w-full rounded-xl border border-border-strong px-4 py-3 outline-none focus:border-foreground"
             />
           </div>
 
@@ -55,7 +55,7 @@ export default function ModalEditarPedido({
               type="date"
               value={pedidoEditando.fechaPedido}
               onChange={(event) => onChangeFecha(event.target.value)}
-              className="w-full rounded-xl border border-neutral-300 px-4 py-3 outline-none focus:border-black"
+              className="w-full rounded-xl border border-border-strong px-4 py-3 outline-none focus:border-foreground"
             />
           </div>
         </div>
@@ -63,7 +63,7 @@ export default function ModalEditarPedido({
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onCerrar}
-            className="rounded-xl bg-neutral-100 px-5 py-3 text-sm font-medium"
+            className="rounded-xl bg-surface-subtle px-5 py-3 text-sm font-medium"
           >
             Cancelar
           </button>

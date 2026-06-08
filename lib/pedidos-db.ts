@@ -275,3 +275,18 @@ export async function actualizarEstadoProductoDB(
     throw error;
   }
 }
+
+export async function marcarTodosProductosPedidoDB(
+  pedidoId: number,
+  campo: "pagado" | "entregado"
+) {
+  const { error } = await supabase
+    .from("productos")
+    .update({ [campo]: true })
+    .eq("pedido_id", pedidoId)
+    .eq(campo, false);
+
+  if (error) {
+    throw error;
+  }
+}
