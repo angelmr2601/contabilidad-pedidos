@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import FiltrosPedidos from "../components/FiltrosPedidos";
+import Icon from "../components/Icon";
 import ModalAñadirPedido from "../components/ModalAñadirPedido";
 import ModalAñadirProductoPedido from "../components/ModalAñadirProductoPedido";
 import ModalEditarPedido from "../components/ModalEditarPedido";
@@ -923,45 +924,57 @@ export default function Home() {
             <button
               type="button"
               onClick={() => setPestañaActiva("historial")}
-              className={`rounded-xl px-4 py-3 text-sm font-medium transition ${pestañaActiva === "historial"
+              aria-label="Historial de pedidos"
+              title="Historial de pedidos"
+              className={`flex items-center justify-center rounded-xl px-4 py-3 text-sm font-medium transition ${pestañaActiva === "historial"
                 ? "bg-black text-white"
                 : "bg-surface text-muted hover:bg-surface-subtle"
                 }`}
             >
-              Historial de pedidos
+              <Icon name="history" className="h-5 w-5" />
+              <span className="sr-only">Historial de pedidos</span>
             </button>
 
             <button
               type="button"
               onClick={() => setPestañaActiva("resumen")}
-              className={`rounded-xl px-4 py-3 text-sm font-medium transition ${pestañaActiva === "resumen"
+              aria-label="Resumen"
+              title="Resumen"
+              className={`flex items-center justify-center rounded-xl px-4 py-3 text-sm font-medium transition ${pestañaActiva === "resumen"
                 ? "bg-black text-white"
                 : "bg-surface text-muted hover:bg-surface-subtle"
                 }`}
             >
-              Resumen
+              <Icon name="summary" className="h-5 w-5" />
+              <span className="sr-only">Resumen</span>
             </button>
 
             <button
               type="button"
               onClick={() => setPestañaActiva("borrador")}
-              className={`rounded-xl px-4 py-3 text-sm font-medium transition ${pestañaActiva === "borrador"
+              aria-label="Borrador"
+              title="Borrador"
+              className={`flex items-center justify-center rounded-xl px-4 py-3 text-sm font-medium transition ${pestañaActiva === "borrador"
                 ? "bg-black text-white"
                 : "bg-surface text-muted hover:bg-surface-subtle"
                 }`}
             >
-              Borrador
+              <Icon name="draft" className="h-5 w-5" />
+              <span className="sr-only">Borrador</span>
             </button>
 
             <button
               type="button"
               onClick={() => setPestañaActiva("configuracion")}
-              className={`rounded-xl px-4 py-3 text-sm font-medium transition ${pestañaActiva === "configuracion"
+              aria-label="Configuración"
+              title="Configuración"
+              className={`flex items-center justify-center rounded-xl px-4 py-3 text-sm font-medium transition ${pestañaActiva === "configuracion"
                   ? "bg-black text-white"
                   : "bg-surface text-muted hover:bg-surface-subtle"
                 }`}
             >
-              Configuración
+              <Icon name="settings" className="h-5 w-5" />
+              <span className="sr-only">Configuración</span>
             </button>
           </div>
         </div>
@@ -1005,9 +1018,12 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setFiltroMesResumen("")}
-                  className="rounded-xl bg-surface-subtle px-4 py-3 text-sm font-medium"
+                  aria-label="Ver total"
+                  title="Ver total"
+                  className="inline-flex items-center justify-center rounded-xl bg-surface-subtle px-4 py-3 text-sm font-medium"
                 >
-                  Ver total
+                  <Icon name="total" className="h-5 w-5" />
+                  <span className="sr-only">Ver total</span>
                 </button>
               </div>
             </div>
@@ -1042,9 +1058,12 @@ export default function Home() {
                 type="button"
                 onClick={abrirModalNuevoPedido}
                 disabled={guardando}
-                className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label="Añadir pedido"
+                title="Añadir pedido"
+                className="inline-flex items-center justify-center rounded-xl bg-black px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Añadir pedido
+                <Icon name="add" className="h-5 w-5" />
+                <span className="sr-only">Añadir pedido</span>
               </button>
             </div>
 

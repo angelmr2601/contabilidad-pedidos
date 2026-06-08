@@ -13,6 +13,7 @@ import type {
   PedidoConTotales,
   Producto,
 } from "../types";
+import Icon from "./Icon";
 
 type Props = {
   pedido: PedidoConTotales;
@@ -126,9 +127,12 @@ export default function PedidoCard({
             <button
               type="button"
               onClick={() => onMarcarTodoPagado(pedido.id)}
-              className="rounded-full bg-yellow-100 dark:bg-yellow-950 px-3 py-1 text-xs font-medium text-yellow-800 dark:text-yellow-300"
+              aria-label="Marcar todo pagado"
+              title="Marcar todo pagado"
+              className="inline-flex items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-950 px-3 py-1 text-xs font-medium text-yellow-800 dark:text-yellow-300"
             >
-              Marcar todo pagado
+              <Icon name="payment" />
+              <span className="sr-only">Marcar todo pagado</span>
             </button>
           )}
 
@@ -136,34 +140,46 @@ export default function PedidoCard({
             <button
               type="button"
               onClick={() => onMarcarTodoEntregado(pedido.id)}
-              className="rounded-full bg-red-100 dark:bg-red-950 px-3 py-1 text-xs font-medium text-red-800 dark:text-red-300"
+              aria-label="Marcar todo entregado"
+              title="Marcar todo entregado"
+              className="inline-flex items-center justify-center rounded-full bg-red-100 dark:bg-red-950 px-3 py-1 text-xs font-medium text-red-800 dark:text-red-300"
             >
-              Marcar todo entregado
+              <Icon name="delivery" />
+              <span className="sr-only">Marcar todo entregado</span>
             </button>
           )}
 
           <button
             type="button"
             onClick={() => onAñadirProducto(pedido)}
-            className="rounded-full bg-black px-3 py-1 text-xs font-medium text-white"
+            aria-label="Añadir producto"
+            title="Añadir producto"
+            className="inline-flex items-center justify-center rounded-full bg-black px-3 py-1 text-xs font-medium text-white"
           >
-            Añadir producto
+            <Icon name="add" />
+            <span className="sr-only">Añadir producto</span>
           </button>
 
           <button
             type="button"
             onClick={() => onEditarPedido(pedido)}
-            className="rounded-full bg-surface-subtle px-3 py-1 text-xs font-medium text-muted"
+            aria-label="Editar pedido"
+            title="Editar pedido"
+            className="inline-flex items-center justify-center rounded-full bg-surface-subtle px-3 py-1 text-xs font-medium text-muted"
           >
-            Editar pedido
+            <Icon name="edit" />
+            <span className="sr-only">Editar pedido</span>
           </button>
 
           <button
             type="button"
             onClick={() => onEliminarPedido(pedido.id)}
-            className="rounded-full bg-red-100 dark:bg-red-950 px-3 py-1 text-xs font-medium text-red-700 dark:text-red-300"
+            aria-label="Eliminar pedido"
+            title="Eliminar pedido"
+            className="inline-flex items-center justify-center rounded-full bg-red-100 dark:bg-red-950 px-3 py-1 text-xs font-medium text-red-700 dark:text-red-300"
           >
-            Eliminar pedido
+            <Icon name="delete" />
+            <span className="sr-only">Eliminar pedido</span>
           </button>
         </div>
       </div>
@@ -288,13 +304,18 @@ export default function PedidoCard({
                           onClick={() =>
                             onAlternarPagoProducto(pedido.id, producto.id)
                           }
-                          className={`rounded-full px-3 py-1 text-xs font-medium ${
+                          aria-label={producto.pagado ? "Pagado" : "Pendiente de pago"}
+                          title={producto.pagado ? "Pagado" : "Pendiente de pago"}
+                          className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium ${
                             producto.pagado
                               ? "bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300"
                               : "bg-yellow-100 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-300"
                           }`}
                         >
-                          {producto.pagado ? "Pagado" : "Pendiente pago"}
+                          <Icon name={producto.pagado ? "check" : "payment"} />
+                          <span className="sr-only">
+                            {producto.pagado ? "Pagado" : "Pendiente de pago"}
+                          </span>
                         </button>
 
                         <button
@@ -302,15 +323,18 @@ export default function PedidoCard({
                           onClick={() =>
                             onAlternarEntregaProducto(pedido.id, producto.id)
                           }
-                          className={`rounded-full px-3 py-1 text-xs font-medium ${
+                          aria-label={producto.entregado ? "Entregado" : "Pendiente de entrega"}
+                          title={producto.entregado ? "Entregado" : "Pendiente de entrega"}
+                          className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium ${
                             producto.entregado
                               ? "bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300"
                               : "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300"
                           }`}
                         >
-                          {producto.entregado
-                            ? "Entregado"
-                            : "Pendiente entrega"}
+                          <Icon name={producto.entregado ? "check" : "delivery"} />
+                          <span className="sr-only">
+                            {producto.entregado ? "Entregado" : "Pendiente de entrega"}
+                          </span>
                         </button>
                       </div>
 
@@ -318,17 +342,23 @@ export default function PedidoCard({
                         <button
                           type="button"
                           onClick={() => onDuplicarProducto(pedido.id, producto)}
-                          className="rounded-xl bg-blue-100 dark:bg-blue-950 px-3 py-2 text-xs font-medium text-blue-700 dark:text-blue-300"
+                          aria-label="Duplicar producto"
+                          title="Duplicar producto"
+                          className="inline-flex items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-950 px-3 py-2 text-xs font-medium text-blue-700 dark:text-blue-300"
                         >
-                          Duplicar
+                          <Icon name="copy" />
+                          <span className="sr-only">Duplicar producto</span>
                         </button>
 
                         <button
                           type="button"
                           onClick={() => onEditarProducto(pedido.id, producto)}
-                          className="rounded-xl bg-surface-subtle px-3 py-2 text-xs font-medium text-muted"
+                          aria-label="Editar producto"
+                          title="Editar producto"
+                          className="inline-flex items-center justify-center rounded-xl bg-surface-subtle px-3 py-2 text-xs font-medium text-muted"
                         >
-                          Editar
+                          <Icon name="edit" />
+                          <span className="sr-only">Editar producto</span>
                         </button>
 
                         <button
@@ -336,9 +366,12 @@ export default function PedidoCard({
                           onClick={() =>
                             onEliminarProducto(pedido.id, producto.id)
                           }
-                          className="rounded-xl bg-red-100 dark:bg-red-950 px-3 py-2 text-xs font-medium text-red-700 dark:text-red-300"
+                          aria-label="Eliminar producto"
+                          title="Eliminar producto"
+                          className="inline-flex items-center justify-center rounded-xl bg-red-100 dark:bg-red-950 px-3 py-2 text-xs font-medium text-red-700 dark:text-red-300"
                         >
-                          Eliminar
+                          <Icon name="delete" />
+                          <span className="sr-only">Eliminar producto</span>
                         </button>
                       </div>
                     </div>
@@ -418,13 +451,18 @@ export default function PedidoCard({
                           onClick={() =>
                             onAlternarPagoProducto(pedido.id, producto.id)
                           }
-                          className={`rounded-full px-3 py-1 text-xs font-medium ${
+                          aria-label={producto.pagado ? "Pagado" : "Pendiente de pago"}
+                          title={producto.pagado ? "Pagado" : "Pendiente de pago"}
+                          className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium ${
                             producto.pagado
                               ? "bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300"
                               : "bg-yellow-100 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-300"
                           }`}
                         >
-                          {producto.pagado ? "Pagado" : "Pendiente"}
+                          <Icon name={producto.pagado ? "check" : "payment"} />
+                          <span className="sr-only">
+                            {producto.pagado ? "Pagado" : "Pendiente de pago"}
+                          </span>
                         </button>
                       </td>
 
@@ -434,13 +472,18 @@ export default function PedidoCard({
                           onClick={() =>
                             onAlternarEntregaProducto(pedido.id, producto.id)
                           }
-                          className={`rounded-full px-3 py-1 text-xs font-medium ${
+                          aria-label={producto.entregado ? "Entregado" : "Pendiente de entrega"}
+                          title={producto.entregado ? "Entregado" : "Pendiente de entrega"}
+                          className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium ${
                             producto.entregado
                               ? "bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300"
                               : "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300"
                           }`}
                         >
-                          {producto.entregado ? "Entregado" : "Pendiente"}
+                          <Icon name={producto.entregado ? "check" : "delivery"} />
+                          <span className="sr-only">
+                            {producto.entregado ? "Entregado" : "Pendiente de entrega"}
+                          </span>
                         </button>
                       </td>
 
@@ -451,17 +494,23 @@ export default function PedidoCard({
                             onClick={() =>
                               onDuplicarProducto(pedido.id, producto)
                             }
-                            className="rounded-full bg-blue-100 dark:bg-blue-950 px-3 py-1 text-xs font-medium text-blue-700 dark:text-blue-300"
+                            aria-label="Duplicar producto"
+                            title="Duplicar producto"
+                            className="inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-950 px-3 py-1 text-xs font-medium text-blue-700 dark:text-blue-300"
                           >
-                            Duplicar
+                            <Icon name="copy" />
+                            <span className="sr-only">Duplicar producto</span>
                           </button>
 
                           <button
                             type="button"
                             onClick={() => onEditarProducto(pedido.id, producto)}
-                            className="rounded-full bg-surface-subtle px-3 py-1 text-xs font-medium text-muted"
+                            aria-label="Editar producto"
+                            title="Editar producto"
+                            className="inline-flex items-center justify-center rounded-full bg-surface-subtle px-3 py-1 text-xs font-medium text-muted"
                           >
-                            Editar
+                            <Icon name="edit" />
+                            <span className="sr-only">Editar producto</span>
                           </button>
 
                           <button
@@ -469,9 +518,12 @@ export default function PedidoCard({
                             onClick={() =>
                               onEliminarProducto(pedido.id, producto.id)
                             }
-                            className="rounded-full bg-red-100 dark:bg-red-950 px-3 py-1 text-xs font-medium text-red-700 dark:text-red-300"
+                            aria-label="Eliminar producto"
+                            title="Eliminar producto"
+                            className="inline-flex items-center justify-center rounded-full bg-red-100 dark:bg-red-950 px-3 py-1 text-xs font-medium text-red-700 dark:text-red-300"
                           >
-                            Eliminar
+                            <Icon name="delete" />
+                            <span className="sr-only">Eliminar producto</span>
                           </button>
                         </div>
                       </td>

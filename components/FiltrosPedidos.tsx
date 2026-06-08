@@ -1,4 +1,5 @@
 import type { FiltroArchivo, FiltroEntrega, FiltroPago } from "../types";
+import Icon from "./Icon";
 
 type Props = {
   busqueda: string;
@@ -107,9 +108,12 @@ export default function FiltrosPedidos({
         <button
           type="button"
           onClick={onLimpiarFiltros}
-          className="rounded-xl bg-surface px-4 py-2 text-sm font-medium"
+          aria-label="Limpiar filtros"
+          title="Limpiar filtros"
+          className="inline-flex items-center justify-center rounded-xl bg-surface px-4 py-2 text-sm font-medium"
         >
-          Limpiar filtros
+          <Icon name="filterOff" className="h-5 w-5" />
+          <span className="sr-only">Limpiar filtros</span>
         </button>
       </div>
     </div>

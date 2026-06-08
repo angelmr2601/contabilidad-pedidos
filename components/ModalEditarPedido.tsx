@@ -1,5 +1,6 @@
 import type { PedidoEditando } from "../types";
 
+import Icon from "./Icon";
 type Props = {
   pedidoEditando: PedidoEditando;
   onChangeNombre: (valor: string) => void;
@@ -28,9 +29,12 @@ export default function ModalEditarPedido({
 
           <button
             onClick={onCerrar}
-            className="rounded-xl bg-surface-subtle px-3 py-2 text-sm font-medium"
+            aria-label="Cerrar"
+            title="Cerrar"
+            className="inline-flex items-center justify-center rounded-xl bg-surface-subtle px-3 py-2 text-sm font-medium"
           >
-            Cerrar
+            <Icon name="close" />
+            <span className="sr-only">Cerrar</span>
           </button>
         </div>
 
@@ -63,16 +67,22 @@ export default function ModalEditarPedido({
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onCerrar}
-            className="rounded-xl bg-surface-subtle px-5 py-3 text-sm font-medium"
+            aria-label="Cancelar"
+            title="Cancelar"
+            className="inline-flex items-center justify-center rounded-xl bg-surface-subtle px-5 py-3 text-sm font-medium"
           >
-            Cancelar
+            <Icon name="close" className="h-5 w-5" />
+            <span className="sr-only">Cancelar</span>
           </button>
 
           <button
             onClick={onGuardar}
-            className="rounded-xl bg-black px-5 py-3 text-sm font-medium text-white"
+            aria-label="Guardar cambios"
+            title="Guardar cambios"
+            className="inline-flex items-center justify-center rounded-xl bg-black px-5 py-3 text-sm font-medium text-white"
           >
-            Guardar cambios
+            <Icon name="save" className="h-5 w-5" />
+            <span className="sr-only">Guardar cambios</span>
           </button>
         </div>
       </div>

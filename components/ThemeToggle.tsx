@@ -1,5 +1,7 @@
 "use client";
 
+import Icon from "./Icon";
+
 import { useEffect, useState } from "react";
 
 const CLAVE_TEMA = "tema";
@@ -32,9 +34,12 @@ export default function ThemeToggle() {
 
   useEffect(() => {
     const preferenciaOscura = leerPreferenciaOscura();
-    setOscuro(preferenciaOscura);
+
     aplicarTema(preferenciaOscura);
-    setListo(true);
+    queueMicrotask(() => {
+      setOscuro(preferenciaOscura);
+      setListo(true);
+    });
   }, []);
 
   function alternarTema() {
@@ -56,9 +61,13 @@ export default function ThemeToggle() {
       onClick={alternarTema}
       disabled={!listo}
       aria-label={oscuro ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
-      className="rounded-xl bg-surface-subtle px-4 py-2 text-sm font-medium text-foreground transition hover:bg-surface-muted disabled:opacity-50"
+      title={oscuro ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+      className="inline-flex items-center justify-center rounded-xl bg-surface-subtle px-4 py-2 text-sm font-medium text-foreground transition hover:bg-surface-muted disabled:opacity-50"
     >
-      {oscuro ? "Modo claro" : "Modo oscuro"}
+      <Icon name={oscuro ? "sun" : "moon"} className="h-5 w-5" />
+      <span className="sr-only">
+        {oscuro ? "Modo claro" : "Modo oscuro"}
+      </span>
     </button>
   );
 }
