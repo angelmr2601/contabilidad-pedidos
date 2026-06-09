@@ -38,6 +38,8 @@ export type Pedido = {
   id: number;
   nombre: string;
   fechaPedido: string;
+  numeroPedido: string;
+  numeroSeguimiento: string;
   archivado: boolean;
   productos: Producto[];
 };
@@ -61,4 +63,6 @@ export type PedidoEditando = {
   id: number;
   nombre: string;
   fechaPedido: string;
+  numeroPedido: string;
+  numeroSeguimiento: string;
 };

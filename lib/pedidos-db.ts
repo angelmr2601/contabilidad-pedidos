@@ -22,6 +22,8 @@ type PedidoDB = {
   id: number;
   nombre: string;
   fecha_pedido: string;
+  numero_pedido: string | null;
+  numero_seguimiento: string | null;
   archivado: boolean;
   productos: ProductoDB[];
 };
@@ -98,6 +100,8 @@ export async function cargarPedidos(): Promise<Pedido[]> {
       id,
       nombre,
       fecha_pedido,
+      numero_pedido,
+      numero_seguimiento,
       archivado,
       productos (
         ${PRODUCTOS_SELECT}
@@ -115,6 +119,8 @@ export async function cargarPedidos(): Promise<Pedido[]> {
     id: pedido.id,
     nombre: pedido.nombre,
     fechaPedido: pedido.fecha_pedido,
+    numeroPedido: pedido.numero_pedido ?? "",
+    numeroSeguimiento: pedido.numero_seguimiento ?? "",
     archivado: pedido.archivado,
     productos: pedido.productos.map(productoDesdeDB),
   }));
@@ -123,6 +129,8 @@ export async function cargarPedidos(): Promise<Pedido[]> {
 export async function crearPedidoConProductos(
   nombre: string,
   fechaPedido: string,
+  numeroPedido: string,
+  numeroSeguimiento: string,
   productos: Producto[]
 ): Promise<Pedido> {
   const archivado = calcularArchivadoPedido(productos);
@@ -132,9 +140,11 @@ export async function crearPedidoConProductos(
     .insert({
       nombre,
       fecha_pedido: fechaPedido,
+      numero_pedido: numeroPedido.trim() || null,
+      numero_seguimiento: numeroSeguimiento.trim() || null,
       archivado,
     })
-    .select("id, nombre, fecha_pedido, archivado")
+    .select("id, nombre, fecha_pedido, numero_pedido, numero_seguimiento, archivado")
     .single();
 
   if (errorPedido) {
@@ -158,6 +168,8 @@ export async function crearPedidoConProductos(
     id: pedidoCreado.id,
     nombre: pedidoCreado.nombre,
     fechaPedido: pedidoCreado.fecha_pedido,
+    numeroPedido: pedidoCreado.numero_pedido ?? "",
+    numeroSeguimiento: pedidoCreado.numero_seguimiento ?? "",
     archivado: pedidoCreado.archivado,
     productos: ((productosCreados ?? []) as ProductoDB[]).map(productoDesdeDB),
   };
@@ -183,13 +195,17 @@ export async function crearProductoEnPedido(
 export async function actualizarPedidoDB(
   pedidoId: number,
   nombre: string,
-  fechaPedido: string
+  fechaPedido: string,
+  numeroPedido: string,
+  numeroSeguimiento: string
 ) {
   const { error } = await supabase
     .from("pedidos")
     .update({
       nombre,
       fecha_pedido: fechaPedido,
+      numero_pedido: numeroPedido.trim() || null,
+      numero_seguimiento: numeroSeguimiento.trim() || null,
     })
     .eq("id", pedidoId);
 

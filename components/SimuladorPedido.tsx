@@ -42,6 +42,8 @@ export default function SimuladorPedido({ precios, onPedidoGuardado }: Props) {
     id: 0,
     nombre: nombreBorrador || "Borrador",
     fechaPedido: fechaBorrador,
+    numeroPedido: "",
+    numeroSeguimiento: "",
     archivado: false,
     productos,
   };
@@ -145,6 +147,8 @@ export default function SimuladorPedido({ precios, onPedidoGuardado }: Props) {
       const nuevoPedido = await crearPedidoConProductos(
         nombreBorrador.trim(),
         fechaBorrador,
+        "",
+        "",
         productosValidos
       );
 

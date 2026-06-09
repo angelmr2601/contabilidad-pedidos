@@ -116,6 +116,8 @@ export default function Home() {
 
   const [nombrePedido, setNombrePedido] = useState("");
   const [fechaPedido, setFechaPedido] = useState(fechaHoy());
+  const [numeroPedido, setNumeroPedido] = useState("");
+  const [numeroSeguimiento, setNumeroSeguimiento] = useState("");
   const [productosFormulario, setProductosFormulario] = useState<Producto[]>([
     crearProductoVacio(1),
   ]);
@@ -169,6 +171,8 @@ export default function Home() {
           : pedido.nombre.toLowerCase().includes(textoBusqueda) ||
           String(pedido.id).includes(textoBusqueda) ||
           pedido.fechaPedido.includes(textoBusqueda) ||
+          pedido.numeroPedido.toLowerCase().includes(textoBusqueda) ||
+          pedido.numeroSeguimiento.toLowerCase().includes(textoBusqueda) ||
           pedido.productos.some((producto) => {
             const textoProducto = [
               producto.cliente,
@@ -763,6 +767,8 @@ export default function Home() {
       id: pedido.id,
       nombre: pedido.nombre,
       fechaPedido: pedido.fechaPedido,
+      numeroPedido: pedido.numeroPedido,
+      numeroSeguimiento: pedido.numeroSeguimiento,
     });
   }
 
@@ -783,6 +789,30 @@ export default function Home() {
         ? {
           ...actual,
           fechaPedido: fechaPedidoNueva,
+        }
+        : actual
+    );
+  }
+
+  function actualizarNumeroPedidoEditando(numeroPedidoNuevo: string) {
+    setPedidoEditando((actual) =>
+      actual
+        ? {
+          ...actual,
+          numeroPedido: numeroPedidoNuevo,
+        }
+        : actual
+    );
+  }
+
+  function actualizarNumeroSeguimientoEditando(
+    numeroSeguimientoNuevo: string
+  ) {
+    setPedidoEditando((actual) =>
+      actual
+        ? {
+          ...actual,
+          numeroSeguimiento: numeroSeguimientoNuevo,
         }
         : actual
     );
@@ -809,6 +839,8 @@ export default function Home() {
             ...pedido,
             nombre: pedidoEditando.nombre,
             fechaPedido: pedidoEditando.fechaPedido,
+            numeroPedido: pedidoEditando.numeroPedido,
+            numeroSeguimiento: pedidoEditando.numeroSeguimiento,
           }
           : pedido
       )
@@ -818,7 +850,9 @@ export default function Home() {
       await actualizarPedidoDB(
         pedidoEditando.id,
         pedidoEditando.nombre,
-        pedidoEditando.fechaPedido
+        pedidoEditando.fechaPedido,
+        pedidoEditando.numeroPedido,
+        pedidoEditando.numeroSeguimiento
       );
       setPedidoEditando(null);
     } catch (error) {
@@ -874,6 +908,8 @@ export default function Home() {
       const nuevoPedido = await crearPedidoConProductos(
         nombrePedido,
         fechaPedido,
+        numeroPedido,
+        numeroSeguimiento,
         productosValidos
       );
 
@@ -882,6 +918,8 @@ export default function Home() {
       setModalAbierto(false);
       setNombrePedido("");
       setFechaPedido(fechaHoy());
+      setNumeroPedido("");
+      setNumeroSeguimiento("");
       setProductosFormulario([crearProductoVacio(1)]);
       setProductoFormularioAbierto(1);
     } catch (error) {
@@ -1163,10 +1201,14 @@ export default function Home() {
           precios={precios}
           nombrePedido={nombrePedido}
           fechaPedido={fechaPedido}
+          numeroPedido={numeroPedido}
+          numeroSeguimiento={numeroSeguimiento}
           productosFormulario={productosFormulario}
           productoFormularioAbierto={productoFormularioAbierto}
           onNombrePedidoChange={setNombrePedido}
           onFechaPedidoChange={setFechaPedido}
+          onNumeroPedidoChange={setNumeroPedido}
+          onNumeroSeguimientoChange={setNumeroSeguimiento}
           onCerrar={cerrarModalNuevoPedido}
           onGuardarPedido={guardarPedido}
           onAñadirProducto={añadirProductoFormulario}
@@ -1202,6 +1244,8 @@ export default function Home() {
           pedidoEditando={pedidoEditando}
           onChangeNombre={actualizarNombrePedidoEditando}
           onChangeFecha={actualizarFechaPedidoEditando}
+          onChangeNumeroPedido={actualizarNumeroPedidoEditando}
+          onChangeNumeroSeguimiento={actualizarNumeroSeguimientoEditando}
           onCerrar={() => setPedidoEditando(null)}
           onGuardar={guardarPedidoEditado}
         />

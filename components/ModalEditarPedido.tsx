@@ -5,6 +5,8 @@ type Props = {
   pedidoEditando: PedidoEditando;
   onChangeNombre: (valor: string) => void;
   onChangeFecha: (valor: string) => void;
+  onChangeNumeroPedido: (valor: string) => void;
+  onChangeNumeroSeguimiento: (valor: string) => void;
   onCerrar: () => void;
   onGuardar: () => void;
 };
@@ -13,6 +15,8 @@ export default function ModalEditarPedido({
   pedidoEditando,
   onChangeNombre,
   onChangeFecha,
+  onChangeNumeroPedido,
+  onChangeNumeroSeguimiento,
   onCerrar,
   onGuardar,
 }: Props) {
@@ -23,7 +27,7 @@ export default function ModalEditarPedido({
           <div>
             <h2 className="text-2xl font-bold">Editar pedido</h2>
             <p className="text-sm text-muted">
-              Cambia el nombre y la fecha del pedido.
+              Cambia los datos internos y el seguimiento del pedido.
             </p>
           </div>
 
@@ -59,6 +63,32 @@ export default function ModalEditarPedido({
               type="date"
               value={pedidoEditando.fechaPedido}
               onChange={(event) => onChangeFecha(event.target.value)}
+              className="w-full rounded-xl border border-border-strong px-4 py-3 outline-none focus:border-foreground"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium">
+              Número de pedido
+            </label>
+            <input
+              value={pedidoEditando.numeroPedido}
+              onChange={(event) => onChangeNumeroPedido(event.target.value)}
+              placeholder="Ej: PED-2026-001"
+              className="w-full rounded-xl border border-border-strong px-4 py-3 outline-none focus:border-foreground"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium">
+              Número de seguimiento CTTExpress
+            </label>
+            <input
+              value={pedidoEditando.numeroSeguimiento}
+              onChange={(event) =>
+                onChangeNumeroSeguimiento(event.target.value)
+              }
+              placeholder="Ej: 0082800082809733407939"
               className="w-full rounded-xl border border-border-strong px-4 py-3 outline-none focus:border-foreground"
             />
           </div>
