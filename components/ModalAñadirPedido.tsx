@@ -12,10 +12,14 @@ type Props = {
   precios: ConfiguracionPrecios;
   nombrePedido: string;
   fechaPedido: string;
+  numeroPedido: string;
+  numeroSeguimiento: string;
   productosFormulario: Producto[];
   productoFormularioAbierto: number;
   onNombrePedidoChange: (valor: string) => void;
   onFechaPedidoChange: (valor: string) => void;
+  onNumeroPedidoChange: (valor: string) => void;
+  onNumeroSeguimientoChange: (valor: string) => void;
   onCerrar: () => void;
   onGuardarPedido: () => void;
   onAñadirProducto: () => void;
@@ -32,10 +36,14 @@ export default function ModalAñadirPedido({
   precios,
   nombrePedido,
   fechaPedido,
+  numeroPedido,
+  numeroSeguimiento,
   productosFormulario,
   productoFormularioAbierto,
   onNombrePedidoChange,
   onFechaPedidoChange,
+  onNumeroPedidoChange,
+  onNumeroSeguimientoChange,
   onCerrar,
   onGuardarPedido,
   onAñadirProducto,
@@ -90,6 +98,32 @@ export default function ModalAñadirPedido({
               type="date"
               value={fechaPedido}
               onChange={(event) => onFechaPedidoChange(event.target.value)}
+              className="w-full rounded-xl border border-border-strong px-4 py-3 outline-none focus:border-foreground"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium">
+              Número de pedido
+            </label>
+            <input
+              value={numeroPedido}
+              onChange={(event) => onNumeroPedidoChange(event.target.value)}
+              placeholder="Ej: PED-2026-001"
+              className="w-full rounded-xl border border-border-strong px-4 py-3 outline-none focus:border-foreground"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium">
+              Número de seguimiento CTTExpress
+            </label>
+            <input
+              value={numeroSeguimiento}
+              onChange={(event) =>
+                onNumeroSeguimientoChange(event.target.value)
+              }
+              placeholder="Ej: 0082800082809733407939"
               className="w-full rounded-xl border border-border-strong px-4 py-3 outline-none focus:border-foreground"
             />
           </div>

@@ -7,6 +7,7 @@ import {
   formatoEuros,
   formatoFecha,
 } from "../lib/calculos";
+import { crearEnlaceSeguimientoCttExpress } from "../lib/ctt-express";
 import type {
   ConfiguracionPrecios,
   Pedido,
@@ -88,6 +89,18 @@ export default function PedidoCard({
               Fecha: {formatoFecha(pedido.fechaPedido)}
             </p>
 
+            {pedido.numeroPedido && (
+              <p className="mt-1 text-sm text-muted">
+                Nº pedido: {pedido.numeroPedido}
+              </p>
+            )}
+
+            {pedido.numeroSeguimiento && (
+              <p className="mt-1 text-sm text-muted">
+                Seguimiento CTTExpress: {pedido.numeroSeguimiento}
+              </p>
+            )}
+
             <p className="mt-1 text-sm text-muted">
               {pedido.productos.length} producto
               {pedido.productos.length === 1 ? "" : "s"}
@@ -123,6 +136,19 @@ export default function PedidoCard({
         </button>
 
         <div className="flex flex-wrap gap-2 md:ml-4">
+          {pedido.numeroSeguimiento && (
+            <a
+              href={crearEnlaceSeguimientoCttExpress(pedido.numeroSeguimiento)}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Abrir seguimiento en CTTExpress"
+              title="Abrir seguimiento en CTTExpress"
+              className="inline-flex items-center justify-center rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+            >
+              CTTExpress
+            </a>
+          )}
+
           {pedido.productosPendientesPago > 0 && (
             <button
               type="button"
