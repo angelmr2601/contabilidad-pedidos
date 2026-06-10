@@ -7,6 +7,7 @@ import {
   formatoEuros,
   formatoFecha,
 } from "../lib/calculos";
+import { crearEnlaceSeguimientoCttExpress } from "../lib/ctt-express";
 import type {
   ConfiguracionPrecios,
   Pedido,
@@ -57,131 +58,160 @@ export default function PedidoCard({
     );
   }
 
+  const numeroSeguimiento = pedido.numeroSeguimiento.trim();
+  const enlaceSeguimiento = crearEnlaceSeguimientoCttExpress(
+    numeroSeguimiento
+  );
+
   return (
     <div
       className={`overflow-hidden rounded-2xl border ${
         pedido.archivado ? "border-green-200 dark:border-green-900" : "border-border"
       }`}
     >
-      <div className="flex flex-col gap-4 bg-surface p-5 md:flex-row md:items-center md:justify-between">
-        <button
-          type="button"
-          onClick={() => onCambiarAbierto(pedido.id)}
-          className="flex flex-1 flex-col gap-4 text-left md:flex-row md:items-center md:justify-between"
-        >
-          <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <h3 className="text-lg font-bold">Pedido #{pedido.id}</h3>
+      <div className="flex flex-col gap-4 bg-surface p-5">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <button
+            type="button"
+            onClick={() => onCambiarAbierto(pedido.id)}
+            className="flex flex-1 flex-col gap-4 text-left md:flex-row md:items-center md:justify-between"
+          >
+            <div>
+              <div className="flex flex-wrap items-center gap-3">
+                <h3 className="text-lg font-bold">Pedido #{pedido.id}</h3>
 
-              {pedido.archivado && (
-                <span className="rounded-full bg-green-100 dark:bg-green-950 px-3 py-1 text-xs font-medium text-green-700 dark:text-green-300">
-                  Archivado
-                </span>
+                {pedido.archivado && (
+                  <span className="rounded-full bg-green-100 dark:bg-green-950 px-3 py-1 text-xs font-medium text-green-700 dark:text-green-300">
+                    Archivado
+                  </span>
+                )}
+
+                <span className="text-lg">{abierto ? "−" : "+"}</span>
+              </div>
+
+              <p className="mt-1 font-medium">{pedido.nombre}</p>
+
+              <p className="mt-1 text-sm text-muted">
+                Fecha: {formatoFecha(pedido.fechaPedido)}
+              </p>
+
+              {pedido.numeroPedido && (
+                <p className="mt-1 text-sm text-muted">
+                  Nº pedido: {pedido.numeroPedido}
+                </p>
               )}
 
-              <span className="text-lg">{abierto ? "−" : "+"}</span>
+              <p className="mt-1 text-sm text-muted">
+                {pedido.productos.length} producto
+                {pedido.productos.length === 1 ? "" : "s"}
+              </p>
             </div>
 
-            <p className="mt-1 font-medium">{pedido.nombre}</p>
+            <div className="grid grid-cols-2 gap-3 text-sm md:grid-cols-5 md:text-right">
+              <div>
+                <p className="text-muted">Venta</p>
+                <p className="font-bold">{formatoEuros(pedido.totalVenta)}</p>
+              </div>
 
-            <p className="mt-1 text-sm text-muted">
-              Fecha: {formatoFecha(pedido.fechaPedido)}
-            </p>
+              <div>
+                <p className="text-muted">Coste</p>
+                <p className="font-bold">{formatoEuros(pedido.totalCoste)}</p>
+              </div>
 
-            <p className="mt-1 text-sm text-muted">
-              {pedido.productos.length} producto
-              {pedido.productos.length === 1 ? "" : "s"}
-            </p>
-          </div>
+              <div>
+                <p className="text-muted">Beneficio</p>
+                <p className="font-bold">{formatoEuros(pedido.beneficio)}</p>
+              </div>
 
-          <div className="grid grid-cols-2 gap-3 text-sm md:grid-cols-5 md:text-right">
-            <div>
-              <p className="text-muted">Venta</p>
-              <p className="font-bold">{formatoEuros(pedido.totalVenta)}</p>
+              <div>
+                <p className="text-muted">Sin pagar</p>
+                <p className="font-bold">{pedido.productosPendientesPago}</p>
+              </div>
+
+              <div>
+                <p className="text-muted">Sin entregar</p>
+                <p className="font-bold">{pedido.productosPendientesEntrega}</p>
+              </div>
             </div>
+          </button>
 
-            <div>
-              <p className="text-muted">Coste</p>
-              <p className="font-bold">{formatoEuros(pedido.totalCoste)}</p>
-            </div>
+          <div className="flex flex-wrap gap-2 md:ml-4">
+            {pedido.productosPendientesPago > 0 && (
+              <button
+                type="button"
+                onClick={() => onMarcarTodoPagado(pedido.id)}
+                aria-label="Marcar todo pagado"
+                title="Marcar todo pagado"
+                className="inline-flex items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-950 px-3 py-1 text-xs font-medium text-yellow-800 dark:text-yellow-300"
+              >
+                <Icon name="payment" />
+                <span className="sr-only">Marcar todo pagado</span>
+              </button>
+            )}
 
-            <div>
-              <p className="text-muted">Beneficio</p>
-              <p className="font-bold">{formatoEuros(pedido.beneficio)}</p>
-            </div>
+            {pedido.productosPendientesEntrega > 0 && (
+              <button
+                type="button"
+                onClick={() => onMarcarTodoEntregado(pedido.id)}
+                aria-label="Marcar todo entregado"
+                title="Marcar todo entregado"
+                className="inline-flex items-center justify-center rounded-full bg-red-100 dark:bg-red-950 px-3 py-1 text-xs font-medium text-red-800 dark:text-red-300"
+              >
+                <Icon name="delivery" />
+                <span className="sr-only">Marcar todo entregado</span>
+              </button>
+            )}
 
-            <div>
-              <p className="text-muted">Sin pagar</p>
-              <p className="font-bold">{pedido.productosPendientesPago}</p>
-            </div>
-
-            <div>
-              <p className="text-muted">Sin entregar</p>
-              <p className="font-bold">{pedido.productosPendientesEntrega}</p>
-            </div>
-          </div>
-        </button>
-
-        <div className="flex flex-wrap gap-2 md:ml-4">
-          {pedido.productosPendientesPago > 0 && (
             <button
               type="button"
-              onClick={() => onMarcarTodoPagado(pedido.id)}
-              aria-label="Marcar todo pagado"
-              title="Marcar todo pagado"
-              className="inline-flex items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-950 px-3 py-1 text-xs font-medium text-yellow-800 dark:text-yellow-300"
+              onClick={() => onAñadirProducto(pedido)}
+              aria-label="Añadir producto"
+              title="Añadir producto"
+              className="inline-flex items-center justify-center rounded-full bg-black px-3 py-1 text-xs font-medium text-white"
             >
-              <Icon name="payment" />
-              <span className="sr-only">Marcar todo pagado</span>
+              <Icon name="add" />
+              <span className="sr-only">Añadir producto</span>
             </button>
-          )}
 
-          {pedido.productosPendientesEntrega > 0 && (
             <button
               type="button"
-              onClick={() => onMarcarTodoEntregado(pedido.id)}
-              aria-label="Marcar todo entregado"
-              title="Marcar todo entregado"
-              className="inline-flex items-center justify-center rounded-full bg-red-100 dark:bg-red-950 px-3 py-1 text-xs font-medium text-red-800 dark:text-red-300"
+              onClick={() => onEditarPedido(pedido)}
+              aria-label="Editar pedido"
+              title="Editar pedido"
+              className="inline-flex items-center justify-center rounded-full bg-surface-subtle px-3 py-1 text-xs font-medium text-muted"
             >
-              <Icon name="delivery" />
-              <span className="sr-only">Marcar todo entregado</span>
+              <Icon name="edit" />
+              <span className="sr-only">Editar pedido</span>
             </button>
-          )}
 
-          <button
-            type="button"
-            onClick={() => onAñadirProducto(pedido)}
-            aria-label="Añadir producto"
-            title="Añadir producto"
-            className="inline-flex items-center justify-center rounded-full bg-black px-3 py-1 text-xs font-medium text-white"
-          >
-            <Icon name="add" />
-            <span className="sr-only">Añadir producto</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onEditarPedido(pedido)}
-            aria-label="Editar pedido"
-            title="Editar pedido"
-            className="inline-flex items-center justify-center rounded-full bg-surface-subtle px-3 py-1 text-xs font-medium text-muted"
-          >
-            <Icon name="edit" />
-            <span className="sr-only">Editar pedido</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onEliminarPedido(pedido.id)}
-            aria-label="Eliminar pedido"
-            title="Eliminar pedido"
-            className="inline-flex items-center justify-center rounded-full bg-red-100 dark:bg-red-950 px-3 py-1 text-xs font-medium text-red-700 dark:text-red-300"
-          >
-            <Icon name="delete" />
-            <span className="sr-only">Eliminar pedido</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => onEliminarPedido(pedido.id)}
+              aria-label="Eliminar pedido"
+              title="Eliminar pedido"
+              className="inline-flex items-center justify-center rounded-full bg-red-100 dark:bg-red-950 px-3 py-1 text-xs font-medium text-red-700 dark:text-red-300"
+            >
+              <Icon name="delete" />
+              <span className="sr-only">Eliminar pedido</span>
+            </button>
+          </div>
         </div>
+
+        {numeroSeguimiento && (
+          <a
+            href={enlaceSeguimiento}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={`Abrir seguimiento ${numeroSeguimiento} en CTTExpress`}
+            title="Abrir seguimiento en CTTExpress"
+            className="flex flex-col gap-1 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-blue-800 shadow-sm underline-offset-4 transition hover:border-blue-300 hover:bg-blue-100 hover:underline dark:border-blue-900 dark:bg-blue-950 dark:text-blue-200 dark:hover:border-blue-700 md:flex-row md:items-center md:justify-between"
+          >
+            <span className="text-xs font-semibold uppercase tracking-wide">
+              Seguimiento CTTExpress
+            </span>
+            <span className="text-base font-bold">{numeroSeguimiento}</span>
+          </a>
+        )}
       </div>
 
       {abierto && (
