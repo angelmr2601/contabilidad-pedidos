@@ -20,10 +20,15 @@ import { cargarConfiguracionPrecios } from "../lib/configuracion-precios-db";
 import { PRECIOS_POR_DEFECTO } from "../lib/precios";
 import type { ConfiguracionPrecios as TipoConfiguracionPrecios } from "../types";
 
-import { calcularPedidosConTotales, calcularResumen } from "../lib/calculos";
+import {
+  calcularGastoEnvioPedido,
+  calcularPedidosConTotales,
+  calcularResumen,
+} from "../lib/calculos";
 import {
   actualizarArchivadoPedidoDB,
   actualizarEstadoProductoDB,
+  actualizarGastoEnvioPedidoDB,
   marcarTodosProductosPedidoDB,
   actualizarPedidoDB,
   actualizarProductoDB,
@@ -117,6 +122,7 @@ export default function Home() {
   const [fechaPedido, setFechaPedido] = useState(fechaHoy());
   const [numeroPedido, setNumeroPedido] = useState("");
   const [numeroSeguimiento, setNumeroSeguimiento] = useState("");
+  const [incluirGastosEnvio, setIncluirGastosEnvio] = useState(false);
   const [productosFormulario, setProductosFormulario] = useState<Producto[]>([
     crearProductoVacio(1),
   ]);
@@ -517,6 +523,9 @@ export default function Home() {
       pedido?.productos.filter((producto) => producto.id !== productoId) ?? [];
 
     const nuevoArchivado = calcularArchivadoPedido(productosRestantes);
+    const nuevoGastoEnvio = pedido?.incluirGastosEnvio
+      ? calcularGastoEnvioPedido(productosRestantes.length)
+      : null;
 
     setPedidos((pedidosActuales) =>
       pedidosActuales
@@ -539,6 +548,13 @@ export default function Home() {
 
       if (productosRestantes.length > 0) {
         await actualizarArchivadoPedidoDB(pedidoId, nuevoArchivado);
+        if (pedido?.incluirGastosEnvio) {
+          await actualizarGastoEnvioPedidoDB(
+            pedidoId,
+            productosRestantes,
+            pedido.incluirGastosEnvio,
+          );
+        }
       }
     } catch (error) {
       console.error(error);
@@ -578,6 +594,9 @@ export default function Home() {
 
       const productosActualizados = [...pedido.productos, productoCreado];
       const nuevoArchivado = calcularArchivadoPedido(productosActualizados);
+      const nuevoGastoEnvio = pedido.incluirGastosEnvio
+        ? calcularGastoEnvioPedido(productosActualizados.length)
+        : null;
 
       setPedidos((pedidosActuales) =>
         pedidosActuales.map((pedidoActual) =>
@@ -592,6 +611,13 @@ export default function Home() {
       );
 
       await actualizarArchivadoPedidoDB(pedidoId, nuevoArchivado);
+      if (pedido.incluirGastosEnvio) {
+        await actualizarGastoEnvioPedidoDB(
+          pedidoId,
+          productosActualizados,
+          pedido.incluirGastosEnvio,
+        );
+      }
 
       setPedidoAbierto(pedidoId);
     } catch (error) {
@@ -736,6 +762,9 @@ export default function Home() {
       ];
 
       const nuevoArchivado = calcularArchivadoPedido(productosActualizados);
+      const nuevoGastoEnvio = productoAñadiendo.pedido.incluirGastosEnvio
+        ? calcularGastoEnvioPedido(productosActualizados.length)
+        : null;
 
       setPedidos((pedidosActuales) =>
         pedidosActuales.map((pedido) =>
@@ -753,6 +782,13 @@ export default function Home() {
         productoAñadiendo.pedido.id,
         nuevoArchivado,
       );
+      if (productoAñadiendo.pedido.incluirGastosEnvio) {
+        await actualizarGastoEnvioPedidoDB(
+          productoAñadiendo.pedido.id,
+          productosActualizados,
+          productoAñadiendo.pedido.incluirGastosEnvio,
+        );
+      }
 
       setPedidoAbierto(productoAñadiendo.pedido.id);
       setProductoAñadiendo(null);
@@ -771,6 +807,7 @@ export default function Home() {
       fechaPedido: pedido.fechaPedido,
       numeroPedido: pedido.numeroPedido,
       numeroSeguimiento: pedido.numeroSeguimiento,
+      incluirGastosEnvio: pedido.incluirGastosEnvio,
     });
   }
 
@@ -831,6 +868,13 @@ export default function Home() {
     }
 
     const pedidosAntes = pedidos;
+    const pedidoActual = pedidos.find(
+      (pedido) => pedido.id === pedidoEditando.id,
+    );
+
+    if (!pedidoActual) {
+      return;
+    }
 
     setPedidos((pedidosActuales) =>
       pedidosActuales.map((pedido) =>
@@ -921,6 +965,7 @@ export default function Home() {
       setFechaPedido(fechaHoy());
       setNumeroPedido("");
       setNumeroSeguimiento("");
+      setIncluirGastosEnvio(false);
       setProductosFormulario([crearProductoVacio(1)]);
       setProductoFormularioAbierto(1);
     } catch (error) {
@@ -1208,12 +1253,14 @@ export default function Home() {
           fechaPedido={fechaPedido}
           numeroPedido={numeroPedido}
           numeroSeguimiento={numeroSeguimiento}
+          incluirGastosEnvio={incluirGastosEnvio}
           productosFormulario={productosFormulario}
           productoFormularioAbierto={productoFormularioAbierto}
           onNombrePedidoChange={setNombrePedido}
           onFechaPedidoChange={setFechaPedido}
           onNumeroPedidoChange={setNumeroPedido}
           onNumeroSeguimientoChange={setNumeroSeguimiento}
+          onIncluirGastosEnvioChange={setIncluirGastosEnvio}
           onCerrar={cerrarModalNuevoPedido}
           onGuardarPedido={guardarPedido}
           onAñadirProducto={añadirProductoFormulario}
@@ -1251,6 +1298,7 @@ export default function Home() {
           onChangeFecha={actualizarFechaPedidoEditando}
           onChangeNumeroPedido={actualizarNumeroPedidoEditando}
           onChangeNumeroSeguimiento={actualizarNumeroSeguimientoEditando}
+          onChangeIncluirGastosEnvio={actualizarIncluirGastosEnvioEditando}
           onCerrar={() => setPedidoEditando(null)}
           onGuardar={guardarPedidoEditado}
         />

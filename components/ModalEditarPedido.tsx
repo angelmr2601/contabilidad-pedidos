@@ -7,6 +7,7 @@ type Props = {
   onChangeFecha: (valor: string) => void;
   onChangeNumeroPedido: (valor: string) => void;
   onChangeNumeroSeguimiento: (valor: string) => void;
+  onChangeIncluirGastosEnvio: (valor: boolean) => void;
   onCerrar: () => void;
   onGuardar: () => void;
 };
@@ -17,6 +18,7 @@ export default function ModalEditarPedido({
   onChangeFecha,
   onChangeNumeroPedido,
   onChangeNumeroSeguimiento,
+  onChangeIncluirGastosEnvio,
   onCerrar,
   onGuardar,
 }: Props) {
@@ -92,6 +94,25 @@ export default function ModalEditarPedido({
               className="w-full rounded-xl border border-border-strong px-4 py-3 outline-none focus:border-foreground"
             />
           </div>
+          <label className="flex items-start gap-3 rounded-xl border border-border-strong px-4 py-3">
+            <input
+              type="checkbox"
+              checked={pedidoEditando.incluirGastosEnvio}
+              onChange={(event) =>
+                onChangeIncluirGastosEnvio(event.target.checked)
+              }
+              className="mt-1"
+            />
+            <span>
+              <span className="block text-sm font-medium">
+                Añadir gasto de envío al coste
+              </span>
+              <span className="mt-1 block text-xs text-muted">
+                1 camiseta: +3,40 €, 2: +2,60 €, 3: +1,70 €, 4: +0,90 €, 5 o
+                más: gratis.
+              </span>
+            </span>
+          </label>
         </div>
 
         <div className="mt-6 flex justify-end gap-3">

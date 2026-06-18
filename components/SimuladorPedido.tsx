@@ -37,6 +37,7 @@ export default function SimuladorPedido({ precios, onPedidoGuardado }: Props) {
   const [modalImportarAbierto, setModalImportarAbierto] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState("");
+  const [incluirGastosEnvio, setIncluirGastosEnvio] = useState(false);
 
   const pedidoBorrador: Pedido = {
     id: 0,
@@ -119,6 +120,7 @@ export default function SimuladorPedido({ precios, onPedidoGuardado }: Props) {
     setProductos([crearProductoVacio(1)]);
     setProductoAbierto(1);
     setMensaje("");
+    setIncluirGastosEnvio(false);
   }
 
   function limpiarBorrador() {
@@ -265,9 +267,26 @@ export default function SimuladorPedido({ precios, onPedidoGuardado }: Props) {
             className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
           />
         </div>
+        <label className="flex items-start gap-3 rounded-xl border border-border-strong bg-surface px-4 py-3">
+          <input
+            type="checkbox"
+            checked={incluirGastosEnvio}
+            onChange={(event) => setIncluirGastosEnvio(event.target.checked)}
+            className="mt-1"
+          />
+          <span>
+            <span className="block text-sm font-medium">
+              Añadir gasto de envío al coste
+            </span>
+            <span className="mt-1 block text-xs text-muted">
+              1 camiseta: +3,40 €, 2: +2,60 €, 3: +1,70 €, 4: +0,90 €, 5 o más:
+              gratis.
+            </span>
+          </span>
+        </label>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-6">
         <div className="rounded-2xl bg-surface-muted p-5">
           <p className="text-sm text-muted">Venta estimada</p>
           <p className="mt-2 text-2xl font-bold">
@@ -298,6 +317,13 @@ export default function SimuladorPedido({ precios, onPedidoGuardado }: Props) {
           <p className="text-sm text-muted">Coste fijo pedido</p>
           <p className="mt-2 text-2xl font-bold">
             {formatoEuros(precios.costeFijoPedido)}
+          </p>
+        </div>
+
+        <div className="rounded-2xl bg-surface-muted p-5">
+          <p className="text-sm text-muted">Envío</p>
+          <p className="mt-2 text-2xl font-bold">
+            {formatoEuros(pedidoConTotales.gastoEnvio)}
           </p>
         </div>
       </div>

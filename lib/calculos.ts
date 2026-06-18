@@ -134,6 +134,7 @@ export function calcularPedidosConTotales(
       totalVenta,
       costeProductos,
       totalCoste,
+      gastoEnvio,
       beneficio,
       pendienteCobro,
       productosPendientesPago,

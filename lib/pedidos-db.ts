@@ -244,6 +244,28 @@ export async function actualizarPedidoDB(
       fecha_pedido: fechaPedido,
       numero_pedido: numeroPedido.trim() || null,
       numero_seguimiento: numeroSeguimiento.trim() || null,
+      incluir_gastos_envio: incluirGastosEnvio,
+      gasto_envio_snapshot: gastoEnvioSnapshot,
+    })
+    .eq("id", pedidoId);
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function actualizarGastoEnvioPedidoDB(
+  pedidoId: number,
+  productos: Producto[],
+  incluirGastosEnvio: boolean,
+) {
+  const { error } = await supabase
+    .from("pedidos")
+    .update({
+      incluir_gastos_envio: incluirGastosEnvio,
+      gasto_envio_snapshot: incluirGastosEnvio
+        ? calcularGastoEnvioPedido(productos.length)
+        : null,
     })
     .eq("id", pedidoId);
 

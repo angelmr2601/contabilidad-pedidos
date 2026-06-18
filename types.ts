@@ -51,6 +51,7 @@ export type PedidoConTotales = Pedido & {
   totalVenta: number;
   costeProductos: number;
   totalCoste: number;
+  gastoEnvio: number;
   beneficio: number;
   pendienteCobro: number;
   productosPendientesPago: number;
@@ -68,4 +69,5 @@ export type PedidoEditando = {
   fechaPedido: string;
   numeroPedido: string;
   numeroSeguimiento: string;
+  incluirGastosEnvio: boolean;
 };

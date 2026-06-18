@@ -14,12 +14,14 @@ type Props = {
   fechaPedido: string;
   numeroPedido: string;
   numeroSeguimiento: string;
+  incluirGastosEnvio: boolean;
   productosFormulario: Producto[];
   productoFormularioAbierto: number;
   onNombrePedidoChange: (valor: string) => void;
   onFechaPedidoChange: (valor: string) => void;
   onNumeroPedidoChange: (valor: string) => void;
   onNumeroSeguimientoChange: (valor: string) => void;
+  onIncluirGastosEnvioChange: (valor: boolean) => void;
   onCerrar: () => void;
   onGuardarPedido: () => void;
   onAñadirProducto: () => void;
@@ -28,7 +30,7 @@ type Props = {
   onActualizarProducto: (
     id: number,
     campo: keyof Producto,
-    valor: string | number | boolean
+    valor: string | number | boolean,
   ) => void;
 };
 
@@ -38,12 +40,14 @@ export default function ModalAñadirPedido({
   fechaPedido,
   numeroPedido,
   numeroSeguimiento,
+  incluirGastosEnvio,
   productosFormulario,
   productoFormularioAbierto,
   onNombrePedidoChange,
   onFechaPedidoChange,
   onNumeroPedidoChange,
   onNumeroSeguimientoChange,
+  onIncluirGastosEnvioChange,
   onCerrar,
   onGuardarPedido,
   onAñadirProducto,
@@ -60,8 +64,8 @@ export default function ModalAñadirPedido({
           <div>
             <h2 className="text-2xl font-bold">Añadir pedido</h2>
             <p className="text-sm text-muted">
-              Se añadirá automáticamente{" "}
-              {formatoEuros(precios.costeFijoPedido)} de coste fijo al pedido.
+              Se añadirá automáticamente {formatoEuros(precios.costeFijoPedido)}{" "}
+              de coste fijo al pedido.
             </p>
           </div>
 
@@ -127,6 +131,25 @@ export default function ModalAñadirPedido({
               className="w-full rounded-xl border border-border-strong px-4 py-3 outline-none focus:border-foreground"
             />
           </div>
+          <label className="flex items-start gap-3 rounded-xl border border-border-strong px-4 py-3">
+            <input
+              type="checkbox"
+              checked={incluirGastosEnvio}
+              onChange={(event) =>
+                onIncluirGastosEnvioChange(event.target.checked)
+              }
+              className="mt-1"
+            />
+            <span>
+              <span className="block text-sm font-medium">
+                Añadir gasto de envío al coste
+              </span>
+              <span className="mt-1 block text-xs text-muted">
+                1 camiseta: +3,40 €, 2: +2,60 €, 3: +1,70 €, 4: +0,90 €, 5 o
+                más: gratis.
+              </span>
+            </span>
+          </label>
         </div>
 
         <div className="space-y-3">
