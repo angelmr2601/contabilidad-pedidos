@@ -106,7 +106,7 @@ function parsearBooleano(valor: string) {
 
 function calcularPrecioRegla(
   producto: Producto,
-  precios: ConfiguracionPrecios
+  precios: ConfiguracionPrecios,
 ) {
   const calculo = calcularProducto(producto, precios);
 
@@ -133,7 +133,7 @@ function esFilaCabecera(columnas: string[]) {
 export function importarProductosDesdeTexto(
   texto: string,
   idInicial = 1,
-  precios: ConfiguracionPrecios = PRECIOS_POR_DEFECTO
+  precios: ConfiguracionPrecios = PRECIOS_POR_DEFECTO,
 ): ResultadoImportacion {
   const lineas = texto
     .split(/\r?\n/)
@@ -152,7 +152,7 @@ export function importarProductosDesdeTexto(
 
     if (columnas.length < 6) {
       errores.push(
-        `Línea ${index + 1}: faltan columnas. Mínimo esperado: cliente, producto, talla, tipo, manga y personalización.`
+        `Línea ${index + 1}: faltan columnas. Mínimo esperado: cliente, producto, talla, tipo, manga y personalización.`,
       );
       return;
     }
@@ -208,6 +208,8 @@ export function importarProductosDesdeTexto(
       numeroPersonalizacion: "",
       precioVentaManual: 0,
       costeManual: 0,
+      ventaUnidadSnapshot: null,
+      costeUnidadSnapshot: null,
       pagado: false,
       entregado: false,
     };
