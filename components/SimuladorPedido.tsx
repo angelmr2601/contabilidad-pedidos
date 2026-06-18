@@ -45,23 +45,24 @@ export default function SimuladorPedido({ precios, onPedidoGuardado }: Props) {
     numeroPedido: "",
     numeroSeguimiento: "",
     archivado: false,
+    costeFijoSnapshot: null,
     productos,
   };
 
   const pedidoConTotales = calcularPedidosConTotales(
     [pedidoBorrador],
-    precios
+    precios,
   )[0];
 
   function actualizarProducto(
     id: number,
     campo: keyof Producto,
-    valor: string | number | boolean
+    valor: string | number | boolean,
   ) {
     setProductos((productosActuales) =>
       productosActuales.map((producto) =>
-        producto.id === id ? { ...producto, [campo]: valor } : producto
-      )
+        producto.id === id ? { ...producto, [campo]: valor } : producto,
+      ),
     );
   }
 
@@ -106,7 +107,7 @@ export default function SimuladorPedido({ precios, onPedidoGuardado }: Props) {
     }
 
     setProductos((productosActuales) =>
-      productosActuales.filter((producto) => producto.id !== id)
+      productosActuales.filter((producto) => producto.id !== id),
     );
 
     setProductoAbierto((actual) => (actual === id ? 0 : actual));
@@ -149,7 +150,8 @@ export default function SimuladorPedido({ precios, onPedidoGuardado }: Props) {
         fechaBorrador,
         "",
         "",
-        productosValidos
+        productosValidos,
+        precios,
       );
 
       reiniciarBorrador();
