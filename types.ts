@@ -44,6 +44,8 @@ export type Pedido = {
   numeroSeguimiento: string;
   archivado: boolean;
   costeFijoSnapshot: number | null;
+  incluirGastosEnvio: boolean;
+  gastoEnvioSnapshot: number | null;
   productos: Producto[];
 };
 

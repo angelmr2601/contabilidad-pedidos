@@ -20,11 +20,8 @@ import { cargarConfiguracionPrecios } from "../lib/configuracion-precios-db";
 import { PRECIOS_POR_DEFECTO } from "../lib/precios";
 import type { ConfiguracionPrecios as TipoConfiguracionPrecios } from "../types";
 
-import {
-  calcularGastoEnvioPedido,
-  calcularPedidosConTotales,
-  calcularResumen,
-} from "../lib/calculos";
+import { calcularPedidosConTotales, calcularResumen } from "../lib/calculos";
+import { calcularGastoEnvioPedido } from "../lib/gastos-envio";
 import {
   actualizarArchivadoPedidoDB,
   actualizarEstadoProductoDB,
@@ -534,6 +531,7 @@ export default function Home() {
             ? {
                 ...pedidoActual,
                 archivado: nuevoArchivado,
+                gastoEnvioSnapshot: nuevoGastoEnvio,
                 productos: pedidoActual.productos.filter(
                   (producto) => producto.id !== productoId,
                 ),
@@ -604,6 +602,7 @@ export default function Home() {
             ? {
                 ...pedidoActual,
                 archivado: nuevoArchivado,
+                gastoEnvioSnapshot: nuevoGastoEnvio,
                 productos: productosActualizados,
               }
             : pedidoActual,
@@ -772,6 +771,7 @@ export default function Home() {
             ? {
                 ...pedido,
                 archivado: nuevoArchivado,
+                gastoEnvioSnapshot: nuevoGastoEnvio,
                 productos: productosActualizados,
               }
             : pedido,
@@ -855,6 +855,19 @@ export default function Home() {
     );
   }
 
+  function actualizarIncluirGastosEnvioEditando(
+    incluirGastosEnvioNuevo: boolean,
+  ) {
+    setPedidoEditando((actual) =>
+      actual
+        ? {
+            ...actual,
+            incluirGastosEnvio: incluirGastosEnvioNuevo,
+          }
+        : actual,
+    );
+  }
+
   async function guardarPedidoEditado() {
     if (!pedidoEditando) {
       return;
@@ -885,6 +898,10 @@ export default function Home() {
               fechaPedido: pedidoEditando.fechaPedido,
               numeroPedido: pedidoEditando.numeroPedido,
               numeroSeguimiento: pedidoEditando.numeroSeguimiento,
+              incluirGastosEnvio: pedidoEditando.incluirGastosEnvio,
+              gastoEnvioSnapshot: pedidoEditando.incluirGastosEnvio
+                ? calcularGastoEnvioPedido(pedido.productos.length)
+                : null,
             }
           : pedido,
       ),
@@ -897,6 +914,10 @@ export default function Home() {
         pedidoEditando.fechaPedido,
         pedidoEditando.numeroPedido,
         pedidoEditando.numeroSeguimiento,
+        pedidoEditando.incluirGastosEnvio,
+        pedidoEditando.incluirGastosEnvio
+          ? calcularGastoEnvioPedido(pedidoActual.productos.length)
+          : null,
       );
       setPedidoEditando(null);
     } catch (error) {
@@ -956,6 +977,7 @@ export default function Home() {
         numeroSeguimiento,
         productosValidos,
         precios,
+        incluirGastosEnvio,
       );
 
       setPedidos((actuales) => [nuevoPedido, ...actuales]);

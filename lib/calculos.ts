@@ -4,6 +4,7 @@ import type {
   PedidoConTotales,
   Producto,
 } from "../types";
+import { calcularGastoEnvioPedido } from "./gastos-envio";
 import { PRECIOS_POR_DEFECTO } from "./precios";
 
 export function calcularPrecioProductoDesdeConfiguracion(
@@ -92,6 +93,17 @@ export function aplicarPrecioProductoActual(
   };
 }
 
+export function calcularGastoEnvioPedidoSnapshot(pedido: Pedido) {
+  if (!pedido.incluirGastosEnvio) {
+    return 0;
+  }
+
+  return (
+    pedido.gastoEnvioSnapshot ??
+    calcularGastoEnvioPedido(pedido.productos.length)
+  );
+}
+
 export function calcularPedidosConTotales(
   pedidos: Pedido[],
   precios: ConfiguracionPrecios = PRECIOS_POR_DEFECTO,
@@ -110,7 +122,8 @@ export function calcularPedidosConTotales(
     );
 
     const costeFijoPedido = pedido.costeFijoSnapshot ?? precios.costeFijoPedido;
-    const totalCoste = costeProductos + costeFijoPedido;
+    const gastoEnvio = calcularGastoEnvioPedidoSnapshot(pedido);
+    const totalCoste = costeProductos + costeFijoPedido + gastoEnvio;
     const beneficio = totalVenta - totalCoste;
 
     const pendienteCobro = pedido.productos.reduce(
