@@ -1,9 +1,6 @@
 import { supabase } from "./supabase";
 import type { ConfiguracionPrecios, Pedido, Producto } from "../types";
-import {
-  aplicarPrecioProductoActual,
-  calcularGastoEnvioPedido,
-} from "./calculos";
+import { aplicarPrecioProductoActual } from "./calculos";
 
 type ProductoDB = {
   id: number;
@@ -32,8 +29,6 @@ type PedidoDB = {
   numero_seguimiento: string | null;
   archivado: boolean;
   coste_fijo_snapshot: number | null;
-  incluir_gastos_envio: boolean | null;
-  gasto_envio_snapshot: number | null;
   productos: ProductoDB[];
 };
 
@@ -125,8 +120,6 @@ export async function cargarPedidos(): Promise<Pedido[]> {
       numero_seguimiento,
       archivado,
       coste_fijo_snapshot,
-      incluir_gastos_envio,
-      gasto_envio_snapshot,
       productos (
         ${PRODUCTOS_SELECT}
       )
@@ -150,11 +143,6 @@ export async function cargarPedidos(): Promise<Pedido[]> {
       pedido.coste_fijo_snapshot === null
         ? null
         : Number(pedido.coste_fijo_snapshot),
-    incluirGastosEnvio: Boolean(pedido.incluir_gastos_envio),
-    gastoEnvioSnapshot:
-      pedido.gasto_envio_snapshot === null
-        ? null
-        : Number(pedido.gasto_envio_snapshot),
     productos: pedido.productos.map(productoDesdeDB),
   }));
 }
@@ -166,7 +154,6 @@ export async function crearPedidoConProductos(
   numeroSeguimiento: string,
   productos: Producto[],
   precios: ConfiguracionPrecios,
-  incluirGastosEnvio: boolean,
 ): Promise<Pedido> {
   const productosConPrecios = productos.map((producto) =>
     aplicarPrecioProductoActual(producto, precios),
@@ -182,13 +169,9 @@ export async function crearPedidoConProductos(
       numero_seguimiento: numeroSeguimiento.trim() || null,
       archivado,
       coste_fijo_snapshot: precios.costeFijoPedido,
-      incluir_gastos_envio: incluirGastosEnvio,
-      gasto_envio_snapshot: incluirGastosEnvio
-        ? calcularGastoEnvioPedido(productosConPrecios.length)
-        : null,
     })
     .select(
-      "id, nombre, fecha_pedido, numero_pedido, numero_seguimiento, archivado, coste_fijo_snapshot, incluir_gastos_envio, gasto_envio_snapshot",
+      "id, nombre, fecha_pedido, numero_pedido, numero_seguimiento, archivado, coste_fijo_snapshot",
     )
     .single();
 
@@ -220,11 +203,6 @@ export async function crearPedidoConProductos(
       pedidoCreado.coste_fijo_snapshot === null
         ? null
         : Number(pedidoCreado.coste_fijo_snapshot),
-    incluirGastosEnvio: Boolean(pedidoCreado.incluir_gastos_envio),
-    gastoEnvioSnapshot:
-      pedidoCreado.gasto_envio_snapshot === null
-        ? null
-        : Number(pedidoCreado.gasto_envio_snapshot),
     productos: ((productosCreados ?? []) as ProductoDB[]).map(productoDesdeDB),
   };
 }
@@ -258,8 +236,6 @@ export async function actualizarPedidoDB(
   fechaPedido: string,
   numeroPedido: string,
   numeroSeguimiento: string,
-  incluirGastosEnvio: boolean,
-  gastoEnvioSnapshot: number | null,
 ) {
   const { error } = await supabase
     .from("pedidos")

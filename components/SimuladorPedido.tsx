@@ -47,8 +47,6 @@ export default function SimuladorPedido({ precios, onPedidoGuardado }: Props) {
     numeroSeguimiento: "",
     archivado: false,
     costeFijoSnapshot: null,
-    incluirGastosEnvio,
-    gastoEnvioSnapshot: null,
     productos,
   };
 
@@ -156,7 +154,6 @@ export default function SimuladorPedido({ precios, onPedidoGuardado }: Props) {
         "",
         productosValidos,
         precios,
-        incluirGastosEnvio,
       );
 
       reiniciarBorrador();

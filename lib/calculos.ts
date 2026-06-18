@@ -92,32 +92,6 @@ export function aplicarPrecioProductoActual(
   };
 }
 
-export function calcularGastoEnvioPedido(cantidadProductos: number) {
-  if (cantidadProductos <= 0 || cantidadProductos >= 5) {
-    return 0;
-  }
-
-  const gastosEnvioPorCantidad: Record<number, number> = {
-    1: 3.4,
-    2: 2.6,
-    3: 1.7,
-    4: 0.9,
-  };
-
-  return gastosEnvioPorCantidad[cantidadProductos] ?? 0;
-}
-
-export function calcularGastoEnvioPedidoSnapshot(pedido: Pedido) {
-  if (!pedido.incluirGastosEnvio) {
-    return 0;
-  }
-
-  return (
-    pedido.gastoEnvioSnapshot ??
-    calcularGastoEnvioPedido(pedido.productos.length)
-  );
-}
-
 export function calcularPedidosConTotales(
   pedidos: Pedido[],
   precios: ConfiguracionPrecios = PRECIOS_POR_DEFECTO,
@@ -136,8 +110,7 @@ export function calcularPedidosConTotales(
     );
 
     const costeFijoPedido = pedido.costeFijoSnapshot ?? precios.costeFijoPedido;
-    const gastoEnvio = calcularGastoEnvioPedidoSnapshot(pedido);
-    const totalCoste = costeProductos + costeFijoPedido + gastoEnvio;
+    const totalCoste = costeProductos + costeFijoPedido;
     const beneficio = totalVenta - totalCoste;
 
     const pendienteCobro = pedido.productos.reduce(
