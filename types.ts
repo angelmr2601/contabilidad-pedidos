@@ -30,6 +30,8 @@ export type Producto = {
   numeroPersonalizacion: string;
   precioVentaManual: number;
   costeManual: number;
+  ventaUnidadSnapshot: number | null;
+  costeUnidadSnapshot: number | null;
   pagado: boolean;
   entregado: boolean;
 };
@@ -41,6 +43,9 @@ export type Pedido = {
   numeroPedido: string;
   numeroSeguimiento: string;
   archivado: boolean;
+  costeFijoSnapshot: number | null;
+  incluirGastosEnvio: boolean;
+  gastoEnvioSnapshot: number | null;
   productos: Producto[];
 };
 
@@ -48,6 +53,7 @@ export type PedidoConTotales = Pedido & {
   totalVenta: number;
   costeProductos: number;
   totalCoste: number;
+  gastoEnvio: number;
   beneficio: number;
   pendienteCobro: number;
   productosPendientesPago: number;
@@ -65,4 +71,5 @@ export type PedidoEditando = {
   fechaPedido: string;
   numeroPedido: string;
   numeroSeguimiento: string;
+  incluirGastosEnvio: boolean;
 };
