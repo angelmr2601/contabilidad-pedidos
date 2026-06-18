@@ -2,11 +2,7 @@
 
 import { useState } from "react";
 
-import {
-  calcularProducto,
-  formatoEuros,
-  formatoFecha,
-} from "../lib/calculos";
+import { calcularProducto, formatoEuros, formatoFecha } from "../lib/calculos";
 import { crearEnlaceSeguimientoCttExpress } from "../lib/ctt-express";
 import type {
   ConfiguracionPrecios,
@@ -49,24 +45,25 @@ export default function PedidoCard({
   onMarcarTodoPagado,
   onMarcarTodoEntregado,
 }: Props) {
-  const [productoMovilAbierto, setProductoMovilAbierto] =
-    useState<number | null>(null);
+  const [productoMovilAbierto, setProductoMovilAbierto] = useState<
+    number | null
+  >(null);
 
   function cambiarProductoMovilAbierto(productoId: number) {
     setProductoMovilAbierto((actual) =>
-      actual === productoId ? null : productoId
+      actual === productoId ? null : productoId,
     );
   }
 
   const numeroSeguimiento = pedido.numeroSeguimiento.trim();
-  const enlaceSeguimiento = crearEnlaceSeguimientoCttExpress(
-    numeroSeguimiento
-  );
+  const enlaceSeguimiento = crearEnlaceSeguimientoCttExpress(numeroSeguimiento);
 
   return (
     <div
       className={`overflow-hidden rounded-2xl border ${
-        pedido.archivado ? "border-green-200 dark:border-green-900" : "border-border"
+        pedido.archivado
+          ? "border-green-200 dark:border-green-900"
+          : "border-border"
       }`}
     >
       <div className="flex flex-col gap-4 bg-surface p-5">
@@ -107,7 +104,7 @@ export default function PedidoCard({
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-sm md:grid-cols-5 md:text-right">
+            <div className="grid grid-cols-2 gap-3 text-sm md:grid-cols-6 md:text-right">
               <div>
                 <p className="text-muted">Venta</p>
                 <p className="font-bold">{formatoEuros(pedido.totalVenta)}</p>
@@ -116,6 +113,11 @@ export default function PedidoCard({
               <div>
                 <p className="text-muted">Coste</p>
                 <p className="font-bold">{formatoEuros(pedido.totalCoste)}</p>
+              </div>
+
+              <div>
+                <p className="text-muted">Envío</p>
+                <p className="font-bold">{formatoEuros(pedido.gastoEnvio)}</p>
               </div>
 
               <div>
@@ -267,7 +269,9 @@ export default function PedidoCard({
                       </div>
                     </div>
 
-                    <span className="text-lg">{productoAbierto ? "−" : "+"}</span>
+                    <span className="text-lg">
+                      {productoAbierto ? "−" : "+"}
+                    </span>
                   </button>
 
                   {productoAbierto && (
@@ -334,8 +338,12 @@ export default function PedidoCard({
                           onClick={() =>
                             onAlternarPagoProducto(pedido.id, producto.id)
                           }
-                          aria-label={producto.pagado ? "Pagado" : "Pendiente de pago"}
-                          title={producto.pagado ? "Pagado" : "Pendiente de pago"}
+                          aria-label={
+                            producto.pagado ? "Pagado" : "Pendiente de pago"
+                          }
+                          title={
+                            producto.pagado ? "Pagado" : "Pendiente de pago"
+                          }
                           className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium ${
                             producto.pagado
                               ? "bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300"
@@ -353,17 +361,29 @@ export default function PedidoCard({
                           onClick={() =>
                             onAlternarEntregaProducto(pedido.id, producto.id)
                           }
-                          aria-label={producto.entregado ? "Entregado" : "Pendiente de entrega"}
-                          title={producto.entregado ? "Entregado" : "Pendiente de entrega"}
+                          aria-label={
+                            producto.entregado
+                              ? "Entregado"
+                              : "Pendiente de entrega"
+                          }
+                          title={
+                            producto.entregado
+                              ? "Entregado"
+                              : "Pendiente de entrega"
+                          }
                           className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium ${
                             producto.entregado
                               ? "bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300"
                               : "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300"
                           }`}
                         >
-                          <Icon name={producto.entregado ? "check" : "delivery"} />
+                          <Icon
+                            name={producto.entregado ? "check" : "delivery"}
+                          />
                           <span className="sr-only">
-                            {producto.entregado ? "Entregado" : "Pendiente de entrega"}
+                            {producto.entregado
+                              ? "Entregado"
+                              : "Pendiente de entrega"}
                           </span>
                         </button>
                       </div>
@@ -371,7 +391,9 @@ export default function PedidoCard({
                       <div className="mt-4 grid grid-cols-3 gap-2">
                         <button
                           type="button"
-                          onClick={() => onDuplicarProducto(pedido.id, producto)}
+                          onClick={() =>
+                            onDuplicarProducto(pedido.id, producto)
+                          }
                           aria-label="Duplicar producto"
                           title="Duplicar producto"
                           className="inline-flex items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-950 px-3 py-2 text-xs font-medium text-blue-700 dark:text-blue-300"
@@ -481,8 +503,12 @@ export default function PedidoCard({
                           onClick={() =>
                             onAlternarPagoProducto(pedido.id, producto.id)
                           }
-                          aria-label={producto.pagado ? "Pagado" : "Pendiente de pago"}
-                          title={producto.pagado ? "Pagado" : "Pendiente de pago"}
+                          aria-label={
+                            producto.pagado ? "Pagado" : "Pendiente de pago"
+                          }
+                          title={
+                            producto.pagado ? "Pagado" : "Pendiente de pago"
+                          }
                           className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium ${
                             producto.pagado
                               ? "bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300"
@@ -502,17 +528,29 @@ export default function PedidoCard({
                           onClick={() =>
                             onAlternarEntregaProducto(pedido.id, producto.id)
                           }
-                          aria-label={producto.entregado ? "Entregado" : "Pendiente de entrega"}
-                          title={producto.entregado ? "Entregado" : "Pendiente de entrega"}
+                          aria-label={
+                            producto.entregado
+                              ? "Entregado"
+                              : "Pendiente de entrega"
+                          }
+                          title={
+                            producto.entregado
+                              ? "Entregado"
+                              : "Pendiente de entrega"
+                          }
                           className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium ${
                             producto.entregado
                               ? "bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300"
                               : "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300"
                           }`}
                         >
-                          <Icon name={producto.entregado ? "check" : "delivery"} />
+                          <Icon
+                            name={producto.entregado ? "check" : "delivery"}
+                          />
                           <span className="sr-only">
-                            {producto.entregado ? "Entregado" : "Pendiente de entrega"}
+                            {producto.entregado
+                              ? "Entregado"
+                              : "Pendiente de entrega"}
                           </span>
                         </button>
                       </td>
@@ -534,7 +572,9 @@ export default function PedidoCard({
 
                           <button
                             type="button"
-                            onClick={() => onEditarProducto(pedido.id, producto)}
+                            onClick={() =>
+                              onEditarProducto(pedido.id, producto)
+                            }
                             aria-label="Editar producto"
                             title="Editar producto"
                             className="inline-flex items-center justify-center rounded-full bg-surface-subtle px-3 py-1 text-xs font-medium text-muted"

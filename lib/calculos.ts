@@ -6,9 +6,9 @@ import type {
 } from "../types";
 import { PRECIOS_POR_DEFECTO } from "./precios";
 
-export function calcularProducto(
+export function calcularPrecioProductoDesdeConfiguracion(
   producto: Producto,
-  precios: ConfiguracionPrecios = PRECIOS_POR_DEFECTO
+  precios: ConfiguracionPrecios = PRECIOS_POR_DEFECTO,
 ) {
   let costeUnidad = 0;
   let ventaUnidad = 0;
@@ -53,24 +53,91 @@ export function calcularProducto(
   };
 }
 
+export function calcularProducto(
+  producto: Producto,
+  precios: ConfiguracionPrecios = PRECIOS_POR_DEFECTO,
+) {
+  if (
+    producto.costeUnidadSnapshot !== null &&
+    producto.ventaUnidadSnapshot !== null
+  ) {
+    const costeUnidad = producto.costeUnidadSnapshot;
+    const ventaUnidad = producto.ventaUnidadSnapshot;
+    const costeTotal = costeUnidad;
+    const ventaTotal = ventaUnidad;
+    const beneficio = ventaTotal - costeTotal;
+
+    return {
+      costeUnidad,
+      ventaUnidad,
+      costeTotal,
+      ventaTotal,
+      beneficio,
+    };
+  }
+
+  return calcularPrecioProductoDesdeConfiguracion(producto, precios);
+}
+
+export function aplicarPrecioProductoActual(
+  producto: Producto,
+  precios: ConfiguracionPrecios = PRECIOS_POR_DEFECTO,
+): Producto {
+  const calculo = calcularPrecioProductoDesdeConfiguracion(producto, precios);
+
+  return {
+    ...producto,
+    costeUnidadSnapshot: calculo.costeUnidad,
+    ventaUnidadSnapshot: calculo.ventaUnidad,
+  };
+}
+
+export function calcularGastoEnvioPedido(cantidadProductos: number) {
+  if (cantidadProductos <= 0 || cantidadProductos >= 5) {
+    return 0;
+  }
+
+  const gastosEnvioPorCantidad: Record<number, number> = {
+    1: 3.4,
+    2: 2.6,
+    3: 1.7,
+    4: 0.9,
+  };
+
+  return gastosEnvioPorCantidad[cantidadProductos] ?? 0;
+}
+
+export function calcularGastoEnvioPedidoSnapshot(pedido: Pedido) {
+  if (!pedido.incluirGastosEnvio) {
+    return 0;
+  }
+
+  return (
+    pedido.gastoEnvioSnapshot ??
+    calcularGastoEnvioPedido(pedido.productos.length)
+  );
+}
+
 export function calcularPedidosConTotales(
   pedidos: Pedido[],
-  precios: ConfiguracionPrecios = PRECIOS_POR_DEFECTO
+  precios: ConfiguracionPrecios = PRECIOS_POR_DEFECTO,
 ): PedidoConTotales[] {
   return pedidos.map((pedido: Pedido) => {
     const totalVenta = pedido.productos.reduce(
       (total: number, producto: Producto) =>
         total + calcularProducto(producto, precios).ventaTotal,
-      0
+      0,
     );
 
     const costeProductos = pedido.productos.reduce(
       (total: number, producto: Producto) =>
         total + calcularProducto(producto, precios).costeTotal,
-      0
+      0,
     );
 
-    const totalCoste = costeProductos + precios.costeFijoPedido;
+    const costeFijoPedido = pedido.costeFijoSnapshot ?? precios.costeFijoPedido;
+    const gastoEnvio = calcularGastoEnvioPedidoSnapshot(pedido);
+    const totalCoste = costeProductos + costeFijoPedido + gastoEnvio;
     const beneficio = totalVenta - totalCoste;
 
     const pendienteCobro = pedido.productos.reduce(
@@ -78,15 +145,15 @@ export function calcularPedidosConTotales(
         const calculo = calcularProducto(producto, precios);
         return total + (producto.pagado ? 0 : calculo.ventaTotal);
       },
-      0
+      0,
     );
 
     const productosPendientesPago = pedido.productos.filter(
-      (producto: Producto) => !producto.pagado
+      (producto: Producto) => !producto.pagado,
     ).length;
 
     const productosPendientesEntrega = pedido.productos.filter(
-      (producto: Producto) => !producto.entregado
+      (producto: Producto) => !producto.entregado,
     ).length;
 
     return {
@@ -94,6 +161,7 @@ export function calcularPedidosConTotales(
       totalVenta,
       costeProductos,
       totalCoste,
+      gastoEnvio,
       beneficio,
       pendienteCobro,
       productosPendientesPago,
@@ -119,7 +187,7 @@ export function calcularResumen(pedidos: PedidoConTotales[]) {
       beneficio: 0,
       pendienteCobro: 0,
       productosPendientesEntrega: 0,
-    }
+    },
   );
 }
 

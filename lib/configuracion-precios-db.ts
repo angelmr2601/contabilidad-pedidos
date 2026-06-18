@@ -57,7 +57,7 @@ export async function cargarConfiguracionPrecios(): Promise<ConfiguracionPrecios
       coste_manga_larga,
       venta_manga_larga,
       coste_fijo_pedido
-    `
+    `,
     )
     .eq("id", 1)
     .single();
@@ -73,15 +73,12 @@ export async function cargarConfiguracionPrecios(): Promise<ConfiguracionPrecios
 }
 
 export async function guardarConfiguracionPrecios(
-  precios: ConfiguracionPrecios
+  precios: ConfiguracionPrecios,
 ) {
-  const { error } = await supabase.from("configuracion_precios").upsert(
-    {
-      id: 1,
-      ...preciosParaDB(precios),
-    },
-    { onConflict: "id" }
-  );
+  const { error } = await supabase
+    .from("configuracion_precios")
+    .update(preciosParaDB(precios))
+    .eq("id", 1);
 
   if (error) {
     throw error;
