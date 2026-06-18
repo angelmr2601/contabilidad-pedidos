@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
-import type { Pedido, Producto } from "../types";
+import type { ConfiguracionPrecios, Pedido, Producto } from "../types";
+import { aplicarPrecioProductoActual } from "./calculos";
 
 type ProductoDB = {
   id: number;
@@ -14,6 +15,8 @@ type ProductoDB = {
   numero_personalizacion: string;
   precio_venta_manual: number | null;
   coste_manual: number | null;
+  venta_unidad_snapshot: number | null;
+  coste_unidad_snapshot: number | null;
   pagado: boolean;
   entregado: boolean;
 };
@@ -25,6 +28,7 @@ type PedidoDB = {
   numero_pedido: string | null;
   numero_seguimiento: string | null;
   archivado: boolean;
+  coste_fijo_snapshot: number | null;
   productos: ProductoDB[];
 };
 
@@ -41,6 +45,8 @@ const PRODUCTOS_SELECT = `
   numero_personalizacion,
   precio_venta_manual,
   coste_manual,
+  venta_unidad_snapshot,
+  coste_unidad_snapshot,
   pagado,
   entregado
 `;
@@ -58,6 +64,14 @@ function productoDesdeDB(producto: ProductoDB): Producto {
     numeroPersonalizacion: producto.numero_personalizacion,
     precioVentaManual: Number(producto.precio_venta_manual ?? 0),
     costeManual: Number(producto.coste_manual ?? 0),
+    ventaUnidadSnapshot:
+      producto.venta_unidad_snapshot === null
+        ? null
+        : Number(producto.venta_unidad_snapshot),
+    costeUnidadSnapshot:
+      producto.coste_unidad_snapshot === null
+        ? null
+        : Number(producto.coste_unidad_snapshot),
     pagado: producto.pagado,
     entregado: producto.entregado,
   };
@@ -80,6 +94,8 @@ function productoParaDB(producto: Producto, pedidoId: number) {
     precio_venta_manual:
       producto.tipo === "Otro" ? producto.precioVentaManual : null,
     coste_manual: producto.tipo === "Otro" ? producto.costeManual : null,
+    venta_unidad_snapshot: producto.ventaUnidadSnapshot,
+    coste_unidad_snapshot: producto.costeUnidadSnapshot,
     pagado: producto.pagado,
     entregado: producto.entregado,
   };
@@ -103,10 +119,11 @@ export async function cargarPedidos(): Promise<Pedido[]> {
       numero_pedido,
       numero_seguimiento,
       archivado,
+      coste_fijo_snapshot,
       productos (
         ${PRODUCTOS_SELECT}
       )
-    `
+    `,
     )
     .order("fecha_pedido", { ascending: false })
     .order("id", { ascending: false });
@@ -122,6 +139,10 @@ export async function cargarPedidos(): Promise<Pedido[]> {
     numeroPedido: pedido.numero_pedido ?? "",
     numeroSeguimiento: pedido.numero_seguimiento ?? "",
     archivado: pedido.archivado,
+    costeFijoSnapshot:
+      pedido.coste_fijo_snapshot === null
+        ? null
+        : Number(pedido.coste_fijo_snapshot),
     productos: pedido.productos.map(productoDesdeDB),
   }));
 }
@@ -131,9 +152,13 @@ export async function crearPedidoConProductos(
   fechaPedido: string,
   numeroPedido: string,
   numeroSeguimiento: string,
-  productos: Producto[]
+  productos: Producto[],
+  precios: ConfiguracionPrecios,
 ): Promise<Pedido> {
-  const archivado = calcularArchivadoPedido(productos);
+  const productosConPrecios = productos.map((producto) =>
+    aplicarPrecioProductoActual(producto, precios),
+  );
+  const archivado = calcularArchivadoPedido(productosConPrecios);
 
   const { data: pedidoCreado, error: errorPedido } = await supabase
     .from("pedidos")
@@ -143,16 +168,19 @@ export async function crearPedidoConProductos(
       numero_pedido: numeroPedido.trim() || null,
       numero_seguimiento: numeroSeguimiento.trim() || null,
       archivado,
+      coste_fijo_snapshot: precios.costeFijoPedido,
     })
-    .select("id, nombre, fecha_pedido, numero_pedido, numero_seguimiento, archivado")
+    .select(
+      "id, nombre, fecha_pedido, numero_pedido, numero_seguimiento, archivado, coste_fijo_snapshot",
+    )
     .single();
 
   if (errorPedido) {
     throw errorPedido;
   }
 
-  const productosParaInsertar = productos.map((producto) =>
-    productoParaDB(producto, pedidoCreado.id)
+  const productosParaInsertar = productosConPrecios.map((producto) =>
+    productoParaDB(producto, pedidoCreado.id),
   );
 
   const { data: productosCreados, error: errorProductos } = await supabase
@@ -171,17 +199,27 @@ export async function crearPedidoConProductos(
     numeroPedido: pedidoCreado.numero_pedido ?? "",
     numeroSeguimiento: pedidoCreado.numero_seguimiento ?? "",
     archivado: pedidoCreado.archivado,
+    costeFijoSnapshot:
+      pedidoCreado.coste_fijo_snapshot === null
+        ? null
+        : Number(pedidoCreado.coste_fijo_snapshot),
     productos: ((productosCreados ?? []) as ProductoDB[]).map(productoDesdeDB),
   };
 }
 
 export async function crearProductoEnPedido(
   pedidoId: number,
-  producto: Producto
+  producto: Producto,
+  precios?: ConfiguracionPrecios,
 ): Promise<Producto> {
   const { data, error } = await supabase
     .from("productos")
-    .insert(productoParaDB(producto, pedidoId))
+    .insert(
+      productoParaDB(
+        precios ? aplicarPrecioProductoActual(producto, precios) : producto,
+        pedidoId,
+      ),
+    )
     .select(PRODUCTOS_SELECT)
     .single();
 
@@ -197,7 +235,7 @@ export async function actualizarPedidoDB(
   nombre: string,
   fechaPedido: string,
   numeroPedido: string,
-  numeroSeguimiento: string
+  numeroSeguimiento: string,
 ) {
   const { error } = await supabase
     .from("pedidos")
@@ -216,7 +254,7 @@ export async function actualizarPedidoDB(
 
 export async function actualizarArchivadoPedidoDB(
   pedidoId: number,
-  archivado: boolean
+  archivado: boolean,
 ) {
   const { error } = await supabase
     .from("pedidos")
@@ -254,6 +292,8 @@ export async function actualizarProductoDB(producto: Producto) {
       precio_venta_manual:
         producto.tipo === "Otro" ? producto.precioVentaManual : null,
       coste_manual: producto.tipo === "Otro" ? producto.costeManual : null,
+      venta_unidad_snapshot: producto.ventaUnidadSnapshot,
+      coste_unidad_snapshot: producto.costeUnidadSnapshot,
       pagado: producto.pagado,
       entregado: producto.entregado,
     })
@@ -280,7 +320,7 @@ export async function actualizarEstadoProductoDB(
   campos: {
     pagado?: boolean;
     entregado?: boolean;
-  }
+  },
 ) {
   const { error } = await supabase
     .from("productos")
@@ -294,7 +334,7 @@ export async function actualizarEstadoProductoDB(
 
 export async function marcarTodosProductosPedidoDB(
   pedidoId: number,
-  campo: "pagado" | "entregado"
+  campo: "pagado" | "entregado",
 ) {
   const { error } = await supabase
     .from("productos")

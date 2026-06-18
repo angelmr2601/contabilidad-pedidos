@@ -96,10 +96,8 @@ export default function Home() {
   const [busqueda, setBusqueda] = useState("");
   const [filtroMes, setFiltroMes] = useState("");
   const [filtroPago, setFiltroPago] = useState<FiltroPago>("todos");
-  const [filtroEntrega, setFiltroEntrega] =
-    useState<FiltroEntrega>("todos");
-  const [filtroArchivo, setFiltroArchivo] =
-    useState<FiltroArchivo>("activos");
+  const [filtroEntrega, setFiltroEntrega] = useState<FiltroEntrega>("todos");
+  const [filtroArchivo, setFiltroArchivo] = useState<FiltroArchivo>("activos");
 
   const [filtroMesResumen, setFiltroMesResumen] = useState("");
 
@@ -109,8 +107,9 @@ export default function Home() {
   const [productoAñadiendo, setProductoAñadiendo] =
     useState<ProductoAñadiendo | null>(null);
 
-  const [pedidoEditando, setPedidoEditando] =
-    useState<PedidoEditando | null>(null);
+  const [pedidoEditando, setPedidoEditando] = useState<PedidoEditando | null>(
+    null,
+  );
 
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
 
@@ -154,8 +153,8 @@ export default function Home() {
     textoBusquedaGlobal !== "" &&
     pedidosConTotales.some((pedido) =>
       pedido.productos.some((producto) =>
-        producto.cliente.toLowerCase().includes(textoBusquedaGlobal)
-      )
+        producto.cliente.toLowerCase().includes(textoBusquedaGlobal),
+      ),
     );
 
   const pedidosFiltrados = pedidosConTotales.filter((pedido) => {
@@ -166,28 +165,28 @@ export default function Home() {
         ? true
         : busquedaCoincideConCliente
           ? pedido.productos.some((producto) =>
-            producto.cliente.toLowerCase().includes(textoBusqueda)
-          )
+              producto.cliente.toLowerCase().includes(textoBusqueda),
+            )
           : pedido.nombre.toLowerCase().includes(textoBusqueda) ||
-          String(pedido.id).includes(textoBusqueda) ||
-          pedido.fechaPedido.includes(textoBusqueda) ||
-          pedido.numeroPedido.toLowerCase().includes(textoBusqueda) ||
-          pedido.numeroSeguimiento.toLowerCase().includes(textoBusqueda) ||
-          pedido.productos.some((producto) => {
-            const textoProducto = [
-              producto.cliente,
-              producto.nombre,
-              producto.talla,
-              producto.tipo,
-              producto.manga,
-              producto.nombrePersonalizacion,
-              producto.numeroPersonalizacion,
-            ]
-              .join(" ")
-              .toLowerCase();
+            String(pedido.id).includes(textoBusqueda) ||
+            pedido.fechaPedido.includes(textoBusqueda) ||
+            pedido.numeroPedido.toLowerCase().includes(textoBusqueda) ||
+            pedido.numeroSeguimiento.toLowerCase().includes(textoBusqueda) ||
+            pedido.productos.some((producto) => {
+              const textoProducto = [
+                producto.cliente,
+                producto.nombre,
+                producto.talla,
+                producto.tipo,
+                producto.manga,
+                producto.nombrePersonalizacion,
+                producto.numeroPersonalizacion,
+              ]
+                .join(" ")
+                .toLowerCase();
 
-            return textoProducto.includes(textoBusqueda);
-          });
+              return textoProducto.includes(textoBusqueda);
+            });
 
     const coincideMes =
       filtroMes === "" || pedido.fechaPedido.startsWith(filtroMes);
@@ -200,7 +199,7 @@ export default function Home() {
     const coincidePago =
       filtroPago === "todos" ||
       pedido.productos.some((producto) =>
-        filtroPago === "pagado" ? producto.pagado : !producto.pagado
+        filtroPago === "pagado" ? producto.pagado : !producto.pagado,
       );
 
     const coincideEntrega =
@@ -208,7 +207,7 @@ export default function Home() {
       pedido.productos.some((producto) =>
         filtroEntrega === "entregado"
           ? producto.entregado
-          : !producto.entregado
+          : !producto.entregado,
       );
 
     return (
@@ -256,12 +255,12 @@ export default function Home() {
   function actualizarProductoFormulario(
     id: number,
     campo: keyof Producto,
-    valor: string | number | boolean
+    valor: string | number | boolean,
   ) {
     setProductosFormulario((productos) =>
       productos.map((producto) =>
-        producto.id === id ? { ...producto, [campo]: valor } : producto
-      )
+        producto.id === id ? { ...producto, [campo]: valor } : producto,
+      ),
     );
   }
 
@@ -308,7 +307,7 @@ export default function Home() {
   async function alternarPagoProducto(pedidoId: number, productoId: number) {
     const pedido = pedidos.find((pedidoActual) => pedidoActual.id === pedidoId);
     const producto = pedido?.productos.find(
-      (productoActual) => productoActual.id === productoId
+      (productoActual) => productoActual.id === productoId,
     );
 
     if (!pedido || !producto) {
@@ -320,7 +319,7 @@ export default function Home() {
     const productosActualizados = pedido.productos.map((productoActual) =>
       productoActual.id === productoId
         ? { ...productoActual, pagado: nuevoPagado }
-        : productoActual
+        : productoActual,
     );
 
     const nuevoArchivado = calcularArchivadoPedido(productosActualizados);
@@ -329,12 +328,12 @@ export default function Home() {
       pedidosActuales.map((pedidoActual) =>
         pedidoActual.id === pedidoId
           ? {
-            ...pedidoActual,
-            archivado: nuevoArchivado,
-            productos: productosActualizados,
-          }
-          : pedidoActual
-      )
+              ...pedidoActual,
+              archivado: nuevoArchivado,
+              productos: productosActualizados,
+            }
+          : pedidoActual,
+      ),
     );
 
     try {
@@ -345,8 +344,8 @@ export default function Home() {
       alert("No se pudo actualizar el pago.");
       setPedidos((pedidosActuales) =>
         pedidosActuales.map((pedidoActual) =>
-          pedidoActual.id === pedidoId ? pedido : pedidoActual
-        )
+          pedidoActual.id === pedidoId ? pedido : pedidoActual,
+        ),
       );
     }
   }
@@ -354,7 +353,7 @@ export default function Home() {
   async function alternarEntregaProducto(pedidoId: number, productoId: number) {
     const pedido = pedidos.find((pedidoActual) => pedidoActual.id === pedidoId);
     const producto = pedido?.productos.find(
-      (productoActual) => productoActual.id === productoId
+      (productoActual) => productoActual.id === productoId,
     );
 
     if (!pedido || !producto) {
@@ -366,7 +365,7 @@ export default function Home() {
     const productosActualizados = pedido.productos.map((productoActual) =>
       productoActual.id === productoId
         ? { ...productoActual, entregado: nuevoEntregado }
-        : productoActual
+        : productoActual,
     );
 
     const nuevoArchivado = calcularArchivadoPedido(productosActualizados);
@@ -375,12 +374,12 @@ export default function Home() {
       pedidosActuales.map((pedidoActual) =>
         pedidoActual.id === pedidoId
           ? {
-            ...pedidoActual,
-            archivado: nuevoArchivado,
-            productos: productosActualizados,
-          }
-          : pedidoActual
-      )
+              ...pedidoActual,
+              archivado: nuevoArchivado,
+              productos: productosActualizados,
+            }
+          : pedidoActual,
+      ),
     );
 
     try {
@@ -393,8 +392,8 @@ export default function Home() {
       alert("No se pudo actualizar la entrega.");
       setPedidos((pedidosActuales) =>
         pedidosActuales.map((pedidoActual) =>
-          pedidoActual.id === pedidoId ? pedido : pedidoActual
-        )
+          pedidoActual.id === pedidoId ? pedido : pedidoActual,
+        ),
       );
     }
   }
@@ -406,11 +405,12 @@ export default function Home() {
       return;
     }
 
-    const pendientes = pedido.productos.filter((producto) => !producto.pagado)
-      .length;
+    const pendientes = pedido.productos.filter(
+      (producto) => !producto.pagado,
+    ).length;
 
     const confirmar = confirm(
-      `¿Marcar como pagados los ${pendientes} producto${pendientes === 1 ? "" : "s"} pendiente${pendientes === 1 ? "" : "s"} del pedido #${pedidoId}?`
+      `¿Marcar como pagados los ${pendientes} producto${pendientes === 1 ? "" : "s"} pendiente${pendientes === 1 ? "" : "s"} del pedido #${pedidoId}?`,
     );
 
     if (!confirmar) {
@@ -428,12 +428,12 @@ export default function Home() {
       pedidosActuales.map((pedidoActual) =>
         pedidoActual.id === pedidoId
           ? {
-            ...pedidoActual,
-            archivado: nuevoArchivado,
-            productos: productosActualizados,
-          }
-          : pedidoActual
-      )
+              ...pedidoActual,
+              archivado: nuevoArchivado,
+              productos: productosActualizados,
+            }
+          : pedidoActual,
+      ),
     );
 
     try {
@@ -444,8 +444,8 @@ export default function Home() {
       alert("No se pudo marcar todo como pagado.");
       setPedidos((pedidosActuales) =>
         pedidosActuales.map((pedidoActual) =>
-          pedidoActual.id === pedidoId ? pedido : pedidoActual
-        )
+          pedidoActual.id === pedidoId ? pedido : pedidoActual,
+        ),
       );
     }
   }
@@ -458,11 +458,11 @@ export default function Home() {
     }
 
     const pendientes = pedido.productos.filter(
-      (producto) => !producto.entregado
+      (producto) => !producto.entregado,
     ).length;
 
     const confirmar = confirm(
-      `¿Marcar como entregados los ${pendientes} producto${pendientes === 1 ? "" : "s"} pendiente${pendientes === 1 ? "" : "s"} del pedido #${pedidoId}?`
+      `¿Marcar como entregados los ${pendientes} producto${pendientes === 1 ? "" : "s"} pendiente${pendientes === 1 ? "" : "s"} del pedido #${pedidoId}?`,
     );
 
     if (!confirmar) {
@@ -480,12 +480,12 @@ export default function Home() {
       pedidosActuales.map((pedidoActual) =>
         pedidoActual.id === pedidoId
           ? {
-            ...pedidoActual,
-            archivado: nuevoArchivado,
-            productos: productosActualizados,
-          }
-          : pedidoActual
-      )
+              ...pedidoActual,
+              archivado: nuevoArchivado,
+              productos: productosActualizados,
+            }
+          : pedidoActual,
+      ),
     );
 
     try {
@@ -496,8 +496,8 @@ export default function Home() {
       alert("No se pudo marcar todo como entregado.");
       setPedidos((pedidosActuales) =>
         pedidosActuales.map((pedidoActual) =>
-          pedidoActual.id === pedidoId ? pedido : pedidoActual
-        )
+          pedidoActual.id === pedidoId ? pedido : pedidoActual,
+        ),
       );
     }
   }
@@ -523,15 +523,15 @@ export default function Home() {
         .map((pedidoActual) =>
           pedidoActual.id === pedidoId
             ? {
-              ...pedidoActual,
-              archivado: nuevoArchivado,
-              productos: pedidoActual.productos.filter(
-                (producto) => producto.id !== productoId
-              ),
-            }
-            : pedidoActual
+                ...pedidoActual,
+                archivado: nuevoArchivado,
+                productos: pedidoActual.productos.filter(
+                  (producto) => producto.id !== productoId,
+                ),
+              }
+            : pedidoActual,
         )
-        .filter((pedidoActual) => pedidoActual.productos.length > 0)
+        .filter((pedidoActual) => pedidoActual.productos.length > 0),
     );
 
     try {
@@ -572,7 +572,8 @@ export default function Home() {
 
       const productoCreado = await crearProductoEnPedido(
         pedidoId,
-        productoDuplicado
+        productoDuplicado,
+        precios,
       );
 
       const productosActualizados = [...pedido.productos, productoCreado];
@@ -582,12 +583,12 @@ export default function Home() {
         pedidosActuales.map((pedidoActual) =>
           pedidoActual.id === pedidoId
             ? {
-              ...pedidoActual,
-              archivado: nuevoArchivado,
-              productos: productosActualizados,
-            }
-            : pedidoActual
-        )
+                ...pedidoActual,
+                archivado: nuevoArchivado,
+                productos: productosActualizados,
+              }
+            : pedidoActual,
+        ),
       );
 
       await actualizarArchivadoPedidoDB(pedidoId, nuevoArchivado);
@@ -610,18 +611,18 @@ export default function Home() {
 
   function actualizarProductoEditando(
     campo: keyof Producto,
-    valor: string | number | boolean
+    valor: string | number | boolean,
   ) {
     setProductoEditando((actual) =>
       actual
         ? {
-          ...actual,
-          producto: {
-            ...actual.producto,
-            [campo]: valor,
-          },
-        }
-        : actual
+            ...actual,
+            producto: {
+              ...actual.producto,
+              [campo]: valor,
+            },
+          }
+        : actual,
     );
   }
 
@@ -640,7 +641,7 @@ export default function Home() {
     const pedidosAntes = pedidos;
 
     const pedido = pedidos.find(
-      (pedidoActual) => pedidoActual.id === productoEditando.pedidoId
+      (pedidoActual) => pedidoActual.id === productoEditando.pedidoId,
     );
 
     if (!pedido) {
@@ -650,7 +651,7 @@ export default function Home() {
     const productosActualizados = pedido.productos.map((producto) =>
       producto.id === productoEditando.producto.id
         ? productoEditando.producto
-        : producto
+        : producto,
     );
 
     const nuevoArchivado = calcularArchivadoPedido(productosActualizados);
@@ -659,19 +660,19 @@ export default function Home() {
       pedidosActuales.map((pedidoActual) =>
         pedidoActual.id === productoEditando.pedidoId
           ? {
-            ...pedidoActual,
-            archivado: nuevoArchivado,
-            productos: productosActualizados,
-          }
-          : pedidoActual
-      )
+              ...pedidoActual,
+              archivado: nuevoArchivado,
+              productos: productosActualizados,
+            }
+          : pedidoActual,
+      ),
     );
 
     try {
       await actualizarProductoDB(productoEditando.producto);
       await actualizarArchivadoPedidoDB(
         productoEditando.pedidoId,
-        nuevoArchivado
+        nuevoArchivado,
       );
       setProductoEditando(null);
     } catch (error) {
@@ -690,18 +691,18 @@ export default function Home() {
 
   function actualizarProductoAñadiendo(
     campo: keyof Producto,
-    valor: string | number | boolean
+    valor: string | number | boolean,
   ) {
     setProductoAñadiendo((actual) =>
       actual
         ? {
-          ...actual,
-          producto: {
-            ...actual.producto,
-            [campo]: valor,
-          },
-        }
-        : actual
+            ...actual,
+            producto: {
+              ...actual.producto,
+              [campo]: valor,
+            },
+          }
+        : actual,
     );
   }
 
@@ -725,7 +726,8 @@ export default function Home() {
 
       const productoCreado = await crearProductoEnPedido(
         productoAñadiendo.pedido.id,
-        productoAñadiendo.producto
+        productoAñadiendo.producto,
+        precios,
       );
 
       const productosActualizados = [
@@ -739,17 +741,17 @@ export default function Home() {
         pedidosActuales.map((pedido) =>
           pedido.id === productoAñadiendo.pedido.id
             ? {
-              ...pedido,
-              archivado: nuevoArchivado,
-              productos: productosActualizados,
-            }
-            : pedido
-        )
+                ...pedido,
+                archivado: nuevoArchivado,
+                productos: productosActualizados,
+              }
+            : pedido,
+        ),
       );
 
       await actualizarArchivadoPedidoDB(
         productoAñadiendo.pedido.id,
-        nuevoArchivado
+        nuevoArchivado,
       );
 
       setPedidoAbierto(productoAñadiendo.pedido.id);
@@ -776,10 +778,10 @@ export default function Home() {
     setPedidoEditando((actual) =>
       actual
         ? {
-          ...actual,
-          nombre,
-        }
-        : actual
+            ...actual,
+            nombre,
+          }
+        : actual,
     );
   }
 
@@ -787,10 +789,10 @@ export default function Home() {
     setPedidoEditando((actual) =>
       actual
         ? {
-          ...actual,
-          fechaPedido: fechaPedidoNueva,
-        }
-        : actual
+            ...actual,
+            fechaPedido: fechaPedidoNueva,
+          }
+        : actual,
     );
   }
 
@@ -798,23 +800,21 @@ export default function Home() {
     setPedidoEditando((actual) =>
       actual
         ? {
-          ...actual,
-          numeroPedido: numeroPedidoNuevo,
-        }
-        : actual
+            ...actual,
+            numeroPedido: numeroPedidoNuevo,
+          }
+        : actual,
     );
   }
 
-  function actualizarNumeroSeguimientoEditando(
-    numeroSeguimientoNuevo: string
-  ) {
+  function actualizarNumeroSeguimientoEditando(numeroSeguimientoNuevo: string) {
     setPedidoEditando((actual) =>
       actual
         ? {
-          ...actual,
-          numeroSeguimiento: numeroSeguimientoNuevo,
-        }
-        : actual
+            ...actual,
+            numeroSeguimiento: numeroSeguimientoNuevo,
+          }
+        : actual,
     );
   }
 
@@ -836,14 +836,14 @@ export default function Home() {
       pedidosActuales.map((pedido) =>
         pedido.id === pedidoEditando.id
           ? {
-            ...pedido,
-            nombre: pedidoEditando.nombre,
-            fechaPedido: pedidoEditando.fechaPedido,
-            numeroPedido: pedidoEditando.numeroPedido,
-            numeroSeguimiento: pedidoEditando.numeroSeguimiento,
-          }
-          : pedido
-      )
+              ...pedido,
+              nombre: pedidoEditando.nombre,
+              fechaPedido: pedidoEditando.fechaPedido,
+              numeroPedido: pedidoEditando.numeroPedido,
+              numeroSeguimiento: pedidoEditando.numeroSeguimiento,
+            }
+          : pedido,
+      ),
     );
 
     try {
@@ -852,7 +852,7 @@ export default function Home() {
         pedidoEditando.nombre,
         pedidoEditando.fechaPedido,
         pedidoEditando.numeroPedido,
-        pedidoEditando.numeroSeguimiento
+        pedidoEditando.numeroSeguimiento,
       );
       setPedidoEditando(null);
     } catch (error) {
@@ -864,7 +864,7 @@ export default function Home() {
 
   async function eliminarPedido(pedidoId: number) {
     const confirmar = confirm(
-      "¿Seguro que quieres eliminar este pedido completo?"
+      "¿Seguro que quieres eliminar este pedido completo?",
     );
 
     if (!confirmar) {
@@ -874,7 +874,7 @@ export default function Home() {
     const pedidosAntes = pedidos;
 
     setPedidos((pedidosActuales) =>
-      pedidosActuales.filter((pedido) => pedido.id !== pedidoId)
+      pedidosActuales.filter((pedido) => pedido.id !== pedidoId),
     );
 
     setPedidoAbierto((actual) => (actual === pedidoId ? null : actual));
@@ -892,7 +892,7 @@ export default function Home() {
     const error = validarNuevoPedido(
       nombrePedido,
       fechaPedido,
-      productosFormulario
+      productosFormulario,
     );
 
     if (error) {
@@ -910,7 +910,8 @@ export default function Home() {
         fechaPedido,
         numeroPedido,
         numeroSeguimiento,
-        productosValidos
+        productosValidos,
+        precios,
       );
 
       setPedidos((actuales) => [nuevoPedido, ...actuales]);
@@ -964,10 +965,11 @@ export default function Home() {
               onClick={() => setPestañaActiva("historial")}
               aria-label="Historial de pedidos"
               title="Historial de pedidos"
-              className={`flex items-center justify-center rounded-xl px-4 py-3 text-sm font-medium transition ${pestañaActiva === "historial"
-                ? "bg-black text-white"
-                : "bg-surface text-muted hover:bg-surface-subtle"
-                }`}
+              className={`flex items-center justify-center rounded-xl px-4 py-3 text-sm font-medium transition ${
+                pestañaActiva === "historial"
+                  ? "bg-black text-white"
+                  : "bg-surface text-muted hover:bg-surface-subtle"
+              }`}
             >
               <Icon name="history" className="h-5 w-5" />
               <span className="sr-only">Historial de pedidos</span>
@@ -978,10 +980,11 @@ export default function Home() {
               onClick={() => setPestañaActiva("resumen")}
               aria-label="Resumen"
               title="Resumen"
-              className={`flex items-center justify-center rounded-xl px-4 py-3 text-sm font-medium transition ${pestañaActiva === "resumen"
-                ? "bg-black text-white"
-                : "bg-surface text-muted hover:bg-surface-subtle"
-                }`}
+              className={`flex items-center justify-center rounded-xl px-4 py-3 text-sm font-medium transition ${
+                pestañaActiva === "resumen"
+                  ? "bg-black text-white"
+                  : "bg-surface text-muted hover:bg-surface-subtle"
+              }`}
             >
               <Icon name="summary" className="h-5 w-5" />
               <span className="sr-only">Resumen</span>
@@ -992,10 +995,11 @@ export default function Home() {
               onClick={() => setPestañaActiva("borrador")}
               aria-label="Borrador"
               title="Borrador"
-              className={`flex items-center justify-center rounded-xl px-4 py-3 text-sm font-medium transition ${pestañaActiva === "borrador"
-                ? "bg-black text-white"
-                : "bg-surface text-muted hover:bg-surface-subtle"
-                }`}
+              className={`flex items-center justify-center rounded-xl px-4 py-3 text-sm font-medium transition ${
+                pestañaActiva === "borrador"
+                  ? "bg-black text-white"
+                  : "bg-surface text-muted hover:bg-surface-subtle"
+              }`}
             >
               <Icon name="draft" className="h-5 w-5" />
               <span className="sr-only">Borrador</span>
@@ -1006,10 +1010,11 @@ export default function Home() {
               onClick={() => setPestañaActiva("configuracion")}
               aria-label="Configuración"
               title="Configuración"
-              className={`flex items-center justify-center rounded-xl px-4 py-3 text-sm font-medium transition ${pestañaActiva === "configuracion"
+              className={`flex items-center justify-center rounded-xl px-4 py-3 text-sm font-medium transition ${
+                pestañaActiva === "configuracion"
                   ? "bg-black text-white"
                   : "bg-surface text-muted hover:bg-surface-subtle"
-                }`}
+              }`}
             >
               <Icon name="settings" className="h-5 w-5" />
               <span className="sr-only">Configuración</span>
@@ -1189,11 +1194,11 @@ export default function Home() {
         )}
 
         {pestañaActiva === "configuracion" && (
-  <ConfiguracionPrecios
-    precios={precios}
-    onPreciosChange={setPrecios}
-  />
-)}
+          <ConfiguracionPrecios
+            precios={precios}
+            onPreciosChange={setPrecios}
+          />
+        )}
       </div>
 
       {modalAbierto && (
