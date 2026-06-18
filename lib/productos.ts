@@ -13,6 +13,8 @@ export function crearProductoVacio(id: number): Producto {
     numeroPersonalizacion: "",
     precioVentaManual: 0,
     costeManual: 0,
+    ventaUnidadSnapshot: null,
+    costeUnidadSnapshot: null,
     pagado: false,
     entregado: false,
   };

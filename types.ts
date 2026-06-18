@@ -30,6 +30,8 @@ export type Producto = {
   numeroPersonalizacion: string;
   precioVentaManual: number;
   costeManual: number;
+  ventaUnidadSnapshot: number | null;
+  costeUnidadSnapshot: number | null;
   pagado: boolean;
   entregado: boolean;
 };
@@ -41,6 +43,7 @@ export type Pedido = {
   numeroPedido: string;
   numeroSeguimiento: string;
   archivado: boolean;
+  costeFijoSnapshot: number | null;
   productos: Producto[];
 };
 
