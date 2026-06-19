@@ -1,5 +1,7 @@
 import { supabase } from "./supabase";
-import type { Pedido, Producto } from "../types";
+import type { ConfiguracionPrecios, Pedido, Producto } from "../types";
+import { aplicarPrecioProductoActual } from "./calculos";
+import { calcularGastoEnvioPedido } from "./gastos-envio";
 
 type ProductoDB = {
   id: number;
@@ -14,6 +16,8 @@ type ProductoDB = {
   numero_personalizacion: string;
   precio_venta_manual: number | null;
   coste_manual: number | null;
+  venta_unidad_snapshot: number | null;
+  coste_unidad_snapshot: number | null;
   pagado: boolean;
   entregado: boolean;
 };
@@ -25,6 +29,9 @@ type PedidoDB = {
   numero_pedido: string | null;
   numero_seguimiento: string | null;
   archivado: boolean;
+  coste_fijo_snapshot: number | null;
+  incluir_gastos_envio: boolean | null;
+  gasto_envio_snapshot: number | null;
   productos: ProductoDB[];
 };
 
@@ -41,6 +48,8 @@ const PRODUCTOS_SELECT = `
   numero_personalizacion,
   precio_venta_manual,
   coste_manual,
+  venta_unidad_snapshot,
+  coste_unidad_snapshot,
   pagado,
   entregado
 `;
@@ -58,6 +67,14 @@ function productoDesdeDB(producto: ProductoDB): Producto {
     numeroPersonalizacion: producto.numero_personalizacion,
     precioVentaManual: Number(producto.precio_venta_manual ?? 0),
     costeManual: Number(producto.coste_manual ?? 0),
+    ventaUnidadSnapshot:
+      producto.venta_unidad_snapshot === null
+        ? null
+        : Number(producto.venta_unidad_snapshot),
+    costeUnidadSnapshot:
+      producto.coste_unidad_snapshot === null
+        ? null
+        : Number(producto.coste_unidad_snapshot),
     pagado: producto.pagado,
     entregado: producto.entregado,
   };
@@ -72,14 +89,28 @@ function productoParaDB(producto: Producto, pedidoId: number) {
     tipo: producto.tipo,
     manga: producto.manga,
     personalizacion:
-      producto.tipo === "Otro" ? false : producto.personalizacion,
+      producto.tipo === "Otro" ||
+      producto.tipo === "Traje infantil" ||
+      producto.tipo === "Parche"
+        ? false
+        : producto.personalizacion,
     nombre_personalizacion:
-      producto.tipo === "Otro" ? "" : producto.nombrePersonalizacion,
+      producto.tipo === "Otro" ||
+      producto.tipo === "Traje infantil" ||
+      producto.tipo === "Parche"
+        ? ""
+        : producto.nombrePersonalizacion,
     numero_personalizacion:
-      producto.tipo === "Otro" ? "" : producto.numeroPersonalizacion,
+      producto.tipo === "Otro" ||
+      producto.tipo === "Traje infantil" ||
+      producto.tipo === "Parche"
+        ? ""
+        : producto.numeroPersonalizacion,
     precio_venta_manual:
       producto.tipo === "Otro" ? producto.precioVentaManual : null,
     coste_manual: producto.tipo === "Otro" ? producto.costeManual : null,
+    venta_unidad_snapshot: producto.ventaUnidadSnapshot,
+    coste_unidad_snapshot: producto.costeUnidadSnapshot,
     pagado: producto.pagado,
     entregado: producto.entregado,
   };
@@ -103,10 +134,13 @@ export async function cargarPedidos(): Promise<Pedido[]> {
       numero_pedido,
       numero_seguimiento,
       archivado,
+      coste_fijo_snapshot,
+      incluir_gastos_envio,
+      gasto_envio_snapshot,
       productos (
         ${PRODUCTOS_SELECT}
       )
-    `
+    `,
     )
     .order("fecha_pedido", { ascending: false })
     .order("id", { ascending: false });
@@ -122,6 +156,15 @@ export async function cargarPedidos(): Promise<Pedido[]> {
     numeroPedido: pedido.numero_pedido ?? "",
     numeroSeguimiento: pedido.numero_seguimiento ?? "",
     archivado: pedido.archivado,
+    costeFijoSnapshot:
+      pedido.coste_fijo_snapshot === null
+        ? null
+        : Number(pedido.coste_fijo_snapshot),
+    incluirGastosEnvio: Boolean(pedido.incluir_gastos_envio),
+    gastoEnvioSnapshot:
+      pedido.gasto_envio_snapshot === null
+        ? null
+        : Number(pedido.gasto_envio_snapshot),
     productos: pedido.productos.map(productoDesdeDB),
   }));
 }
@@ -131,9 +174,14 @@ export async function crearPedidoConProductos(
   fechaPedido: string,
   numeroPedido: string,
   numeroSeguimiento: string,
-  productos: Producto[]
+  productos: Producto[],
+  precios: ConfiguracionPrecios,
+  incluirGastosEnvio: boolean,
 ): Promise<Pedido> {
-  const archivado = calcularArchivadoPedido(productos);
+  const productosConPrecios = productos.map((producto) =>
+    aplicarPrecioProductoActual(producto, precios),
+  );
+  const archivado = calcularArchivadoPedido(productosConPrecios);
 
   const { data: pedidoCreado, error: errorPedido } = await supabase
     .from("pedidos")
@@ -143,16 +191,23 @@ export async function crearPedidoConProductos(
       numero_pedido: numeroPedido.trim() || null,
       numero_seguimiento: numeroSeguimiento.trim() || null,
       archivado,
+      coste_fijo_snapshot: precios.costeFijoPedido,
+      incluir_gastos_envio: incluirGastosEnvio,
+      gasto_envio_snapshot: incluirGastosEnvio
+        ? calcularGastoEnvioPedido(productosConPrecios.length)
+        : null,
     })
-    .select("id, nombre, fecha_pedido, numero_pedido, numero_seguimiento, archivado")
+    .select(
+      "id, nombre, fecha_pedido, numero_pedido, numero_seguimiento, archivado, coste_fijo_snapshot, incluir_gastos_envio, gasto_envio_snapshot",
+    )
     .single();
 
   if (errorPedido) {
     throw errorPedido;
   }
 
-  const productosParaInsertar = productos.map((producto) =>
-    productoParaDB(producto, pedidoCreado.id)
+  const productosParaInsertar = productosConPrecios.map((producto) =>
+    productoParaDB(producto, pedidoCreado.id),
   );
 
   const { data: productosCreados, error: errorProductos } = await supabase
@@ -171,17 +226,32 @@ export async function crearPedidoConProductos(
     numeroPedido: pedidoCreado.numero_pedido ?? "",
     numeroSeguimiento: pedidoCreado.numero_seguimiento ?? "",
     archivado: pedidoCreado.archivado,
+    costeFijoSnapshot:
+      pedidoCreado.coste_fijo_snapshot === null
+        ? null
+        : Number(pedidoCreado.coste_fijo_snapshot),
+    incluirGastosEnvio: Boolean(pedidoCreado.incluir_gastos_envio),
+    gastoEnvioSnapshot:
+      pedidoCreado.gasto_envio_snapshot === null
+        ? null
+        : Number(pedidoCreado.gasto_envio_snapshot),
     productos: ((productosCreados ?? []) as ProductoDB[]).map(productoDesdeDB),
   };
 }
 
 export async function crearProductoEnPedido(
   pedidoId: number,
-  producto: Producto
+  producto: Producto,
+  precios?: ConfiguracionPrecios,
 ): Promise<Producto> {
   const { data, error } = await supabase
     .from("productos")
-    .insert(productoParaDB(producto, pedidoId))
+    .insert(
+      productoParaDB(
+        precios ? aplicarPrecioProductoActual(producto, precios) : producto,
+        pedidoId,
+      ),
+    )
     .select(PRODUCTOS_SELECT)
     .single();
 
@@ -197,7 +267,9 @@ export async function actualizarPedidoDB(
   nombre: string,
   fechaPedido: string,
   numeroPedido: string,
-  numeroSeguimiento: string
+  numeroSeguimiento: string,
+  incluirGastosEnvio: boolean,
+  gastoEnvioSnapshot: number | null,
 ) {
   const { error } = await supabase
     .from("pedidos")
@@ -206,6 +278,28 @@ export async function actualizarPedidoDB(
       fecha_pedido: fechaPedido,
       numero_pedido: numeroPedido.trim() || null,
       numero_seguimiento: numeroSeguimiento.trim() || null,
+      incluir_gastos_envio: incluirGastosEnvio,
+      gasto_envio_snapshot: gastoEnvioSnapshot,
+    })
+    .eq("id", pedidoId);
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function actualizarGastoEnvioPedidoDB(
+  pedidoId: number,
+  productos: Producto[],
+  incluirGastosEnvio: boolean,
+) {
+  const { error } = await supabase
+    .from("pedidos")
+    .update({
+      incluir_gastos_envio: incluirGastosEnvio,
+      gasto_envio_snapshot: incluirGastosEnvio
+        ? calcularGastoEnvioPedido(productos.length)
+        : null,
     })
     .eq("id", pedidoId);
 
@@ -216,7 +310,7 @@ export async function actualizarPedidoDB(
 
 export async function actualizarArchivadoPedidoDB(
   pedidoId: number,
-  archivado: boolean
+  archivado: boolean,
 ) {
   const { error } = await supabase
     .from("pedidos")
@@ -246,14 +340,28 @@ export async function actualizarProductoDB(producto: Producto) {
       tipo: producto.tipo,
       manga: producto.manga,
       personalizacion:
-        producto.tipo === "Otro" ? false : producto.personalizacion,
+        producto.tipo === "Otro" ||
+        producto.tipo === "Traje infantil" ||
+        producto.tipo === "Parche"
+          ? false
+          : producto.personalizacion,
       nombre_personalizacion:
-        producto.tipo === "Otro" ? "" : producto.nombrePersonalizacion,
+        producto.tipo === "Otro" ||
+        producto.tipo === "Traje infantil" ||
+        producto.tipo === "Parche"
+          ? ""
+          : producto.nombrePersonalizacion,
       numero_personalizacion:
-        producto.tipo === "Otro" ? "" : producto.numeroPersonalizacion,
+        producto.tipo === "Otro" ||
+        producto.tipo === "Traje infantil" ||
+        producto.tipo === "Parche"
+          ? ""
+          : producto.numeroPersonalizacion,
       precio_venta_manual:
         producto.tipo === "Otro" ? producto.precioVentaManual : null,
       coste_manual: producto.tipo === "Otro" ? producto.costeManual : null,
+      venta_unidad_snapshot: producto.ventaUnidadSnapshot,
+      coste_unidad_snapshot: producto.costeUnidadSnapshot,
       pagado: producto.pagado,
       entregado: producto.entregado,
     })
@@ -280,7 +388,7 @@ export async function actualizarEstadoProductoDB(
   campos: {
     pagado?: boolean;
     entregado?: boolean;
-  }
+  },
 ) {
   const { error } = await supabase
     .from("productos")
@@ -294,7 +402,7 @@ export async function actualizarEstadoProductoDB(
 
 export async function marcarTodosProductosPedidoDB(
   pedidoId: number,
-  campo: "pagado" | "entregado"
+  campo: "pagado" | "entregado",
 ) {
   const { error } = await supabase
     .from("productos")

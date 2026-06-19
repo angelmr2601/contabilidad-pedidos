@@ -33,14 +33,64 @@ const CAMPOS: {
     descripcion: "Precio de venta base de una camiseta Fan.",
   },
   {
-    campo: "costeRetroPlayer",
-    titulo: "Coste Retro/Player",
-    descripcion: "Coste base de una camiseta Retro o Player.",
+    campo: "costePlayer",
+    titulo: "Coste Player",
+    descripcion: "Coste base de una camiseta Player.",
   },
   {
-    campo: "ventaRetroPlayer",
-    titulo: "Venta Retro/Player",
-    descripcion: "Precio de venta base de una camiseta Retro o Player.",
+    campo: "ventaPlayer",
+    titulo: "Venta Player",
+    descripcion: "Precio de venta base de una camiseta Player.",
+  },
+  {
+    campo: "costeRetro",
+    titulo: "Coste Retro",
+    descripcion: "Coste base de una camiseta Retro.",
+  },
+  {
+    campo: "ventaRetro",
+    titulo: "Venta Retro",
+    descripcion: "Precio de venta base de una camiseta Retro.",
+  },
+  {
+    campo: "costeTrajeInfantil",
+    titulo: "Coste traje infantil",
+    descripcion: "Coste base de un traje infantil.",
+  },
+  {
+    campo: "ventaTrajeInfantil",
+    titulo: "Venta traje infantil",
+    descripcion: "Precio de venta base de un traje infantil.",
+  },
+  {
+    campo: "costeParche",
+    titulo: "Coste parche",
+    descripcion: "Coste de un parche.",
+  },
+  {
+    campo: "ventaParche",
+    titulo: "Venta parche",
+    descripcion: "Precio de venta de un parche.",
+  },
+  {
+    campo: "costeTalla3XL",
+    titulo: "Coste extra 3XL",
+    descripcion: "Extra de coste para tallas 3XL.",
+  },
+  {
+    campo: "ventaTalla3XL",
+    titulo: "Venta extra 3XL",
+    descripcion: "Extra de venta para tallas 3XL.",
+  },
+  {
+    campo: "costeTalla4XL",
+    titulo: "Coste extra 4XL",
+    descripcion: "Extra de coste para tallas 4XL.",
+  },
+  {
+    campo: "ventaTalla4XL",
+    titulo: "Venta extra 4XL",
+    descripcion: "Extra de venta para tallas 4XL.",
   },
   {
     campo: "costePersonalizacion",
@@ -73,8 +123,7 @@ export default function ConfiguracionPrecios({
   precios,
   onPreciosChange,
 }: Props) {
-  const [formulario, setFormulario] =
-    useState<ConfiguracionPrecios>(precios);
+  const [formulario, setFormulario] = useState<ConfiguracionPrecios>(precios);
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState("");
 
@@ -129,7 +178,7 @@ export default function ConfiguracionPrecios({
 
   async function restaurarDefecto() {
     const confirmar = confirm(
-      "¿Seguro que quieres restaurar los precios por defecto?"
+      "¿Seguro que quieres restaurar los precios por defecto?",
     );
 
     if (!confirmar) {
@@ -249,9 +298,7 @@ export default function ConfiguracionPrecios({
               className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
             />
 
-            <p className="mt-2 text-xs text-muted">
-              {campo.descripcion}
-            </p>
+            <p className="mt-2 text-xs text-muted">{campo.descripcion}</p>
           </div>
         ))}
       </div>

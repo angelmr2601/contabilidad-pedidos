@@ -10,15 +10,55 @@ import type {
 type Props = {
   producto: Producto;
   precios: ConfiguracionPrecios;
-  onChange: (
-    campo: keyof Producto,
-    valor: string | number | boolean
-  ) => void;
+  onChange: (campo: keyof Producto, valor: string | number | boolean) => void;
 };
 
 export default function ProductoForm({ producto, precios, onChange }: Props) {
   const calculo = calcularProducto(producto, precios);
   const esOtro = producto.tipo === "Otro";
+  const esTrajeInfantil = producto.tipo === "Traje infantil";
+  const esParche = producto.tipo === "Parche";
+  const bloqueaExtras = esOtro || esTrajeInfantil || esParche;
+  const tallasAdulto: TallaProducto[] = [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "XXL",
+    "3XL",
+    "4XL",
+  ];
+  const tallasInfantiles: TallaProducto[] = [
+    "16",
+    "18",
+    "20",
+    "22",
+    "24",
+    "26",
+    "28",
+  ];
+  const tallasDisponibles = esTrajeInfantil ? tallasInfantiles : tallasAdulto;
+
+  function cambiarTipo(tipo: TipoProducto) {
+    onChange("tipo", tipo);
+
+    if (
+      tipo === "Traje infantil" &&
+      !tallasInfantiles.includes(producto.talla)
+    ) {
+      onChange("talla", "16");
+    }
+
+    if (tipo !== "Traje infantil" && !tallasAdulto.includes(producto.talla)) {
+      onChange("talla", "M");
+    }
+
+    if (tipo === "Otro" || tipo === "Traje infantil" || tipo === "Parche") {
+      onChange("personalizacion", false);
+      onChange("nombrePersonalizacion", "");
+      onChange("numeroPersonalizacion", "");
+    }
+  }
 
   return (
     <>
@@ -52,13 +92,11 @@ export default function ProductoForm({ producto, precios, onChange }: Props) {
             }
             className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
           >
-            <option value="S">S</option>
-            <option value="M">M</option>
-            <option value="L">L</option>
-            <option value="XL">XL</option>
-            <option value="XXL">XXL</option>
-            <option value="3XL">3XL</option>
-            <option value="4XL">4XL</option>
+            {tallasDisponibles.map((talla) => (
+              <option key={talla} value={talla}>
+                {talla}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -67,12 +105,15 @@ export default function ProductoForm({ producto, precios, onChange }: Props) {
           <select
             value={producto.tipo}
             onChange={(event) =>
-              onChange("tipo", event.target.value as TipoProducto)
+              cambiarTipo(event.target.value as TipoProducto)
             }
             className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
           >
             <option value="Fan">Fan</option>
-            <option value="Retro/Player">Retro/Player</option>
+            <option value="Player">Player</option>
+            <option value="Retro">Retro</option>
+            <option value="Traje infantil">Traje infantil</option>
+            <option value="Parche">Parche</option>
             <option value="Otro">Otro</option>
           </select>
         </div>
@@ -84,7 +125,7 @@ export default function ProductoForm({ producto, precios, onChange }: Props) {
             onChange={(event) =>
               onChange("manga", event.target.value as MangaProducto)
             }
-            disabled={esOtro}
+            disabled={bloqueaExtras}
             className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:text-muted/70"
           >
             <option value="Corta">Corta</option>
@@ -134,7 +175,7 @@ export default function ProductoForm({ producto, precios, onChange }: Props) {
           <input
             type="checkbox"
             checked={producto.personalizacion}
-            disabled={esOtro}
+            disabled={bloqueaExtras}
             onChange={(event) =>
               onChange("personalizacion", event.target.checked)
             }
@@ -161,7 +202,7 @@ export default function ProductoForm({ producto, precios, onChange }: Props) {
         </label>
       </div>
 
-      {!esOtro && producto.personalizacion && (
+      {!bloqueaExtras && producto.personalizacion && (
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div>
             <label className="mb-2 block text-sm font-medium">
@@ -172,7 +213,7 @@ export default function ProductoForm({ producto, precios, onChange }: Props) {
               onChange={(event) =>
                 onChange(
                   "nombrePersonalizacion",
-                  event.target.value.toUpperCase()
+                  event.target.value.toUpperCase(),
                 )
               }
               placeholder="Ej: MESSI"
@@ -199,8 +240,8 @@ export default function ProductoForm({ producto, precios, onChange }: Props) {
       {esOtro && (
         <p className="mt-3 text-sm text-muted">
           En productos de tipo “Otro”, el coste y la venta se introducen
-          manualmente. No se aplican extras automáticos por manga larga ni
-          personalización.
+          manualmente. No se aplican extras automáticos por manga larga, talla
+          ni personalización.
         </p>
       )}
 
