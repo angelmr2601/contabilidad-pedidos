@@ -89,11 +89,23 @@ function productoParaDB(producto: Producto, pedidoId: number) {
     tipo: producto.tipo,
     manga: producto.manga,
     personalizacion:
-      producto.tipo === "Otro" ? false : producto.personalizacion,
+      producto.tipo === "Otro" ||
+      producto.tipo === "Traje infantil" ||
+      producto.tipo === "Parche"
+        ? false
+        : producto.personalizacion,
     nombre_personalizacion:
-      producto.tipo === "Otro" ? "" : producto.nombrePersonalizacion,
+      producto.tipo === "Otro" ||
+      producto.tipo === "Traje infantil" ||
+      producto.tipo === "Parche"
+        ? ""
+        : producto.nombrePersonalizacion,
     numero_personalizacion:
-      producto.tipo === "Otro" ? "" : producto.numeroPersonalizacion,
+      producto.tipo === "Otro" ||
+      producto.tipo === "Traje infantil" ||
+      producto.tipo === "Parche"
+        ? ""
+        : producto.numeroPersonalizacion,
     precio_venta_manual:
       producto.tipo === "Otro" ? producto.precioVentaManual : null,
     coste_manual: producto.tipo === "Otro" ? producto.costeManual : null,
@@ -328,11 +340,23 @@ export async function actualizarProductoDB(producto: Producto) {
       tipo: producto.tipo,
       manga: producto.manga,
       personalizacion:
-        producto.tipo === "Otro" ? false : producto.personalizacion,
+        producto.tipo === "Otro" ||
+        producto.tipo === "Traje infantil" ||
+        producto.tipo === "Parche"
+          ? false
+          : producto.personalizacion,
       nombre_personalizacion:
-        producto.tipo === "Otro" ? "" : producto.nombrePersonalizacion,
+        producto.tipo === "Otro" ||
+        producto.tipo === "Traje infantil" ||
+        producto.tipo === "Parche"
+          ? ""
+          : producto.nombrePersonalizacion,
       numero_personalizacion:
-        producto.tipo === "Otro" ? "" : producto.numeroPersonalizacion,
+        producto.tipo === "Otro" ||
+        producto.tipo === "Traje infantil" ||
+        producto.tipo === "Parche"
+          ? ""
+          : producto.numeroPersonalizacion,
       precio_venta_manual:
         producto.tipo === "Otro" ? producto.precioVentaManual : null,
       coste_manual: producto.tipo === "Otro" ? producto.costeManual : null,

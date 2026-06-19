@@ -21,6 +21,13 @@ const TALLAS_VALIDAS: TallaProducto[] = [
   "XXL",
   "3XL",
   "4XL",
+  "16",
+  "18",
+  "20",
+  "22",
+  "24",
+  "26",
+  "28",
 ];
 
 function normalizarTexto(valor: string) {
@@ -71,11 +78,27 @@ function normalizarTalla(valor: string): TallaProducto {
 function normalizarTipo(valor: string): TipoProducto {
   const tipo = normalizarTexto(valor);
 
-  if (tipo.includes("retro") || tipo.includes("player")) {
-    return "Retro/Player";
+  if (tipo.includes("player") || tipo.includes("jugador")) {
+    return "Player";
   }
 
-  if (tipo.includes("fan")) {
+  if (tipo.includes("retro") || tipo.includes("vintage")) {
+    return "Retro";
+  }
+
+  if (
+    tipo.includes("infantil") ||
+    tipo.includes("niño") ||
+    tipo.includes("nino")
+  ) {
+    return "Traje infantil";
+  }
+
+  if (tipo.includes("parche")) {
+    return "Parche";
+  }
+
+  if (tipo.includes("fan") || tipo.includes("hincha")) {
     return "Fan";
   }
 

@@ -7,6 +7,18 @@ type ConfiguracionPreciosDB = {
   venta_fan: number;
   coste_retro_player: number;
   venta_retro_player: number;
+  coste_player: number | null;
+  venta_player: number | null;
+  coste_retro: number | null;
+  venta_retro: number | null;
+  coste_traje_infantil: number | null;
+  venta_traje_infantil: number | null;
+  coste_parche: number | null;
+  venta_parche: number | null;
+  coste_talla_3xl: number | null;
+  venta_talla_3xl: number | null;
+  coste_talla_4xl: number | null;
+  venta_talla_4xl: number | null;
   coste_personalizacion: number;
   venta_personalizacion: number;
   coste_manga_larga: number;
@@ -20,6 +32,30 @@ function preciosDesdeDB(data: ConfiguracionPreciosDB): ConfiguracionPrecios {
     ventaFan: Number(data.venta_fan),
     costeRetroPlayer: Number(data.coste_retro_player),
     ventaRetroPlayer: Number(data.venta_retro_player),
+    costePlayer: Number(data.coste_player ?? data.coste_retro_player),
+    ventaPlayer: Number(data.venta_player ?? data.venta_retro_player),
+    costeRetro: Number(data.coste_retro ?? data.coste_retro_player),
+    ventaRetro: Number(data.venta_retro ?? data.venta_retro_player),
+    costeTrajeInfantil: Number(
+      data.coste_traje_infantil ?? PRECIOS_POR_DEFECTO.costeTrajeInfantil,
+    ),
+    ventaTrajeInfantil: Number(
+      data.venta_traje_infantil ?? PRECIOS_POR_DEFECTO.ventaTrajeInfantil,
+    ),
+    costeParche: Number(data.coste_parche ?? PRECIOS_POR_DEFECTO.costeParche),
+    ventaParche: Number(data.venta_parche ?? PRECIOS_POR_DEFECTO.ventaParche),
+    costeTalla3XL: Number(
+      data.coste_talla_3xl ?? PRECIOS_POR_DEFECTO.costeTalla3XL,
+    ),
+    ventaTalla3XL: Number(
+      data.venta_talla_3xl ?? PRECIOS_POR_DEFECTO.ventaTalla3XL,
+    ),
+    costeTalla4XL: Number(
+      data.coste_talla_4xl ?? PRECIOS_POR_DEFECTO.costeTalla4XL,
+    ),
+    ventaTalla4XL: Number(
+      data.venta_talla_4xl ?? PRECIOS_POR_DEFECTO.ventaTalla4XL,
+    ),
     costePersonalizacion: Number(data.coste_personalizacion),
     ventaPersonalizacion: Number(data.venta_personalizacion),
     costeMangaLarga: Number(data.coste_manga_larga),
@@ -34,6 +70,18 @@ function preciosParaDB(precios: ConfiguracionPrecios) {
     venta_fan: precios.ventaFan,
     coste_retro_player: precios.costeRetroPlayer,
     venta_retro_player: precios.ventaRetroPlayer,
+    coste_player: precios.costePlayer,
+    venta_player: precios.ventaPlayer,
+    coste_retro: precios.costeRetro,
+    venta_retro: precios.ventaRetro,
+    coste_traje_infantil: precios.costeTrajeInfantil,
+    venta_traje_infantil: precios.ventaTrajeInfantil,
+    coste_parche: precios.costeParche,
+    venta_parche: precios.ventaParche,
+    coste_talla_3xl: precios.costeTalla3XL,
+    venta_talla_3xl: precios.ventaTalla3XL,
+    coste_talla_4xl: precios.costeTalla4XL,
+    venta_talla_4xl: precios.ventaTalla4XL,
     coste_personalizacion: precios.costePersonalizacion,
     venta_personalizacion: precios.ventaPersonalizacion,
     coste_manga_larga: precios.costeMangaLarga,
@@ -52,6 +100,18 @@ export async function cargarConfiguracionPrecios(): Promise<ConfiguracionPrecios
       venta_fan,
       coste_retro_player,
       venta_retro_player,
+      coste_player,
+      venta_player,
+      coste_retro,
+      venta_retro,
+      coste_traje_infantil,
+      venta_traje_infantil,
+      coste_parche,
+      venta_parche,
+      coste_talla_3xl,
+      venta_talla_3xl,
+      coste_talla_4xl,
+      venta_talla_4xl,
       coste_personalizacion,
       venta_personalizacion,
       coste_manga_larga,

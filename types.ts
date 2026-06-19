@@ -1,6 +1,27 @@
-export type TipoProducto = "Fan" | "Retro/Player" | "Otro";
+export type TipoProducto =
+  | "Fan"
+  | "Player"
+  | "Retro"
+  | "Retro/Player"
+  | "Traje infantil"
+  | "Parche"
+  | "Otro";
 export type MangaProducto = "Corta" | "Larga";
-export type TallaProducto = "S" | "M" | "L" | "XL" | "XXL" | "3XL" | "4XL";
+export type TallaProducto =
+  | "S"
+  | "M"
+  | "L"
+  | "XL"
+  | "XXL"
+  | "3XL"
+  | "4XL"
+  | "16"
+  | "18"
+  | "20"
+  | "22"
+  | "24"
+  | "26"
+  | "28";
 
 export type FiltroPago = "todos" | "pagado" | "pendiente";
 export type FiltroEntrega = "todos" | "entregado" | "pendiente";
@@ -11,6 +32,18 @@ export type ConfiguracionPrecios = {
   ventaFan: number;
   costeRetroPlayer: number;
   ventaRetroPlayer: number;
+  costePlayer: number;
+  ventaPlayer: number;
+  costeRetro: number;
+  ventaRetro: number;
+  costeTrajeInfantil: number;
+  ventaTrajeInfantil: number;
+  costeParche: number;
+  ventaParche: number;
+  costeTalla3XL: number;
+  ventaTalla3XL: number;
+  costeTalla4XL: number;
+  ventaTalla4XL: number;
   costePersonalizacion: number;
   ventaPersonalizacion: number;
   costeMangaLarga: number;

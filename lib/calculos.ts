@@ -19,9 +19,29 @@ export function calcularPrecioProductoDesdeConfiguracion(
     ventaUnidad = precios.ventaFan;
   }
 
+  if (producto.tipo === "Player") {
+    costeUnidad = precios.costePlayer;
+    ventaUnidad = precios.ventaPlayer;
+  }
+
+  if (producto.tipo === "Retro") {
+    costeUnidad = precios.costeRetro;
+    ventaUnidad = precios.ventaRetro;
+  }
+
   if (producto.tipo === "Retro/Player") {
     costeUnidad = precios.costeRetroPlayer;
     ventaUnidad = precios.ventaRetroPlayer;
+  }
+
+  if (producto.tipo === "Traje infantil") {
+    costeUnidad = precios.costeTrajeInfantil;
+    ventaUnidad = precios.ventaTrajeInfantil;
+  }
+
+  if (producto.tipo === "Parche") {
+    costeUnidad = precios.costeParche;
+    ventaUnidad = precios.ventaParche;
   }
 
   if (producto.tipo === "Otro") {
@@ -29,7 +49,11 @@ export function calcularPrecioProductoDesdeConfiguracion(
     ventaUnidad = producto.precioVentaManual || 0;
   }
 
-  if (producto.tipo !== "Otro") {
+  if (
+    producto.tipo !== "Otro" &&
+    producto.tipo !== "Traje infantil" &&
+    producto.tipo !== "Parche"
+  ) {
     if (producto.personalizacion) {
       costeUnidad += precios.costePersonalizacion;
       ventaUnidad += precios.ventaPersonalizacion;
@@ -38,6 +62,16 @@ export function calcularPrecioProductoDesdeConfiguracion(
     if (producto.manga === "Larga") {
       costeUnidad += precios.costeMangaLarga;
       ventaUnidad += precios.ventaMangaLarga;
+    }
+
+    if (producto.talla === "3XL") {
+      costeUnidad += precios.costeTalla3XL;
+      ventaUnidad += precios.ventaTalla3XL;
+    }
+
+    if (producto.talla === "4XL") {
+      costeUnidad += precios.costeTalla4XL;
+      ventaUnidad += precios.ventaTalla4XL;
     }
   }
 
