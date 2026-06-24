@@ -11,6 +11,12 @@ type MailStatusRow = {
   excerpt: string | null;
   received_at: string | null;
   updated_at: string;
+  recipients?: string[] | null;
+  plain_body?: string | null;
+  plain_html?: string | null;
+  body_url?: string | null;
+  attachments?: unknown;
+  payload_metadata?: unknown;
 };
 
 function asString(value: unknown) {
@@ -53,6 +59,88 @@ function deepFindString(source: unknown, keys: string[]): string {
   }
 
   return "";
+}
+
+function deepFindStringArray(source: unknown, keys: string[]): string[] {
+  for (const key of keys) {
+    const queue: unknown[] = [source];
+    const seen = new Set<unknown>();
+
+    while (queue.length) {
+      const current = queue.shift();
+
+      if (!isRecord(current) || seen.has(current)) {
+        continue;
+      }
+
+      seen.add(current);
+      const value = current[key];
+
+      if (Array.isArray(value)) {
+        return value
+          .map((item) => {
+            if (typeof item === "string") return item;
+            if (isRecord(item)) return asString(item.email || item.address || item.name);
+            return "";
+          })
+          .filter(Boolean);
+      }
+
+      if (typeof value === "string" && value.trim()) {
+        return [value];
+      }
+
+      for (const child of Object.values(current)) {
+        if (isRecord(child) || Array.isArray(child)) {
+          queue.push(child);
+        }
+      }
+    }
+  }
+
+  return [];
+}
+
+function deepFindValue(source: unknown, keys: string[]): unknown {
+  for (const key of keys) {
+    const queue: unknown[] = [source];
+    const seen = new Set<unknown>();
+
+    while (queue.length) {
+      const current = queue.shift();
+
+      if (!isRecord(current) || seen.has(current)) {
+        continue;
+      }
+
+      seen.add(current);
+
+      if (current[key] !== undefined) {
+        return current[key];
+      }
+
+      for (const child of Object.values(current)) {
+        if (isRecord(child) || Array.isArray(child)) {
+          queue.push(child);
+        }
+      }
+    }
+  }
+
+  return undefined;
+}
+
+function normalizeAttachments(value: unknown) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.slice(0, 20).filter(isRecord).map((attachment) => ({
+    filename: asString(attachment.filename || attachment.name),
+    contentType: asString(attachment.contentType || attachment.content_type || attachment.mimeType),
+    sizeBytes: typeof attachment.sizeBytes === "number" ? attachment.sizeBytes : attachment.size,
+    fileUrl: asString(attachment.fileUrl || attachment.url),
+  }));
 }
 
 function deepFindAddress(source: unknown) {
@@ -223,6 +311,11 @@ export function webhookPayloadToRow(payload: WebhookPayload) {
     ]),
     received_at: timestamp,
     updated_at: new Date().toISOString(),
+    recipients: deepFindStringArray(root, ["to", "recipients", "recipient", "deliveredTo"]),
+    plain_body: deepFindString(root, ["plainBody", "plain_body", "text", "plain_text"]),
+    plain_html: deepFindString(root, ["plainHtml", "plain_html", "html"]),
+    body_url: deepFindString(root, ["bodyUrl", "body_url"]),
+    attachments: normalizeAttachments(deepFindValue(root, ["attachments"])),
     payload_metadata: sanitizePayloadMetadata(root),
   };
 }
@@ -261,7 +354,7 @@ function rowToSummary(row: MailStatusRow): HostingerMessageSummary {
       "Mensaje recibido por webhook. Abre Hostinger para ver el cuerpo completo hasta conectar el endpoint REST oficial.",
     date: row.received_at ?? row.updated_at,
     read: row.status === "respondido",
-    hasAttachments: false,
+    hasAttachments: Array.isArray(row.attachments) && row.attachments.length > 0,
   };
 }
 
@@ -281,7 +374,7 @@ export async function listWebhookMessages({
   let request = supabase
     .from("hostinger_mail_message_statuses")
     .select(
-      "message_id, mailbox, status, sender_email, sender_name, subject, excerpt, received_at, updated_at",
+      "message_id, mailbox, status, sender_email, sender_name, subject, excerpt, received_at, updated_at, recipients, plain_body, plain_html, body_url, attachments, payload_metadata",
       { count: "exact" },
     )
     .order("received_at", { ascending: false, nullsFirst: false })
@@ -311,5 +404,35 @@ export async function listWebhookMessages({
     perPage,
     total: count ?? 0,
     nextPage: count && to + 1 < count ? page + 1 : null,
+  };
+}
+
+
+export async function getWebhookMessage(messageId: string) {
+  const { data, error } = await supabase
+    .from("hostinger_mail_message_statuses")
+    .select(
+      "message_id, mailbox, status, sender_email, sender_name, subject, excerpt, received_at, updated_at, recipients, plain_body, plain_html, body_url, attachments, payload_metadata",
+    )
+    .eq("message_id", messageId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  const row = data as MailStatusRow;
+  return {
+    ...rowToSummary(row),
+    recipients: row.recipients ?? [],
+    textBody: row.plain_body ?? row.excerpt ?? "",
+    htmlBody: row.plain_html ?? "",
+    bodyUrl: row.body_url ?? "",
+    attachments: Array.isArray(row.attachments) ? row.attachments : [],
+    internalStatus: row.status,
   };
 }
