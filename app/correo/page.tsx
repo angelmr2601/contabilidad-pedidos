@@ -25,22 +25,7 @@ type MessageDetail = Msg & {
   internalStatus: string;
 };
 
-type RelatedOrder = {
-  id: number;
-  numeroPedido: string;
-  fechaPedido: string;
-  estado: string;
-  importe: number;
-};
-
-const folders = [
-  ["inbox", "Recibidos", "📥"],
-  ["sent", "Enviados", "📤"],
-  ["drafts", "Borradores", "📝"],
-  ["archive", "Archivados", "🗄️"],
-  ["spam", "Spam", "⚠️"],
-  ["trash", "Papelera", "🗑️"],
-];
+const mailboxLabel = "Recibidos";
 
 function formatDate(value: string) {
   const date = new Date(value);
@@ -58,7 +43,6 @@ export default function CorreoPage() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<MessageDetail | null>(null);
-  const [related, setRelated] = useState<RelatedOrder[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
@@ -91,7 +75,7 @@ export default function CorreoPage() {
       }
 
       setMessages(json.items ?? []);
-      setNotice(json.pending ?? "");
+      setNotice("");
     } catch (loadError) {
       setError((loadError as Error).message);
     } finally {
@@ -116,11 +100,9 @@ export default function CorreoPage() {
       }
 
       setDetail(json.message);
-      setRelated(json.related ?? []);
     } catch (detailError) {
       setError((detailError as Error).message);
       setDetail(null);
-      setRelated([]);
     } finally {
       setLoadingDetail(false);
     }
@@ -206,21 +188,17 @@ export default function CorreoPage() {
           </button>
 
           <nav className="space-y-1">
-            {folders.map(([id, label, icon]) => (
-              <button
-                key={id}
-                onClick={() => setFolder(id)}
-                className={`flex w-full items-center justify-between rounded-r-full px-4 py-2 text-sm transition ${
-                  folder === id
-                    ? "bg-[#d3e3fd] font-semibold text-[#001d35] dark:bg-[#243b5a] dark:text-[#d3e3fd]"
-                    : "text-[#202124] hover:bg-[#e8eaed] dark:text-[#e8eaed] dark:hover:bg-[#202124]"
-                }`}
-              >
-                <span className="flex items-center gap-3"><span>{icon}</span>{label}</span>
-                {id === "inbox" && unreadCount > 0 && <span className="text-xs">{unreadCount}</span>}
-              </button>
-            ))}
+            <button
+              onClick={() => setFolder("inbox")}
+              className="flex w-full items-center justify-between rounded-r-full bg-[#d3e3fd] px-4 py-2 text-sm font-semibold text-[#001d35] transition dark:bg-[#243b5a] dark:text-[#d3e3fd]"
+            >
+              <span className="flex items-center gap-3"><span>📥</span>{mailboxLabel}</span>
+              {unreadCount > 0 && <span className="text-xs">{unreadCount}</span>}
+            </button>
           </nav>
+          <p className="mt-4 px-4 text-xs leading-5 text-[#5f6368] dark:text-[#bdc1c6]">
+            Esta vista muestra los correos recibidos por el webhook de Hostinger.
+          </p>
         </aside>
 
         <section className="flex min-w-0 flex-col">
@@ -276,7 +254,7 @@ export default function CorreoPage() {
                   <span className="min-w-0">
                     <span className="block truncate">{message.from.name || message.from.email}</span>
                     <span className="block truncate"><span>{message.subject || "Sin asunto"}</span>{message.excerpt ? <span className="font-normal text-[#5f6368] dark:text-[#bdc1c6]"> — {message.excerpt}</span> : null}</span>
-                    <span className="mt-1 block text-xs font-normal text-[#5f6368] dark:text-[#bdc1c6]">{message.folder}{message.hasAttachments ? " · 📎 adjuntos" : ""}</span>
+                    <span className="mt-1 block text-xs font-normal text-[#5f6368] dark:text-[#bdc1c6]">{mailboxLabel}{message.hasAttachments ? " · 📎 adjuntos" : ""}</span>
                   </span>
                   <span className="whitespace-nowrap text-xs font-medium text-[#5f6368] dark:text-[#bdc1c6]">{formatShortDate(message.date)}</span>
                 </button>
@@ -290,7 +268,7 @@ export default function CorreoPage() {
                   <div>
                     <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-[#f1f3f4] text-4xl dark:bg-[#202124]">📭</div>
                     <h2 className="text-lg font-medium text-[#202124] dark:text-[#e8eaed]">Selecciona un correo</h2>
-                    <p className="mt-1 text-sm">Verás aquí el contenido, adjuntos y pedidos relacionados.</p>
+                    <p className="mt-1 text-sm">Verás aquí el contenido y los adjuntos del correo.</p>
                   </div>
                 </div>
               )}
@@ -337,18 +315,6 @@ export default function CorreoPage() {
                     )}
                   </div>
 
-                  <section className="mt-5 rounded-2xl bg-[#f8fafd] p-5 dark:bg-[#202124]">
-                    <h3 className="font-semibold">Cliente y pedidos</h3>
-                    {related.length === 0 && <p className="mt-1 text-sm text-[#5f6368] dark:text-[#bdc1c6]">No hay pedidos relacionados para este remitente.</p>}
-                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                      {related.map((order) => (
-                        <Link key={order.id} href="/" className="rounded-xl bg-white p-3 text-sm shadow-sm hover:shadow dark:bg-[#15171c]">
-                          <span className="font-semibold">Pedido #{order.numeroPedido || order.id}</span>
-                          <br />{order.fechaPedido} · {order.estado} · {order.importe.toFixed(2)} €
-                        </Link>
-                      ))}
-                    </div>
-                  </section>
                 </article>
               )}
             </section>

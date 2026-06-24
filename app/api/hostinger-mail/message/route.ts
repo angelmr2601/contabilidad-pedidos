@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { buscarPedidosPorEmail } from "../../../../lib/hostinger-mail/orders";
 import { sanitizeMailHtml } from "../../../../lib/hostinger-mail/schemas";
 import { getWebhookMessage } from "../../../../lib/hostinger-mail/status-db";
 
@@ -20,15 +19,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "No se encontró el mensaje." }, { status: 404 });
     }
 
-    const related = message.from.email
-      ? await buscarPedidosPorEmail(message.from.email).catch(() => [])
-      : [];
-
     return NextResponse.json(
       {
         message,
         sanitizedHtml: sanitizeMailHtml(message.htmlBody ?? ""),
-        related,
       },
       { headers: { "cache-control": "no-store" } },
     );

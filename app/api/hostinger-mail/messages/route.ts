@@ -18,14 +18,7 @@ export async function GET(request: NextRequest) {
   try {
     const messages = await listWebhookMessages({ page, perPage, query, read });
 
-    return NextResponse.json(
-      {
-        ...messages,
-        pending:
-          "Mostrando metadatos recibidos por webhook. El cuerpo completo se activará cuando Hostinger publique/confirmemos endpoints REST oficiales.",
-      },
-      { headers: { "cache-control": "no-store" } },
-    );
+    return NextResponse.json(messages, { headers: { "cache-control": "no-store" } });
   } catch {
     return NextResponse.json(
       { error: "No se pudieron cargar los correos recibidos por webhook." },
