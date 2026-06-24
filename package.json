@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --experimental-strip-types --experimental-specifier-resolution=node --test test/*.test.mjs",
+    "test": "node test/setup-server-only.mjs && node --experimental-strip-types --experimental-specifier-resolution=node --test test/*.test.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
