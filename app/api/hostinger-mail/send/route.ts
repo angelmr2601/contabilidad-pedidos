@@ -1,0 +1,3 @@
+import { NextRequest, NextResponse } from "next/server";
+import { splitEmails, validateSendMail } from "../../../../lib/hostinger-mail/schemas";
+export async function POST(request:NextRequest){ const body=await request.json().catch(()=>null) as {to?:string;cc?:string;bcc?:string;subject?:string;text?:string}|null; const input={ to: splitEmails(body?.to ?? ""), cc: splitEmails(body?.cc ?? ""), bcc: splitEmails(body?.bcc ?? ""), subject: body?.subject ?? "", text: body?.text ?? "" }; const error=validateSendMail(input); if(error) return NextResponse.json({error},{status:422}); return NextResponse.json({ error:"Envío pendiente: no se ejecuta sin endpoint oficial verificado y sin pruebas contra sandbox." }, { status:501 }); }

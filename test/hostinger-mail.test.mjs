@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+process.env.HOSTINGER_MAIL_API_BASE_URL='https://api.mail.hostinger.com';
+process.env.HOSTINGER_MAIL_API_TOKEN='test-token';
+const { hostingerMailRequest, redactHeaders } = await import('../lib/hostinger-mail/client.ts');
+const { validateSendMail, sanitizeMailHtml, parseWebhookPayload } = await import('../lib/hostinger-mail/schemas.ts');
+test('auth bearer and pagination request', async()=>{ let seen; const data=await hostingerMailRequest('/mail/messages?page=2',{fetchImpl:async (url,init)=>{seen={url,init}; return Response.json({items:[],page:2});}}); assert.equal(seen.init.headers.authorization,'Bearer test-token'); assert.equal(data.page,2); });
+test('missing token', async()=>{ delete process.env.HOSTINGER_MAIL_API_TOKEN; await assert.rejects(()=>hostingerMailRequest('/x',{fetchImpl:fetch}),/configurada/); process.env.HOSTINGER_MAIL_API_TOKEN='test-token'; });
+for (const status of [401,429,500]) test(`http ${status}`, async()=>{ await assert.rejects(()=>hostingerMailRequest('/x',{retry:false,fetchImpl:async()=>Response.json({error:'secret'}, {status})}), err=>err.status===status && !String(err.message).includes('secret')); });
+test('timeout', async()=>{ await assert.rejects(()=>hostingerMailRequest('/x',{timeoutMs:1,fetchImpl:async (_u,init)=>new Promise((_,rej)=>init.signal.addEventListener('abort',()=>rej(Object.assign(new Error('aborted'),{name:'AbortError'}))))}), err=>err.status===504); });
+test('send form validation', ()=>{ assert.equal(validateSendMail({to:[],subject:'a',text:'b'}),'Añade al menos un destinatario válido.'); assert.equal(validateSendMail({to:['a@b.com'],subject:'a',text:'b'}),null); });
+test('sanitize html', ()=>{ const out=sanitizeMailHtml('<p onclick="x()">Hola<img src="https://t"></p><script>x()</script>'); assert(!out.includes('script')); assert(!out.includes('onclick')); assert(out.includes('data-blocked-src')); });
+test('webhook parse', ()=>{ assert(parseWebhookPayload({event:'message.received',id:'1'})); assert.equal(parseWebhookPayload({event:'x'}),null); });
+test('redact authorization', ()=>{ assert.equal(redactHeaders({authorization:'Bearer abc'}).get('authorization'),'Bearer [REDACTED]'); });

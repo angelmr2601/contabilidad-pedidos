@@ -34,3 +34,48 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Integración Hostinger Mail
+
+La ruta `/correo` añade el apartado de gestión de correo. La aplicación mantiene el flujo seguro `navegador → servidor de la aplicación → Hostinger Mail`; el token nunca se expone al cliente.
+
+### Variables de entorno
+
+Copia `.env.example` y configura en el entorno del servidor:
+
+```env
+HOSTINGER_MAIL_API_BASE_URL=https://api.mail.hostinger.com
+HOSTINGER_MAIL_API_TOKEN=
+HOSTINGER_MAIL_WEBHOOK_SECRET=
+```
+
+También conserva las variables existentes de Supabase y Basic Auth.
+
+### Token y permisos
+
+En hPanel ve a Emails → tu dominio → Agentic mail → API → Create API token. Selecciona acceso a buzones concretos cuando sea posible. Según la documentación pública de Agentic Mail, los permisos cubren acciones SMTP/IMAP y gestión de webhooks.
+
+### Webhook
+
+Crea un webhook en Agentic mail → Webhooks con la URL pública HTTPS:
+
+```text
+https://TU_DOMINIO/api/webhooks/hostinger-mail
+```
+
+Configura el evento `message.received` y guarda el secreto generado en `HOSTINGER_MAIL_WEBHOOK_SECRET`. El endpoint valida `Authorization: Bearer <secreto>` y rechaza eventos no documentados.
+
+### Estado de endpoints REST
+
+Se verificó documentación pública de Hostinger Agentic Mail sobre autenticación Bearer, JSON, webhooks y el evento `message.received`. La página `https://api.mail.hostinger.com/` no expuso desde este entorno un esquema OpenAPI ni rutas concretas verificables para listado, detalle, envío o acciones; por seguridad, esas llamadas quedan centralizadas pero no activadas con rutas inventadas. Antes de producción hay que conectar los métodos de `lib/hostinger-mail/client.ts` a los paths oficiales publicados por Hostinger.
+
+### Pruebas
+
+```bash
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
+
+Las pruebas usan `fetch` simulado y no contactan buzones reales ni envían correos.
