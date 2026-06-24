@@ -10,6 +10,12 @@ function unauthorized() {
 }
 
 export function proxy(request: NextRequest) {
+  // Hostinger no puede enviar Basic Auth al webhook. Esta ruta se protege
+  // con su propio Bearer token HOSTINGER_MAIL_WEBHOOK_SECRET en el handler.
+  if (request.nextUrl.pathname === "/api/webhooks/hostinger-mail") {
+    return NextResponse.next();
+  }
+
   // En local no pedimos contraseña
   if (process.env.NODE_ENV === "development") {
     return NextResponse.next();
