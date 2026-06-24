@@ -72,9 +72,18 @@ export type WebhookPayload = {
   mailbox?: string;
   mailbox_id?: string;
   message_id?: string;
+  messageId?: string;
+  mailboxAddress?: string;
+  plainBody?: string;
+  plainHtml?: string;
+  bodyUrl?: string;
+  attachments?: Array<{ contentType?: string; filename?: string; sizeBytes?: number; fileUrl?: string }>;
+  data?: Record<string, unknown>;
   message?: Record<string, unknown> & {
     id?: string;
     message_id?: string;
+    messageId?: string;
+    mailboxAddress?: string;
     mailbox?: string;
     mailbox_id?: string;
     from?: string | HostingerAddress | HostingerAddress[];
@@ -84,6 +93,8 @@ export type WebhookPayload = {
     excerpt?: string;
     snippet?: string;
     truncated_message?: string;
+    plainBody?: string;
+    plainHtml?: string;
     text?: string;
     timestamp?: string;
     received_at?: string;

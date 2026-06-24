@@ -17,8 +17,130 @@ function asString(value: unknown) {
   return typeof value === "string" ? value : "";
 }
 
-function firstString(value: unknown) {
-  return Array.isArray(value) ? asString(value[0]) : asString(value);
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function deepFindString(source: unknown, keys: string[]): string {
+  for (const key of keys) {
+    const queue: unknown[] = [source];
+    const seen = new Set<unknown>();
+
+    while (queue.length) {
+      const current = queue.shift();
+
+      if (!isRecord(current) || seen.has(current)) {
+        continue;
+      }
+
+      seen.add(current);
+      const value = current[key];
+
+      if (typeof value === "string" && value.trim()) {
+        return value;
+      }
+
+      if (Array.isArray(value) && typeof value[0] === "string" && value[0].trim()) {
+        return value[0];
+      }
+
+      for (const child of Object.values(current)) {
+        if (isRecord(child) || Array.isArray(child)) {
+          queue.push(child);
+        }
+      }
+    }
+  }
+
+  return "";
+}
+
+function deepFindAddress(source: unknown) {
+  const queue: unknown[] = [source];
+  const seen = new Set<unknown>();
+  const addressKeys = ["sender", "sender_email", "from", "from_", "from_email", "email_from"];
+
+  while (queue.length) {
+    const current = queue.shift();
+
+    if (!isRecord(current) || seen.has(current)) {
+      continue;
+    }
+
+    seen.add(current);
+    const address = addressFromPayload(current);
+
+    if (address.email) {
+      return address;
+    }
+
+    for (const key of addressKeys) {
+      const value = current[key];
+
+      if (typeof value === "string" && value.trim()) {
+        return parseAddressString(value);
+      }
+
+      if (Array.isArray(value) && value.length) {
+        const first = value[0];
+
+        if (typeof first === "string") {
+          return parseAddressString(first);
+        }
+
+        if (isRecord(first)) {
+          return {
+            email: asString(first.email || first.address),
+            name: asString(first.name) || undefined,
+          };
+        }
+      }
+
+      if (isRecord(value)) {
+        return {
+          email: asString(value.email || value.address),
+          name: asString(value.name) || undefined,
+        };
+      }
+    }
+
+    for (const value of Object.values(current)) {
+      if (isRecord(value) || Array.isArray(value)) {
+        queue.push(value);
+      }
+    }
+  }
+
+  return { email: "", name: undefined };
+}
+
+function sanitizePayloadMetadata(value: unknown, depth = 0): unknown {
+  if (depth > 4) {
+    return "[max-depth]";
+  }
+
+  if (typeof value === "string") {
+    return value.length > 500 ? `${value.slice(0, 500)}…` : value;
+  }
+
+  if (typeof value === "number" || typeof value === "boolean" || value === null) {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.slice(0, 10).map((item) => sanitizePayloadMetadata(item, depth + 1));
+  }
+
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([key]) => !/[\s_-]*(html|body|content|attachment|raw|headers)[\s_-]*/i.test(key))
+      .map(([key, item]) => [key, sanitizePayloadMetadata(item, depth + 1)])
+      .filter(([, item]) => item !== undefined),
+  );
 }
 
 function parseAddressString(value: string) {
@@ -69,33 +191,16 @@ function addressFromPayload(message: Record<string, unknown> | undefined) {
 }
 
 export function webhookPayloadToRow(payload: WebhookPayload) {
-  const message =
-    payload.message && typeof payload.message === "object"
-      ? (payload.message as Record<string, unknown>)
-      : undefined;
   const root = payload as Record<string, unknown>;
   const messageId =
-    asString(payload.id) ||
-    asString(payload.event_id) ||
-    asString(root.message_id) ||
-    asString(message?.id) ||
-    asString(message?.message_id);
+    deepFindString(root, ["messageId", "message_id", "email_id", "mail_id", "id", "event_id"]) ||
+    crypto.randomUUID();
   const mailbox =
-    asString(root.mailbox) ||
-    asString(root.mailbox_id) ||
-    asString(message?.mailbox) ||
-    asString(message?.mailbox_id) ||
+    deepFindString(root, ["mailboxAddress", "mailbox", "mailbox_id", "mailbox_email", "account", "recipient"]) ||
     "default";
-  const from = addressFromPayload({
-    from: root.from ?? message?.from,
-    from_: root.from_ ?? message?.from_,
-    sender: root.sender ?? message?.sender,
-  });
+  const from = deepFindAddress(root);
   const timestamp =
-    asString(root.timestamp) ||
-    asString(root.received_at) ||
-    asString(message?.timestamp) ||
-    asString(message?.received_at) ||
+    deepFindString(root, ["date", "received_at", "timestamp", "created_at"]) ||
     new Date().toISOString();
 
   return {
@@ -104,19 +209,21 @@ export function webhookPayloadToRow(payload: WebhookPayload) {
     status: "pendiente" as const,
     sender_email: from.email || null,
     sender_name: from.name ?? null,
-    subject: asString(root.subject) || asString(message?.subject),
-    excerpt: firstString(
-      root.excerpt ||
-        root.truncated_message ||
-        root.snippet ||
-        root.text ||
-        message?.excerpt ||
-        message?.truncated_message ||
-        message?.snippet ||
-        message?.text,
-    ),
+    subject: deepFindString(root, ["subject", "email_subject", "message_subject"]),
+    excerpt: deepFindString(root, [
+      "excerpt",
+      "truncated_message",
+      "snippet",
+      "preview",
+      "summary",
+      "plainBody",
+      "plainHtml",
+      "text",
+      "plain_text",
+    ]),
     received_at: timestamp,
     updated_at: new Date().toISOString(),
+    payload_metadata: sanitizePayloadMetadata(root),
   };
 }
 
