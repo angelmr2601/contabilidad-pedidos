@@ -21,18 +21,31 @@ function firstString(value: unknown) {
   return Array.isArray(value) ? asString(value[0]) : asString(value);
 }
 
+function parseAddressString(value: string) {
+  const match = value.match(/^\s*(?:"?([^"<]*)"?\s*)?<([^<>\s]+@[^<>\s]+)>\s*$/);
+
+  if (!match) {
+    return { email: value, name: undefined };
+  }
+
+  return {
+    email: match[2],
+    name: match[1]?.trim() || undefined,
+  };
+}
+
 function addressFromPayload(message: Record<string, unknown> | undefined) {
   const from = message?.from ?? message?.from_ ?? message?.sender;
 
   if (typeof from === "string") {
-    return { email: from, name: undefined };
+    return parseAddressString(from);
   }
 
   if (Array.isArray(from)) {
     const first = from[0];
 
     if (typeof first === "string") {
-      return { email: first, name: undefined };
+      return parseAddressString(first);
     }
 
     if (first && typeof first === "object") {
@@ -60,15 +73,27 @@ export function webhookPayloadToRow(payload: WebhookPayload) {
     payload.message && typeof payload.message === "object"
       ? (payload.message as Record<string, unknown>)
       : undefined;
+  const root = payload as Record<string, unknown>;
   const messageId =
     asString(payload.id) ||
     asString(payload.event_id) ||
+    asString(root.message_id) ||
     asString(message?.id) ||
     asString(message?.message_id);
   const mailbox =
-    asString(message?.mailbox) || asString(message?.mailbox_id) || "default";
-  const from = addressFromPayload(message);
+    asString(root.mailbox) ||
+    asString(root.mailbox_id) ||
+    asString(message?.mailbox) ||
+    asString(message?.mailbox_id) ||
+    "default";
+  const from = addressFromPayload({
+    from: root.from ?? message?.from,
+    from_: root.from_ ?? message?.from_,
+    sender: root.sender ?? message?.sender,
+  });
   const timestamp =
+    asString(root.timestamp) ||
+    asString(root.received_at) ||
     asString(message?.timestamp) ||
     asString(message?.received_at) ||
     new Date().toISOString();
@@ -79,9 +104,13 @@ export function webhookPayloadToRow(payload: WebhookPayload) {
     status: "pendiente" as const,
     sender_email: from.email || null,
     sender_name: from.name ?? null,
-    subject: asString(message?.subject),
+    subject: asString(root.subject) || asString(message?.subject),
     excerpt: firstString(
-      message?.excerpt ||
+      root.excerpt ||
+        root.truncated_message ||
+        root.snippet ||
+        root.text ||
+        message?.excerpt ||
         message?.truncated_message ||
         message?.snippet ||
         message?.text,

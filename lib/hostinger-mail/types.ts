@@ -59,6 +59,19 @@ export type WebhookPayload = {
   event_type?: "message.received";
   event_id?: string;
   id?: string;
+  sender?: string | HostingerAddress;
+  from?: string | HostingerAddress | HostingerAddress[];
+  from_?: string[];
+  subject?: string;
+  excerpt?: string;
+  snippet?: string;
+  truncated_message?: string;
+  text?: string;
+  timestamp?: string;
+  received_at?: string;
+  mailbox?: string;
+  mailbox_id?: string;
+  message_id?: string;
   message?: Record<string, unknown> & {
     id?: string;
     message_id?: string;
