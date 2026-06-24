@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import FiltrosPedidos from "../components/FiltrosPedidos";
@@ -1022,7 +1023,10 @@ export default function Home() {
             </div>
           </div>
 
-          <ThemeToggle />
+          <div className="flex items-center gap-3">
+            <Link href="/correo" className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white">Correo</Link>
+            <ThemeToggle />
+          </div>
         </header>
 
         <div className="rounded-2xl bg-surface p-2 shadow-sm">
