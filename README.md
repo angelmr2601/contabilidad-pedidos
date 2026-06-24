@@ -63,7 +63,9 @@ Crea un webhook en Agentic mail → Webhooks con la URL pública HTTPS:
 https://TU_DOMINIO/api/webhooks/hostinger-mail
 ```
 
-Configura el evento `message.received` y guarda el secreto generado en `HOSTINGER_MAIL_WEBHOOK_SECRET`. El endpoint valida `Authorization: Bearer <secreto>` y rechaza eventos no documentados.
+Configura el evento `message.received` y guarda el secreto generado en `HOSTINGER_MAIL_WEBHOOK_SECRET`. El endpoint valida `Authorization: Bearer <secreto>` y rechaza eventos no documentados. La ruta `/api/webhooks/hostinger-mail` queda excluida de Basic Auth porque Hostinger solo envía su Bearer token; el resto de la app conserva la protección existente.
+
+Cuando llega el webhook, la app guarda metadatos mínimos del mensaje en `hostinger_mail_message_statuses` y `/correo` muestra esos registros aunque el cuerpo completo siga consultándose en Hostinger hasta conectar endpoints REST oficiales. Si el correo llega al buzón pero no aparece en la app, revisa: URL pública HTTPS exacta, webhook activo en hPanel, evento `message.received`, secreto en `HOSTINGER_MAIL_WEBHOOK_SECRET`, migraciones de Supabase aplicadas y logs del endpoint.
 
 ### Estado de endpoints REST
 

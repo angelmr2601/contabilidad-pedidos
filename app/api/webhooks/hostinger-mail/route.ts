@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { parseWebhookPayload } from "../../../../lib/hostinger-mail/schemas";
+import { upsertWebhookMessage } from "../../../../lib/hostinger-mail/status-db";
 
 const seen = new Set<string>();
 
@@ -36,5 +37,13 @@ export async function POST(request: NextRequest) {
     seen.add(stableId);
   }
 
-  return NextResponse.json({ ok: true });
+  try {
+    const result = await upsertWebhookMessage(payload);
+    return NextResponse.json({ ok: true, ...result });
+  } catch {
+    return NextResponse.json(
+      { ok: false, error: "No se pudo guardar el metadato del correo." },
+      { status: 202 },
+    );
+  }
 }
