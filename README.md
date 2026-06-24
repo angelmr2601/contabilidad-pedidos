@@ -57,15 +57,25 @@ En hPanel ve a Emails → tu dominio → Agentic mail → API → Create API tok
 
 ### Webhook
 
-Crea un webhook en Agentic mail → Webhooks con la URL pública HTTPS:
+Crea un webhook en Agentic mail → Webhooks con la URL pública HTTPS de la aplicación desplegada en Vercel:
 
 ```text
-https://TU_DOMINIO/api/webhooks/hostinger-mail
+https://TU_PROYECTO.vercel.app/api/webhooks/hostinger-mail
 ```
+
+Si el dominio principal (`offsideclub.shop`, por ejemplo) apunta a Shopify, **no uses ese dominio para el webhook**, porque la petición llegará a Shopify y responderá 404 antes de tocar esta app. Usa una de estas opciones:
+
+1. La URL `*.vercel.app` del deployment de Vercel. En este proyecto, la URL indicada es:
+
+   ```text
+   https://contabilidad-pedidos.vercel.app/api/webhooks/hostinger-mail
+   ```
+
+2. Un subdominio dedicado, por ejemplo `app.offsideclub.shop`, configurado como dominio del proyecto en Vercel.
 
 Configura el evento `message.received` y guarda el secreto generado en `HOSTINGER_MAIL_WEBHOOK_SECRET`. El endpoint valida `Authorization: Bearer <secreto>` y rechaza eventos no documentados. La ruta `/api/webhooks/hostinger-mail` queda excluida de Basic Auth porque Hostinger solo envía su Bearer token; el resto de la app conserva la protección existente.
 
-Cuando llega el webhook, la app guarda metadatos mínimos del mensaje en `hostinger_mail_message_statuses` y `/correo` muestra esos registros aunque el cuerpo completo siga consultándose en Hostinger hasta conectar endpoints REST oficiales. Si el correo llega al buzón pero no aparece en la app, revisa: URL pública HTTPS exacta, webhook activo en hPanel, evento `message.received`, secreto en `HOSTINGER_MAIL_WEBHOOK_SECRET`, migraciones de Supabase aplicadas y logs del endpoint.
+Cuando llega el webhook, la app guarda metadatos mínimos del mensaje en `hostinger_mail_message_statuses` y `/correo` muestra esos registros aunque el cuerpo completo siga consultándose en Hostinger hasta conectar endpoints REST oficiales. Si el correo llega al buzón pero no aparece en la app, revisa: URL pública HTTPS exacta de Vercel, webhook activo en hPanel, evento `message.received`, secreto en `HOSTINGER_MAIL_WEBHOOK_SECRET`, migraciones de Supabase aplicadas y logs del endpoint. Puedes abrir `https://contabilidad-pedidos.vercel.app/api/webhooks/hostinger-mail`, `https://TU_PROYECTO.vercel.app/api/webhooks/hostinger-mail` o `https://app.offsideclub.shop/api/webhooks/hostinger-mail` en el navegador para comprobar que Vercel tiene configurado el secreto; debe devolver `webhookSecretConfigured: true` sin exponer el valor.
 
 ### Estado de endpoints REST
 

@@ -55,14 +55,24 @@ export type SendMailInput = {
 };
 
 export type WebhookPayload = {
-  event: "message.received";
+  event?: "message.received";
+  event_type?: "message.received";
+  event_id?: string;
   id?: string;
   message?: Record<string, unknown> & {
     id?: string;
+    message_id?: string;
     mailbox?: string;
-    from?: string | HostingerAddress;
+    mailbox_id?: string;
+    from?: string | HostingerAddress | HostingerAddress[];
+    from_?: string[];
+    sender?: string | HostingerAddress;
     subject?: string;
     excerpt?: string;
+    snippet?: string;
+    truncated_message?: string;
+    text?: string;
     timestamp?: string;
+    received_at?: string;
   };
 };

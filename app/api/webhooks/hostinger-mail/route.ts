@@ -10,6 +10,19 @@ function bearer(header: string | null) {
   return scheme === "Bearer" ? token : null;
 }
 
+
+export async function GET() {
+  return NextResponse.json(
+    {
+      ok: true,
+      endpoint: "hostinger-mail-webhook",
+      webhookSecretConfigured: Boolean(process.env.HOSTINGER_MAIL_WEBHOOK_SECRET),
+      accepts: ["message.received"],
+    },
+    { headers: { "cache-control": "no-store" } },
+  );
+}
+
 export async function POST(request: NextRequest) {
   const secret = process.env.HOSTINGER_MAIL_WEBHOOK_SECRET;
 

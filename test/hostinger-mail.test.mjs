@@ -14,8 +14,10 @@ for (const status of [401,429,500]) test(`http ${status}`, async()=>{ await asse
 test('timeout', async()=>{ await assert.rejects(()=>hostingerMailRequest('/x',{timeoutMs:1,fetchImpl:async (_u,init)=>new Promise((_,rej)=>init.signal.addEventListener('abort',()=>rej(Object.assign(new Error('aborted'),{name:'AbortError'}))))}), err=>err.status===504); });
 test('send form validation', ()=>{ assert.equal(validateSendMail({to:[],subject:'a',text:'b'}),'Añade al menos un destinatario válido.'); assert.equal(validateSendMail({to:['a@b.com'],subject:'a',text:'b'}),null); });
 test('sanitize html', ()=>{ const out=sanitizeMailHtml('<p onclick="x()">Hola<img src="https://t"></p><script>x()</script>'); assert(!out.includes('script')); assert(!out.includes('onclick')); assert(out.includes('data-blocked-src')); });
-test('webhook parse', ()=>{ assert(parseWebhookPayload({event:'message.received',id:'1'})); assert.equal(parseWebhookPayload({event:'x'}),null); });
+test('webhook parse', ()=>{ assert(parseWebhookPayload({event:'message.received',id:'1'})); assert(parseWebhookPayload({event_type:'message.received',event_id:'evt_1'})); assert.equal(parseWebhookPayload({event:'x'}),null); });
 test('redact authorization', ()=>{ assert.equal(redactHeaders({authorization:'Bearer abc'}).get('authorization'),'Bearer [REDACTED]'); });
 
 const { webhookPayloadToRow } = await import('../lib/hostinger-mail/status-db.ts');
 test('webhook payload maps to persisted metadata', ()=>{ const row=webhookPayloadToRow({event:'message.received',id:'m1',message:{mailbox:'box',from:{email:'cliente@example.com',name:'Cliente'},subject:'Pedido',excerpt:'Hola',timestamp:'2026-06-24T10:00:00.000Z'}}); assert.equal(row.message_id,'m1'); assert.equal(row.sender_email,'cliente@example.com'); assert.equal(row.subject,'Pedido'); });
+
+test('webhook payload maps event_type and Agentic-style fields', ()=>{ const row=webhookPayloadToRow({event_type:'message.received',event_id:'evt_2',message:{message_id:'msg_2',mailbox_id:'mailbox_1',from_:['cliente2@example.com'],subject:'Nuevo',truncated_message:'Resumen'}}); assert.equal(row.message_id,'evt_2'); assert.equal(row.sender_email,'cliente2@example.com'); assert.equal(row.excerpt,'Resumen'); });
