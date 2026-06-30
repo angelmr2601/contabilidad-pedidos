@@ -1,13 +1,10 @@
 import { Text, View } from "react-native";
 import { formatoEuros } from "@/lib/calculos";
+import { colors } from "@/theme";
 import { styles } from "./styles";
 export function ResumenCards({ resumen }: { resumen: { ventas: number; costes: number; beneficio: number; pendienteCobro: number; productosPendientesEntrega: number } }) {
-  return <View style={styles.card}>
-    <Text style={styles.subtitle}>Resumen</Text>
-    <Text style={styles.text}>Ventas: {formatoEuros(resumen.ventas)}</Text>
-    <Text style={styles.text}>Costes: {formatoEuros(resumen.costes)}</Text>
-    <Text style={styles.text}>Beneficio: {formatoEuros(resumen.beneficio)}</Text>
-    <Text style={styles.text}>Pendiente de cobro: {formatoEuros(resumen.pendienteCobro)}</Text>
-    <Text style={styles.text}>Productos pendientes de entrega: {resumen.productosPendientesEntrega}</Text>
-  </View>;
+  const stats = [
+    ["Ventas", formatoEuros(resumen.ventas), colors.text], ["Costes", formatoEuros(resumen.costes), colors.textSoft], ["Beneficio", formatoEuros(resumen.beneficio), resumen.beneficio >= 0 ? colors.success : colors.danger], ["Pendiente de cobro", formatoEuros(resumen.pendienteCobro), colors.warning], ["Entrega pendiente", String(resumen.productosPendientesEntrega), colors.blue],
+  ];
+  return <View style={styles.elevatedCard}><Text style={styles.eyebrow}>Resumen financiero</Text><Text style={styles.subtitle}>Control del club</Text><View style={styles.statGrid}>{stats.map(([label, value, color]) => <View key={label} style={styles.stat}><Text style={styles.statLabel}>{label}</Text><Text style={[styles.statValue, { color }]}>{value}</Text></View>)}</View></View>;
 }
