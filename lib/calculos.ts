@@ -29,50 +29,39 @@ export function calcularPrecioProductoDesdeConfiguracion(
     ventaUnidad = precios.ventaRetro;
   }
 
-  if (producto.tipo === "Retro/Player") {
-    costeUnidad = precios.costeRetroPlayer;
-    ventaUnidad = precios.ventaRetroPlayer;
+  if (producto.tipo === "Personalizada") {
+    costeUnidad = precios.costePersonalizada;
+    ventaUnidad = precios.ventaPersonalizada;
   }
 
-  if (producto.tipo === "Traje infantil") {
-    costeUnidad = precios.costeTrajeInfantil;
-    ventaUnidad = precios.ventaTrajeInfantil;
+  if (producto.tipo === "Infantil") {
+    costeUnidad = precios.costeInfantil;
+    ventaUnidad = precios.ventaInfantil;
   }
 
-  if (producto.tipo === "Parche") {
-    costeUnidad = precios.costeParche;
-    ventaUnidad = precios.ventaParche;
+  if (producto.personalizacion) {
+    costeUnidad += precios.costePersonalizacion;
+    ventaUnidad += precios.ventaPersonalizacion;
   }
 
-  if (producto.tipo === "Otro") {
-    costeUnidad = producto.costeManual || 0;
-    ventaUnidad = producto.precioVentaManual || 0;
+  if (producto.parche) {
+    costeUnidad += precios.costeParche;
+    ventaUnidad += precios.ventaParche;
   }
 
-  if (
-    producto.tipo !== "Otro" &&
-    producto.tipo !== "Traje infantil" &&
-    producto.tipo !== "Parche"
-  ) {
-    if (producto.personalizacion) {
-      costeUnidad += precios.costePersonalizacion;
-      ventaUnidad += precios.ventaPersonalizacion;
-    }
+  if (producto.mangaLarga) {
+    costeUnidad += precios.costeMangaLarga;
+    ventaUnidad += precios.ventaMangaLarga;
+  }
 
-    if (producto.manga === "Larga") {
-      costeUnidad += precios.costeMangaLarga;
-      ventaUnidad += precios.ventaMangaLarga;
-    }
+  if (producto.talla === "3XL") {
+    costeUnidad += precios.costeTalla3XL;
+    ventaUnidad += precios.ventaTalla3XL;
+  }
 
-    if (producto.talla === "3XL") {
-      costeUnidad += precios.costeTalla3XL;
-      ventaUnidad += precios.ventaTalla3XL;
-    }
-
-    if (producto.talla === "4XL") {
-      costeUnidad += precios.costeTalla4XL;
-      ventaUnidad += precios.ventaTalla4XL;
-    }
+  if (producto.talla === "4XL") {
+    costeUnidad += precios.costeTalla4XL;
+    ventaUnidad += precios.ventaTalla4XL;
   }
 
   const costeTotal = costeUnidad;

@@ -91,3 +91,17 @@ npm run build
 ```
 
 Las pruebas usan `fetch` simulado y no contactan buzones reales ni envían correos.
+
+## Plan de migración a Supabase Auth y app nativa
+
+La web mantiene Basic Auth por ahora para evitar una migración de seguridad incompleta. Próximos pasos recomendados:
+
+1. Crear una pantalla de login web conectada a Supabase Auth.
+2. Proteger el App Router con sesión Supabase validada en servidor/cliente según la ruta.
+3. Mantener Basic Auth hasta comprobar el flujo completo de sesión y recuperación.
+4. Aplicar Row Level Security por usuario si en el futuro hay varios usuarios o cuentas.
+5. Reutilizar el mismo proyecto de Supabase Auth en la futura app móvil React Native / Expo.
+
+### Compatibilidad temporal del modelo de productos
+
+La migración `20260630120000_refactor_product_model.sql` no elimina columnas antiguas ni borra datos. Convierte `Retro/Player` a `Retro` porque ambos tenían un precio conjunto y ahora existen tipos separados. Los productos antiguos `Otro` no se actualizan de forma destructiva: quedan en base de datos para revisión manual y la app web los interpreta temporalmente como `Personalizada` al leerlos.

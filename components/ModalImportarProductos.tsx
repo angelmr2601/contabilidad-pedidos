@@ -125,7 +125,7 @@ export default function ModalImportarProductos({
                         <td className="px-4 py-3">{producto.nombre}</td>
                         <td className="px-4 py-3">{producto.talla}</td>
                         <td className="px-4 py-3">{producto.tipo}</td>
-                        <td className="px-4 py-3">{producto.manga}</td>
+                        <td className="px-4 py-3">{(producto.mangaLarga ? "Larga" : "Corta")}</td>
                         <td className="px-4 py-3">
                           {formatoEuros(calculo.ventaTotal)}
                         </td>

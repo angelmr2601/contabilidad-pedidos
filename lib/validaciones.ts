@@ -2,19 +2,12 @@ import type { PedidoEditando, Producto, ProductoEditando } from "../types";
 
 function productoPersonalizadoSinDatos(producto: Producto) {
   return (
-    producto.tipo !== "Otro" &&
     producto.personalizacion &&
     !producto.nombrePersonalizacion.trim() &&
     !producto.numeroPersonalizacion.trim()
   );
 }
 
-function productoOtroSinPrecios(producto: Producto) {
-  return (
-    producto.tipo === "Otro" &&
-    (producto.precioVentaManual <= 0 || producto.costeManual < 0)
-  );
-}
 
 export function validarNuevoPedido(
   nombrePedido: string,
@@ -45,12 +38,6 @@ export function validarNuevoPedido(
     return "Hay un producto con personalización marcada, pero sin nombre ni número.";
   }
 
-  const otroSinPrecios = productosValidos.find(productoOtroSinPrecios);
-
-  if (otroSinPrecios) {
-    return "Hay un producto de tipo Otro sin precio de venta válido.";
-  }
-
   return null;
 }
 
@@ -71,10 +58,6 @@ export function validarProductoEditando(productoEditando: ProductoEditando) {
 
   if (productoPersonalizadoSinDatos(productoEditando.producto)) {
     return "La personalización está marcada, pero no hay nombre ni número indicado.";
-  }
-
-  if (productoOtroSinPrecios(productoEditando.producto)) {
-    return "El producto de tipo Otro necesita un precio de venta válido.";
   }
 
   return null;

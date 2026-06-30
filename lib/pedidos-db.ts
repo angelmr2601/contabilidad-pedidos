@@ -10,8 +10,10 @@ type ProductoDB = {
   nombre: string;
   talla: string;
   tipo: string;
-  manga: string;
+  manga: string | null;
   personalizacion: boolean;
+  parche: boolean | null;
+  manga_larga: boolean | null;
   nombre_personalizacion: string;
   numero_personalizacion: string;
   precio_venta_manual: number | null;
@@ -44,6 +46,8 @@ const PRODUCTOS_SELECT = `
   tipo,
   manga,
   personalizacion,
+  parche,
+  manga_larga,
   nombre_personalizacion,
   numero_personalizacion,
   precio_venta_manual,
@@ -54,15 +58,28 @@ const PRODUCTOS_SELECT = `
   entregado
 `;
 
+function normalizarTipoProductoDB(tipo: string): Producto["tipo"] {
+  if (tipo === "Retro/Player") return "Retro";
+  if (tipo === "Traje infantil") return "Infantil";
+  if (tipo === "Otro" || tipo === "Parche") return "Personalizada";
+  if (["Fan", "Player", "Retro", "Personalizada", "Infantil"].includes(tipo)) {
+    return tipo as Producto["tipo"];
+  }
+  return "Personalizada";
+}
+
 function productoDesdeDB(producto: ProductoDB): Producto {
+  const mangaLarga = Boolean(producto.manga_larga ?? producto.manga === "Larga");
+
   return {
     id: producto.id,
     cliente: producto.cliente,
     nombre: producto.nombre,
     talla: producto.talla as Producto["talla"],
-    tipo: producto.tipo as Producto["tipo"],
-    manga: producto.manga as Producto["manga"],
+    tipo: normalizarTipoProductoDB(producto.tipo),
     personalizacion: producto.personalizacion,
+    parche: Boolean(producto.parche),
+    mangaLarga,
     nombrePersonalizacion: producto.nombre_personalizacion,
     numeroPersonalizacion: producto.numero_personalizacion,
     precioVentaManual: Number(producto.precio_venta_manual ?? 0),
@@ -87,28 +104,14 @@ function productoParaDB(producto: Producto, pedidoId: number) {
     nombre: producto.nombre,
     talla: producto.talla,
     tipo: producto.tipo,
-    manga: producto.manga,
-    personalizacion:
-      producto.tipo === "Otro" ||
-      producto.tipo === "Traje infantil" ||
-      producto.tipo === "Parche"
-        ? false
-        : producto.personalizacion,
-    nombre_personalizacion:
-      producto.tipo === "Otro" ||
-      producto.tipo === "Traje infantil" ||
-      producto.tipo === "Parche"
-        ? ""
-        : producto.nombrePersonalizacion,
-    numero_personalizacion:
-      producto.tipo === "Otro" ||
-      producto.tipo === "Traje infantil" ||
-      producto.tipo === "Parche"
-        ? ""
-        : producto.numeroPersonalizacion,
-    precio_venta_manual:
-      producto.tipo === "Otro" ? producto.precioVentaManual : null,
-    coste_manual: producto.tipo === "Otro" ? producto.costeManual : null,
+    manga: producto.mangaLarga ? "Larga" : "Corta",
+    parche: producto.parche,
+    manga_larga: producto.mangaLarga,
+    personalizacion: producto.personalizacion,
+    nombre_personalizacion: producto.nombrePersonalizacion,
+    numero_personalizacion: producto.numeroPersonalizacion,
+    precio_venta_manual: null,
+    coste_manual: null,
     venta_unidad_snapshot: producto.ventaUnidadSnapshot,
     coste_unidad_snapshot: producto.costeUnidadSnapshot,
     pagado: producto.pagado,
@@ -338,28 +341,14 @@ export async function actualizarProductoDB(producto: Producto) {
       nombre: producto.nombre,
       talla: producto.talla,
       tipo: producto.tipo,
-      manga: producto.manga,
-      personalizacion:
-        producto.tipo === "Otro" ||
-        producto.tipo === "Traje infantil" ||
-        producto.tipo === "Parche"
-          ? false
-          : producto.personalizacion,
-      nombre_personalizacion:
-        producto.tipo === "Otro" ||
-        producto.tipo === "Traje infantil" ||
-        producto.tipo === "Parche"
-          ? ""
-          : producto.nombrePersonalizacion,
-      numero_personalizacion:
-        producto.tipo === "Otro" ||
-        producto.tipo === "Traje infantil" ||
-        producto.tipo === "Parche"
-          ? ""
-          : producto.numeroPersonalizacion,
-      precio_venta_manual:
-        producto.tipo === "Otro" ? producto.precioVentaManual : null,
-      coste_manual: producto.tipo === "Otro" ? producto.costeManual : null,
+      manga: producto.mangaLarga ? "Larga" : "Corta",
+    parche: producto.parche,
+    manga_larga: producto.mangaLarga,
+      personalizacion: producto.personalizacion,
+      nombre_personalizacion: producto.nombrePersonalizacion,
+      numero_personalizacion: producto.numeroPersonalizacion,
+      precio_venta_manual: null,
+      coste_manual: null,
       venta_unidad_snapshot: producto.ventaUnidadSnapshot,
       coste_unidad_snapshot: producto.costeUnidadSnapshot,
       pagado: producto.pagado,

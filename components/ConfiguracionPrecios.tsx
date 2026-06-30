@@ -52,15 +52,26 @@ const CAMPOS: {
     titulo: "Venta Retro",
     descripcion: "Precio de venta base de una camiseta Retro.",
   },
+
   {
-    campo: "costeTrajeInfantil",
-    titulo: "Coste traje infantil",
-    descripcion: "Coste base de un traje infantil.",
+    campo: "costePersonalizada",
+    titulo: "Coste Personalizada",
+    descripcion: "Coste base de un producto Personalizada.",
   },
   {
-    campo: "ventaTrajeInfantil",
-    titulo: "Venta traje infantil",
-    descripcion: "Precio de venta base de un traje infantil.",
+    campo: "ventaPersonalizada",
+    titulo: "Venta Personalizada",
+    descripcion: "Precio de venta base de un producto Personalizada.",
+  },
+  {
+    campo: "costeInfantil",
+    titulo: "Coste Infantil",
+    descripcion: "Coste base de un producto Infantil.",
+  },
+  {
+    campo: "ventaInfantil",
+    titulo: "Venta Infantil",
+    descripcion: "Precio de venta base de un producto Infantil.",
   },
   {
     campo: "costeParche",
@@ -304,10 +315,7 @@ export default function ConfiguracionPrecios({
       </div>
 
       <div className="rounded-2xl bg-surface-muted p-5 text-sm text-muted">
-        <p>
-          Los productos de tipo <strong>Otro</strong> no usan estos precios:
-          mantienen su coste y venta manual.
-        </p>
+        <p>Los tipos definen el precio base y los checks suman extras combinables.</p>
       </div>
     </section>
   );

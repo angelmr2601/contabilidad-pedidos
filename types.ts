@@ -1,12 +1,4 @@
-export type TipoProducto =
-  | "Fan"
-  | "Player"
-  | "Retro"
-  | "Retro/Player"
-  | "Traje infantil"
-  | "Parche"
-  | "Otro";
-export type MangaProducto = "Corta" | "Larga";
+export type TipoProducto = "Fan" | "Player" | "Retro" | "Personalizada" | "Infantil";
 export type TallaProducto =
   | "S"
   | "M"
@@ -30,14 +22,14 @@ export type FiltroArchivo = "activos" | "archivados" | "todos";
 export type ConfiguracionPrecios = {
   costeFan: number;
   ventaFan: number;
-  costeRetroPlayer: number;
-  ventaRetroPlayer: number;
   costePlayer: number;
   ventaPlayer: number;
   costeRetro: number;
   ventaRetro: number;
-  costeTrajeInfantil: number;
-  ventaTrajeInfantil: number;
+  costePersonalizada: number;
+  ventaPersonalizada: number;
+  costeInfantil: number;
+  ventaInfantil: number;
   costeParche: number;
   ventaParche: number;
   costeTalla3XL: number;
@@ -57,8 +49,9 @@ export type Producto = {
   nombre: string;
   talla: TallaProducto;
   tipo: TipoProducto;
-  manga: MangaProducto;
   personalizacion: boolean;
+  parche: boolean;
+  mangaLarga: boolean;
   nombrePersonalizacion: string;
   numeroPersonalizacion: string;
   precioVentaManual: number;
