@@ -182,7 +182,9 @@ export default function Home() {
                 producto.nombre,
                 producto.talla,
                 producto.tipo,
-                producto.manga,
+                producto.mangaLarga ? "manga larga" : "",
+                producto.parche ? "parche" : "",
+                producto.personalizacion ? "personalizacion personalizada" : "",
                 producto.nombrePersonalizacion,
                 producto.numeroPersonalizacion,
               ]

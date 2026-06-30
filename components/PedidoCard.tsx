@@ -294,7 +294,7 @@ export default function PedidoCard({
 
                         <div className="rounded-xl bg-surface-muted p-3">
                           <p className="text-muted">Manga</p>
-                          <p className="font-semibold">{producto.manga}</p>
+                          <p className="font-semibold">{(producto.mangaLarga ? "Larga" : "Corta")}</p>
                         </div>
 
                         <div className="rounded-xl bg-surface-muted p-3">
@@ -468,7 +468,7 @@ export default function PedidoCard({
 
                       <td className="py-4 pr-4">{producto.tipo}</td>
 
-                      <td className="py-4 pr-4">{producto.manga}</td>
+                      <td className="py-4 pr-4">{(producto.mangaLarga ? "Larga" : "Corta")}</td>
 
                       <td className="py-4 pr-4">
                         {producto.personalizacion ? (

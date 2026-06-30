@@ -2,7 +2,6 @@ import { calcularProducto } from "./calculos";
 import { PRECIOS_POR_DEFECTO } from "./precios";
 import type {
   ConfiguracionPrecios,
-  MangaProducto,
   Producto,
   TallaProducto,
   TipoProducto,
@@ -91,28 +90,24 @@ function normalizarTipo(valor: string): TipoProducto {
     tipo.includes("niño") ||
     tipo.includes("nino")
   ) {
-    return "Traje infantil";
+    return "Infantil";
   }
 
-  if (tipo.includes("parche")) {
-    return "Parche";
+  if (tipo.includes("personalizada") || tipo.includes("custom")) {
+    return "Personalizada";
   }
 
   if (tipo.includes("fan") || tipo.includes("hincha")) {
     return "Fan";
   }
 
-  return "Otro";
+  return "Personalizada";
 }
 
-function normalizarManga(valor: string): MangaProducto {
+function esMangaLarga(valor: string): boolean {
   const manga = normalizarTexto(valor);
 
-  if (manga.includes("larga")) {
-    return "Larga";
-  }
-
-  return "Corta";
+  return manga.includes("larga");
 }
 
 function parsearBooleano(valor: string) {
@@ -206,7 +201,7 @@ export function importarProductosDesdeTexto(
     const nombreBase = columnas[1] ?? "";
     const talla = normalizarTalla(columnas[2] ?? "");
     const tipoOriginal = normalizarTipo(columnas[3] ?? "");
-    const manga = normalizarManga(columnas[4] ?? "");
+    const mangaLarga = esMangaLarga(columnas[4] ?? "");
     const personalizacion = parsearBooleano(columnas[5] ?? "");
 
     const extras =
@@ -217,16 +212,18 @@ export function importarProductosDesdeTexto(
             .join(" - ")
         : "";
 
+    const parche = normalizarTexto(extras).includes("parche");
     const nombre = extras ? `${nombreBase} - ${extras}` : nombreBase;
 
-    let producto: Producto = {
+    const producto: Producto = {
       id: idInicial + productos.length,
       cliente,
       nombre,
       talla,
       tipo: tipoOriginal,
-      manga,
       personalizacion,
+      parche,
+      mangaLarga,
       nombrePersonalizacion: "",
       numeroPersonalizacion: "",
       precioVentaManual: 0,
@@ -237,40 +234,17 @@ export function importarProductosDesdeTexto(
       entregado: false,
     };
 
-    if (
-      costeManual !== null &&
-      ventaManual !== null &&
-      producto.tipo !== "Otro"
-    ) {
+    if (costeManual !== null && ventaManual !== null) {
       const precioRegla = calcularPrecioRegla(producto, precios);
 
-      const coincideConReglas =
-        numerosIguales(precioRegla.coste, costeManual) &&
-        numerosIguales(precioRegla.venta, ventaManual);
-
-      if (!coincideConReglas) {
-        producto = {
-          ...producto,
-          tipo: "Otro",
-          personalizacion: false,
-          nombrePersonalizacion: "",
-          numeroPersonalizacion: "",
-          costeManual,
-          precioVentaManual: ventaManual,
-        };
+      if (
+        !numerosIguales(precioRegla.coste, costeManual) ||
+        !numerosIguales(precioRegla.venta, ventaManual)
+      ) {
+        errores.push(
+          `Línea ${index + 1}: el precio pegado no coincide con la configuración actual; se importan los precios configurados por la app.`,
+        );
       }
-    }
-
-    if (
-      costeManual !== null &&
-      ventaManual !== null &&
-      producto.tipo === "Otro"
-    ) {
-      producto = {
-        ...producto,
-        costeManual,
-        precioVentaManual: ventaManual,
-      };
     }
 
     productos.push(producto);

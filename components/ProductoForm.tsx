@@ -1,7 +1,6 @@
 import { calcularProducto, formatoEuros } from "../lib/calculos";
 import type {
   ConfiguracionPrecios,
-  MangaProducto,
   Producto,
   TallaProducto,
   TipoProducto,
@@ -15,10 +14,7 @@ type Props = {
 
 export default function ProductoForm({ producto, precios, onChange }: Props) {
   const calculo = calcularProducto(producto, precios);
-  const esOtro = producto.tipo === "Otro";
-  const esTrajeInfantil = producto.tipo === "Traje infantil";
-  const esParche = producto.tipo === "Parche";
-  const bloqueaExtras = esOtro || esTrajeInfantil || esParche;
+  const esInfantil = producto.tipo === "Infantil";
   const tallasAdulto: TallaProducto[] = [
     "S",
     "M",
@@ -37,27 +33,22 @@ export default function ProductoForm({ producto, precios, onChange }: Props) {
     "26",
     "28",
   ];
-  const tallasDisponibles = esTrajeInfantil ? tallasInfantiles : tallasAdulto;
+  const tallasDisponibles = esInfantil ? tallasInfantiles : tallasAdulto;
 
   function cambiarTipo(tipo: TipoProducto) {
     onChange("tipo", tipo);
 
     if (
-      tipo === "Traje infantil" &&
+      tipo === "Infantil" &&
       !tallasInfantiles.includes(producto.talla)
     ) {
       onChange("talla", "16");
     }
 
-    if (tipo !== "Traje infantil" && !tallasAdulto.includes(producto.talla)) {
+    if (tipo !== "Infantil" && !tallasAdulto.includes(producto.talla)) {
       onChange("talla", "M");
     }
 
-    if (tipo === "Otro" || tipo === "Traje infantil" || tipo === "Parche") {
-      onChange("personalizacion", false);
-      onChange("nombrePersonalizacion", "");
-      onChange("numeroPersonalizacion", "");
-    }
   }
 
   return (
@@ -112,75 +103,40 @@ export default function ProductoForm({ producto, precios, onChange }: Props) {
             <option value="Fan">Fan</option>
             <option value="Player">Player</option>
             <option value="Retro">Retro</option>
-            <option value="Traje infantil">Traje infantil</option>
-            <option value="Parche">Parche</option>
-            <option value="Otro">Otro</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="mb-2 block text-sm font-medium">Manga</label>
-          <select
-            value={producto.manga}
-            onChange={(event) =>
-              onChange("manga", event.target.value as MangaProducto)
-            }
-            disabled={bloqueaExtras}
-            className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:text-muted/70"
-          >
-            <option value="Corta">Corta</option>
-            <option value="Larga">Larga</option>
+            <option value="Personalizada">Personalizada</option>
+            <option value="Infantil">Infantil</option>
           </select>
         </div>
       </div>
-
-      {esOtro && (
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <div>
-            <label className="mb-2 block text-sm font-medium">
-              Precio venta manual €
-            </label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={producto.precioVentaManual}
-              onChange={(event) =>
-                onChange("precioVentaManual", Number(event.target.value))
-              }
-              className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium">
-              Coste manual €
-            </label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={producto.costeManual}
-              onChange={(event) =>
-                onChange("costeManual", Number(event.target.value))
-              }
-              className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
-            />
-          </div>
-        </div>
-      )}
 
       <div className="mt-4 flex flex-wrap gap-4">
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
             checked={producto.personalizacion}
-            disabled={bloqueaExtras}
             onChange={(event) =>
               onChange("personalizacion", event.target.checked)
             }
           />
           Personalización
+        </label>
+
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={producto.parche}
+            onChange={(event) => onChange("parche", event.target.checked)}
+          />
+          Parche
+        </label>
+
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={producto.mangaLarga}
+            onChange={(event) => onChange("mangaLarga", event.target.checked)}
+          />
+          Manga larga
         </label>
 
         <label className="flex items-center gap-2 text-sm">
@@ -202,7 +158,7 @@ export default function ProductoForm({ producto, precios, onChange }: Props) {
         </label>
       </div>
 
-      {!bloqueaExtras && producto.personalizacion && (
+      {producto.personalizacion && (
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div>
             <label className="mb-2 block text-sm font-medium">
@@ -235,14 +191,6 @@ export default function ProductoForm({ producto, precios, onChange }: Props) {
             />
           </div>
         </div>
-      )}
-
-      {esOtro && (
-        <p className="mt-3 text-sm text-muted">
-          En productos de tipo “Otro”, el coste y la venta se introducen
-          manualmente. No se aplican extras automáticos por manga larga, talla
-          ni personalización.
-        </p>
       )}
 
       <div className="mt-4 grid gap-3 rounded-xl bg-surface p-4 text-sm md:grid-cols-3">
