@@ -89,3 +89,8 @@ Los binarios no se incluyen en el repositorio para evitar errores al crear el pu
 ## Próximo paso recomendado
 
 Definir políticas RLS definitivas por usuario/rol y probar un APK `preview` en un dispositivo Android real.
+
+## Seguimiento de pedidos
+
+El número de seguimiento queda preparado para la futura integración con 17TRACK.
+La app móvil no debe llamar directamente a 17TRACK porque la API key debe permanecer en backend.

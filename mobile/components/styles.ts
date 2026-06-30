@@ -34,4 +34,6 @@ export const styles = StyleSheet.create({
   statValue: { color: colors.text, fontSize: 20, fontWeight: "900", marginTop: spacing.xs },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.md },
   accentBar: { position: "absolute", left: 0, top: 14, bottom: 14, width: 3, borderRadius: 3, backgroundColor: colors.neon },
+  modalBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.76)", padding: spacing.lg, justifyContent: "center" },
+  modalCard: { marginBottom: 0 },
 });

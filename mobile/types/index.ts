@@ -23,6 +23,7 @@ export type Pedido = {
   id: number;
   nombre: string;
   fechaPedido: string;
+  numeroSeguimiento: string | null;
   archivado: boolean;
   costeFijoSnapshot: number | null;
   productos: Producto[];

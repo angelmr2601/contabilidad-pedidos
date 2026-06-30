@@ -8,9 +8,10 @@ type ProductoDB = {
   numero_personalizacion: string | null; venta_unidad_snapshot: number | null; coste_unidad_snapshot: number | null;
   pagado: boolean; entregado: boolean;
 };
-type PedidoDB = { id: number; nombre: string; fecha_pedido: string; archivado: boolean; coste_fijo_snapshot: number | null; productos: ProductoDB[] };
+type PedidoDB = { id: number; nombre: string; fecha_pedido: string; numero_seguimiento: string | null; archivado: boolean; coste_fijo_snapshot: number | null; productos: ProductoDB[] };
 
 const PRODUCTOS_SELECT = "id,pedido_id,cliente,nombre,talla,tipo,manga,personalizacion,parche,manga_larga,nombre_personalizacion,numero_personalizacion,venta_unidad_snapshot,coste_unidad_snapshot,pagado,entregado";
+const PEDIDOS_SELECT = `id,nombre,fecha_pedido,numero_seguimiento,archivado,coste_fijo_snapshot,productos(${PRODUCTOS_SELECT})`;
 
 function normalizarTipo(tipo: string): TipoProducto {
   if (["Fan", "Player", "Retro", "Personalizada", "Infantil"].includes(tipo)) return tipo as TipoProducto;
@@ -29,10 +30,19 @@ function productoParaDB(producto: Producto, pedidoId: number) {
 }
 export const calcularArchivadoPedido = (productos: Producto[]) => productos.length > 0 && productos.every((p) => p.pagado && p.entregado);
 
+function normalizarNumeroSeguimiento(numeroSeguimiento: string | null) {
+  const limpio = numeroSeguimiento?.trim() ?? "";
+  return limpio.length > 0 ? limpio : null;
+}
+
+function pedidoDesdeDB(p: PedidoDB): Pedido {
+  return { id: p.id, nombre: p.nombre, fechaPedido: p.fecha_pedido, numeroSeguimiento: normalizarNumeroSeguimiento(p.numero_seguimiento), archivado: p.archivado, costeFijoSnapshot: p.coste_fijo_snapshot === null ? null : Number(p.coste_fijo_snapshot), productos: (p.productos ?? []).map(productoDesdeDB) };
+}
+
 export async function cargarPedidos(): Promise<Pedido[]> {
-  const { data, error } = await supabase.from("pedidos").select(`id,nombre,fecha_pedido,archivado,coste_fijo_snapshot,productos(${PRODUCTOS_SELECT})`).order("fecha_pedido", { ascending: false }).order("id", { ascending: false });
+  const { data, error } = await supabase.from("pedidos").select(PEDIDOS_SELECT).order("fecha_pedido", { ascending: false }).order("id", { ascending: false });
   if (error) throw error;
-  return ((data ?? []) as PedidoDB[]).map((p) => ({ id: p.id, nombre: p.nombre, fechaPedido: p.fecha_pedido, archivado: p.archivado, costeFijoSnapshot: p.coste_fijo_snapshot === null ? null : Number(p.coste_fijo_snapshot), productos: (p.productos ?? []).map(productoDesdeDB) }));
+  return ((data ?? []) as PedidoDB[]).map(pedidoDesdeDB);
 }
 export async function crearPedido(nombre: string, fechaPedido: string, precios: ConfiguracionPrecios): Promise<number> {
   const { data, error } = await supabase.from("pedidos").insert({ nombre, fecha_pedido: fechaPedido, archivado: false, coste_fijo_snapshot: precios.costeFijoPedido }).select("id").single();
@@ -42,6 +52,11 @@ export async function crearPedido(nombre: string, fechaPedido: string, precios: 
 export async function actualizarPedido(pedidoId: number, nombre: string, fechaPedido: string) {
   const { error } = await supabase.from("pedidos").update({ nombre, fecha_pedido: fechaPedido }).eq("id", pedidoId);
   if (error) throw error;
+}
+export async function actualizarNumeroSeguimientoPedido(pedidoId: number, numeroSeguimiento: string | null) {
+  const { data, error } = await supabase.from("pedidos").update({ numero_seguimiento: normalizarNumeroSeguimiento(numeroSeguimiento) }).eq("id", pedidoId).select(PEDIDOS_SELECT).single();
+  if (error) throw error;
+  return pedidoDesdeDB(data as PedidoDB);
 }
 export async function eliminarPedido(pedidoId: number) {
   const { error } = await supabase.from("pedidos").delete().eq("id", pedidoId);
