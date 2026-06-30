@@ -32,6 +32,13 @@ export type Pedido = {
   productos: Producto[];
 };
 
+
+export type BorradorPedido = Omit<Pedido, "id" | "numeroSeguimiento" | "archivado"> & {
+  id: -1;
+  numeroSeguimiento: null;
+  archivado: false;
+};
+
 export type ConfiguracionPrecios = {
   costeFan: number; ventaFan: number;
   costePlayer: number; ventaPlayer: number;
