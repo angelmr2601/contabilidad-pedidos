@@ -18,7 +18,11 @@ export default function PedidoDetalle() {
   const cargar = useCallback(async () => { const [pedidos, c] = await Promise.all([cargarPedidos(), cargarConfiguracionPrecios()]); setPedido(pedidos.find((p) => p.id === pedidoId) ?? null); setPrecios(c); }, [pedidoId]);
   useFocusEffect(useCallback(() => { cargar(); }, [cargar]));
   const puedeGuardarProducto = useMemo(() => producto && precios, [producto, precios]);
-  async function syncArchivado(nextProductos: Producto[]) { await guardarArchivadoPedido(pedidoId, nextProductos); await cargar(); }
+  async function syncArchivado(nextProductos: Producto[]) {
+    const archivado = await guardarArchivadoPedido(pedidoId, nextProductos);
+    setPedido((actual) => actual ? { ...actual, archivado, productos: nextProductos } : actual);
+    await cargar();
+  }
   async function guardarProducto() {
     if (!puedeGuardarProducto || !producto || !precios || !pedido) return;
     let nextProductos: Producto[];
@@ -36,7 +40,10 @@ export default function PedidoDetalle() {
     if (!pedido || !precios) return;
     Alert.alert("Duplicar producto", "¿Quieres duplicar este producto?", [
       { text: "Cancelar", style: "cancel" },
-      { text: "Duplicar", onPress: async () => { const creado = await duplicarProducto(pedidoId, item, precios); await syncArchivado([...pedido.productos, creado]); } },
+      { text: "Duplicar", onPress: async () => {
+        const creado = await duplicarProducto(pedidoId, item, precios);
+        await syncArchivado([...pedido.productos, creado]);
+      } },
     ]);
   }
   function abrirSeguimiento() { setNumeroSeguimiento(pedido?.numeroSeguimiento ?? ""); setErrorSeguimiento(""); setSeguimientoModal(true); }

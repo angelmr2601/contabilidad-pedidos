@@ -61,8 +61,10 @@ export async function eliminarPedido(pedidoId: number) {
   if (error) throw error;
 }
 export async function guardarArchivadoPedido(pedidoId: number, productos: Producto[]) {
-  const { error } = await supabase.from("pedidos").update({ archivado: calcularArchivadoPedido(productos) }).eq("id", pedidoId);
+  const archivado = calcularArchivadoPedido(productos);
+  const { error } = await supabase.from("pedidos").update({ archivado }).eq("id", pedidoId);
   if (error) throw error;
+  return archivado;
 }
 export async function crearProducto(pedidoId: number, producto: Producto, precios: ConfiguracionPrecios) {
   const { data, error } = await supabase.from("productos").insert(productoParaDB(aplicarPrecioProductoActual(producto, precios), pedidoId)).select(PRODUCTOS_SELECT).single();
@@ -70,7 +72,13 @@ export async function crearProducto(pedidoId: number, producto: Producto, precio
   return productoDesdeDB(data as ProductoDB);
 }
 export async function duplicarProducto(pedidoId: number, producto: Producto, precios: ConfiguracionPrecios) {
-  return crearProducto(pedidoId, { ...producto, id: Date.now() * -1, pagado: false, entregado: false }, precios);
+  const copia: Producto = {
+    ...producto,
+    id: Date.now() * -1,
+    pagado: false,
+    entregado: false,
+  };
+  return crearProducto(pedidoId, copia, precios);
 }
 export async function actualizarProducto(producto: Producto, precios?: ConfiguracionPrecios) {
   const final = precios ? aplicarPrecioProductoActual(producto, precios) : producto;

@@ -36,13 +36,17 @@ export function calcularArchivadoPedido(productos: Producto[]): boolean {
   return productos.length > 0 && productos.every((producto) => producto.pagado && producto.entregado);
 }
 
+export function contarProductosPendientesEntrega(pedido: Pedido): number {
+  return pedido.productos.filter((producto) => !producto.entregado).length;
+}
+
 export function calcularPedidosConTotales(pedidos: Pedido[], precios: ConfiguracionPrecios = PRECIOS_POR_DEFECTO): PedidoConTotales[] {
   return pedidos.map((pedido) => {
     const totalVenta = pedido.productos.reduce((t, p) => t + calcularProducto(p, precios).ventaTotal, 0);
     const costeProductos = pedido.productos.reduce((t, p) => t + calcularProducto(p, precios).costeTotal, 0);
     const totalCoste = costeProductos + (pedido.costeFijoSnapshot ?? precios.costeFijoPedido);
     const pendienteCobro = pedido.productos.reduce((t, p) => t + (p.pagado ? 0 : calcularProducto(p, precios).ventaTotal), 0);
-    return { ...pedido, totalVenta, costeProductos, totalCoste, beneficio: totalVenta - totalCoste, pendienteCobro, productosPendientesEntrega: pedido.productos.filter((p) => !p.entregado).length };
+    return { ...pedido, totalVenta, costeProductos, totalCoste, beneficio: totalVenta - totalCoste, pendienteCobro, productosPendientesEntrega: contarProductosPendientesEntrega(pedido) };
   });
 }
 

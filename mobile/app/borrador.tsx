@@ -8,7 +8,7 @@ import { calcularPedidosConTotales, formatoEuros } from "@/lib/calculos";
 import { cargarConfiguracionPrecios } from "@/lib/configuracion-precios-db";
 import { PRECIOS_POR_DEFECTO } from "@/lib/precios";
 import { crearProductoVacio } from "@/lib/productos";
-import type { Pedido, Producto } from "@/types";
+import type { BorradorPedido, Producto } from "@/types";
 
 const hoy = () => new Date().toISOString().slice(0, 10);
 
@@ -21,7 +21,7 @@ export default function BorradorScreen() {
 
   useEffect(() => { cargarConfiguracionPrecios().then(setPrecios).catch(() => setPrecios(PRECIOS_POR_DEFECTO)); }, []);
 
-  const pedido: Pedido = useMemo(() => ({
+  const pedido: BorradorPedido = useMemo(() => ({
     id: -1,
     nombre,
     fechaPedido,
@@ -41,7 +41,13 @@ export default function BorradorScreen() {
   }
 
   function duplicarProducto(producto: Producto) {
-    setProductos((actuales) => [...actuales, { ...producto, id: Date.now() * -1, pagado: false, entregado: false }]);
+    const copia: Producto = {
+      ...producto,
+      id: Date.now() * -1,
+      pagado: false,
+      entregado: false,
+    };
+    setProductos((actuales) => [...actuales, copia]);
   }
 
   return <View style={styles.screen}><FlatList data={productos} keyExtractor={(p) => String(p.id)} renderItem={({ item }) => <ProductoCard producto={item} precios={precios} onTogglePagado={() => setProductos((actuales) => actuales.map((p) => p.id === item.id ? { ...p, pagado: !p.pagado } : p))} onToggleEntregado={() => setProductos((actuales) => actuales.map((p) => p.id === item.id ? { ...p, entregado: !p.entregado } : p))} onEdit={() => setProductoEditando(item)} onDuplicate={() => duplicarProducto(item)} onDelete={() => setProductos((actuales) => actuales.filter((p) => p.id !== item.id))} />} ListHeaderComponent={<><Text style={styles.eyebrow}>Simulador</Text><Text style={styles.title}>Borrador</Text><Card elevated><Text style={styles.muted}>Este borrador no se guarda. Sirve solo para calcular un pedido antes de crearlo.</Text><Text style={styles.label}>Nombre del borrador</Text><Input value={nombre} onChangeText={setNombre} placeholder="Nombre" /><Text style={styles.label}>Fecha</Text><Input value={fechaPedido} onChangeText={setFechaPedido} placeholder="YYYY-MM-DD" /><Button onPress={() => setProductoEditando(crearProductoVacio())}>Añadir producto</Button></Card><Card><Text style={styles.eyebrow}>Cálculo</Text><View style={styles.statGrid}><View style={styles.stat}><Text style={styles.statLabel}>Venta total</Text><Text style={styles.statValue}>{formatoEuros(total.totalVenta)}</Text></View><View style={styles.stat}><Text style={styles.statLabel}>Coste productos</Text><Text style={styles.statValue}>{formatoEuros(total.costeProductos)}</Text></View><View style={styles.stat}><Text style={styles.statLabel}>Coste fijo</Text><Text style={styles.statValue}>{formatoEuros(precios.costeFijoPedido)}</Text></View><View style={styles.stat}><Text style={styles.statLabel}>Coste total</Text><Text style={styles.statValue}>{formatoEuros(total.totalCoste)}</Text></View><View style={styles.stat}><Text style={styles.statLabel}>Beneficio</Text><Text style={styles.statValue}>{formatoEuros(total.beneficio)}</Text></View><View style={styles.stat}><Text style={styles.statLabel}>Productos</Text><Text style={styles.statValue}>{productos.length}</Text></View></View></Card><Text style={styles.subtitle}>Productos simulados</Text></>} ListEmptyComponent={<EmptyState title="Sin productos simulados" body="Añade productos para calcular venta, costes y beneficio sin guardar en Supabase." action={<Button onPress={() => setProductoEditando(crearProductoVacio())}>Añadir producto</Button>} />} contentContainerStyle={{ paddingBottom: 32 }} />
