@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "Offside Club",
+    "slug": "offside-club-contabilidad",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "offsideclub",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#f3f4f6"
+    },
+    "android": {
+      "package": "com.offsideclub.contabilidad"
+    },
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}
