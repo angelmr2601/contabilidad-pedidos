@@ -2,9 +2,15 @@ import type { ConfiguracionPrecios, Pedido, PedidoConTotales, Producto } from "@
 import { PRECIOS_POR_DEFECTO } from "./precios";
 
 export function calcularProducto(producto: Producto, precios: ConfiguracionPrecios = PRECIOS_POR_DEFECTO) {
-  if (producto.costeUnidadSnapshot !== null && producto.ventaUnidadSnapshot !== null) {
+  if (producto.tipo !== "Personalizada" && producto.costeUnidadSnapshot !== null && producto.ventaUnidadSnapshot !== null) {
     const costeTotal = producto.costeUnidadSnapshot;
     const ventaTotal = producto.ventaUnidadSnapshot;
+    return { costeUnidad: costeTotal, ventaUnidad: ventaTotal, costeTotal, ventaTotal, beneficio: ventaTotal - costeTotal };
+  }
+  if (producto.tipo === "Personalizada") {
+    const tienePrecioManual = producto.costeManual > 0 || producto.precioVentaManual > 0;
+    const costeTotal = tienePrecioManual || producto.costeUnidadSnapshot === null ? producto.costeManual : producto.costeUnidadSnapshot;
+    const ventaTotal = tienePrecioManual || producto.ventaUnidadSnapshot === null ? producto.precioVentaManual : producto.ventaUnidadSnapshot;
     return { costeUnidad: costeTotal, ventaUnidad: ventaTotal, costeTotal, ventaTotal, beneficio: ventaTotal - costeTotal };
   }
   const porTipo = {
