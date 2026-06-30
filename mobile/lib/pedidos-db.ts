@@ -1,5 +1,5 @@
 import type { ConfiguracionPrecios, Pedido, Producto, TipoProducto, TallaProducto } from "@/types";
-import { aplicarPrecioProductoActual } from "./calculos";
+import { aplicarPrecioProductoActual, calcularArchivadoPedido } from "./calculos";
 import { supabase } from "./supabase";
 
 type ProductoDB = {
@@ -28,8 +28,6 @@ function productoCamposDB(producto: Producto) {
 function productoParaDB(producto: Producto, pedidoId: number) {
   return { pedido_id: pedidoId, ...productoCamposDB(producto) };
 }
-export const calcularArchivadoPedido = (productos: Producto[]) => productos.length > 0 && productos.every((p) => p.pagado && p.entregado);
-
 function normalizarNumeroSeguimiento(numeroSeguimiento: string | null) {
   const limpio = numeroSeguimiento?.trim() ?? "";
   return limpio.length > 0 ? limpio : null;
@@ -67,8 +65,12 @@ export async function guardarArchivadoPedido(pedidoId: number, productos: Produc
   if (error) throw error;
 }
 export async function crearProducto(pedidoId: number, producto: Producto, precios: ConfiguracionPrecios) {
-  const { error } = await supabase.from("productos").insert(productoParaDB(aplicarPrecioProductoActual(producto, precios), pedidoId));
+  const { data, error } = await supabase.from("productos").insert(productoParaDB(aplicarPrecioProductoActual(producto, precios), pedidoId)).select(PRODUCTOS_SELECT).single();
   if (error) throw error;
+  return productoDesdeDB(data as ProductoDB);
+}
+export async function duplicarProducto(pedidoId: number, producto: Producto, precios: ConfiguracionPrecios) {
+  return crearProducto(pedidoId, { ...producto, id: Date.now() * -1, pagado: false, entregado: false }, precios);
 }
 export async function actualizarProducto(producto: Producto, precios?: ConfiguracionPrecios) {
   const final = precios ? aplicarPrecioProductoActual(producto, precios) : producto;

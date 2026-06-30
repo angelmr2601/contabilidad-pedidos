@@ -26,6 +26,10 @@ export function aplicarPrecioProductoActual(producto: Producto, precios: Configu
   return { ...producto, costeUnidadSnapshot: precio.costeUnidad, ventaUnidadSnapshot: precio.ventaUnidad };
 }
 
+export function calcularArchivadoPedido(productos: Producto[]): boolean {
+  return productos.length > 0 && productos.every((producto) => producto.pagado && producto.entregado);
+}
+
 export function calcularPedidosConTotales(pedidos: Pedido[], precios: ConfiguracionPrecios = PRECIOS_POR_DEFECTO): PedidoConTotales[] {
   return pedidos.map((pedido) => {
     const totalVenta = pedido.productos.reduce((t, p) => t + calcularProducto(p, precios).ventaTotal, 0);
