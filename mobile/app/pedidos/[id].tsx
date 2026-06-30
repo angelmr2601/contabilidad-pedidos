@@ -1,0 +1,22 @@
+import { router, useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Alert, FlatList, Modal, Pressable, Text, TextInput, View } from "react-native";
+import { ProductoCard } from "@/components/ProductoCard";
+import { ProductoForm } from "@/components/ProductoForm";
+import { styles } from "@/components/styles";
+import { cargarConfiguracionPrecios } from "@/lib/configuracion-precios-db";
+import { actualizarEstadoProducto, actualizarPedido, actualizarProducto, cargarPedidos, crearProducto, eliminarPedido, eliminarProducto, guardarArchivadoPedido } from "@/lib/pedidos-db";
+import { crearProductoVacio } from "@/lib/productos";
+import type { ConfiguracionPrecios, Pedido, Producto } from "@/types";
+export default function PedidoDetalle() {
+  const { id } = useLocalSearchParams<{ id: string }>(); const pedidoId = Number(id);
+  const [pedido, setPedido] = useState<Pedido | null>(null); const [precios, setPrecios] = useState<ConfiguracionPrecios | null>(null); const [editPedido, setEditPedido] = useState(false); const [producto, setProducto] = useState<Producto | null>(null);
+  const cargar = useCallback(async () => { const [pedidos, c] = await Promise.all([cargarPedidos(), cargarConfiguracionPrecios()]); setPedido(pedidos.find((p) => p.id === pedidoId) ?? null); setPrecios(c); }, [pedidoId]);
+  useEffect(() => { cargar(); }, [cargar]);
+  const puedeGuardarProducto = useMemo(() => producto && precios, [producto, precios]);
+  async function syncArchivado(nextProductos: Producto[]) { await guardarArchivadoPedido(pedidoId, nextProductos); await cargar(); }
+  async function guardarProducto() { if (!puedeGuardarProducto || !producto || !precios) return; if (producto.id < 0) await crearProducto(pedidoId, producto, precios); else await actualizarProducto(producto, precios); setProducto(null); await cargar(); }
+  if (!pedido || !precios) return <View style={styles.screen}><Text>Cargando...</Text></View>;
+  return <View style={styles.screen}><Text style={styles.title}>Pedido #{pedido.id}</Text><View style={styles.card}><TextInput style={styles.input} editable={editPedido} value={pedido.nombre} onChangeText={(nombre) => setPedido({ ...pedido, nombre })} /><TextInput style={styles.input} editable={editPedido} value={pedido.fechaPedido} onChangeText={(fechaPedido) => setPedido({ ...pedido, fechaPedido })} /><View style={styles.row}><Pressable style={styles.button} onPress={async () => { if (editPedido) await actualizarPedido(pedido.id, pedido.nombre, pedido.fechaPedido); setEditPedido(!editPedido); }}><Text style={styles.buttonText}>{editPedido ? "Guardar pedido" : "Editar pedido"}</Text></Pressable><Pressable style={styles.secondaryButton} onPress={() => setProducto(crearProductoVacio())}><Text style={styles.secondaryText}>Añadir producto</Text></Pressable><Pressable style={styles.dangerButton} onPress={() => Alert.alert("Eliminar pedido", "¿Seguro?", [{ text: "Cancelar" }, { text: "Eliminar", style: "destructive", onPress: async () => { await eliminarPedido(pedido.id); router.replace("/pedidos"); } }])}><Text style={styles.buttonText}>Eliminar pedido</Text></Pressable></View></View><FlatList data={pedido.productos} keyExtractor={(p) => String(p.id)} renderItem={({ item }) => <ProductoCard producto={item} precios={precios} onTogglePagado={async () => { const next = pedido.productos.map((p) => p.id === item.id ? { ...p, pagado: !p.pagado } : p); await actualizarEstadoProducto(item.id, { pagado: !item.pagado }); await syncArchivado(next); }} onToggleEntregado={async () => { const next = pedido.productos.map((p) => p.id === item.id ? { ...p, entregado: !p.entregado } : p); await actualizarEstadoProducto(item.id, { entregado: !item.entregado }); await syncArchivado(next); }} onEdit={() => setProducto(item)} onDuplicate={() => setProducto({ ...item, id: Date.now() * -1, pagado: false, entregado: false })} onDelete={async () => { const next = pedido.productos.filter((p) => p.id !== item.id); await eliminarProducto(item.id); await syncArchivado(next); }} />} />
+  <Modal visible={Boolean(producto)} animationType="slide"><View style={styles.screen}>{producto ? <ProductoForm producto={producto} precios={precios} onChange={setProducto} /> : null}<Pressable style={styles.button} onPress={guardarProducto}><Text style={styles.buttonText}>Guardar producto</Text></Pressable><Pressable style={styles.secondaryButton} onPress={() => setProducto(null)}><Text style={styles.secondaryText}>Cancelar</Text></Pressable></View></Modal></View>;
+}
