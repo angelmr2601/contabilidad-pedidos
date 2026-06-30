@@ -6,7 +6,7 @@ import { Badge, Button } from "./ui";
 import { styles } from "./styles";
 export function ProductoCard({ producto, precios, onTogglePagado, onToggleEntregado, onEdit, onDuplicate, onDelete }: { producto: Producto; precios: ConfiguracionPrecios; onTogglePagado: () => void; onToggleEntregado: () => void; onEdit: () => void; onDuplicate: () => void; onDelete: () => void }) {
   const c = calcularProducto(producto, precios);
-  const extras = [[producto.personalizacion, "✓ Personalización"], [producto.parche, "✓ Parche"], [producto.mangaLarga, "✓ Manga larga"]].filter(([on]) => on).map(([, label]) => label as string);
+  const extras = [[producto.personalizacion, "✓ Personalización"], [producto.parche, `✓ Parche${producto.parcheNombre ? `: ${producto.parcheNombre}` : ""}`], [producto.mangaLarga, "✓ Manga larga"]].filter(([on]) => on).map(([, label]) => label as string);
   return <View style={styles.card}>
     <View style={styles.between}><View style={{ flex: 1 }}><Text style={styles.eyebrow}>Producto</Text><Text style={styles.subtitle}>{producto.cliente || "Sin cliente"}</Text></View><Badge tone={producto.pagado && producto.entregado ? "success" : "warning"}>{producto.pagado && producto.entregado ? "Todo al día" : "Pendiente"}</Badge></View>
     <Text style={styles.text}>{producto.nombre || "Sin producto"} · {producto.talla} · {producto.tipo}</Text>

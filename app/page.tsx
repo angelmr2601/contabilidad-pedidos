@@ -21,7 +21,7 @@ import { cargarConfiguracionPrecios } from "../lib/configuracion-precios-db";
 import { PRECIOS_POR_DEFECTO } from "../lib/precios";
 import type { ConfiguracionPrecios as TipoConfiguracionPrecios } from "../types";
 
-import { calcularPedidosConTotales, calcularResumen } from "../lib/calculos";
+import { aplicarPrecioProductoActual, calcularPedidosConTotales, calcularResumen } from "../lib/calculos";
 import { calcularGastoEnvioPedido } from "../lib/gastos-envio";
 import {
   actualizarArchivadoPedidoDB,
@@ -183,7 +183,7 @@ export default function Home() {
                 producto.talla,
                 producto.tipo,
                 producto.mangaLarga ? "manga larga" : "",
-                producto.parche ? "parche" : "",
+                producto.parche ? `parche ${producto.parcheNombre}` : "",
                 producto.personalizacion ? "personalizacion personalizada" : "",
                 producto.nombrePersonalizacion,
                 producto.numeroPersonalizacion,
@@ -261,7 +261,7 @@ export default function Home() {
   function actualizarProductoFormulario(
     id: number,
     campo: keyof Producto,
-    valor: string | number | boolean,
+    valor: string | number | boolean | null,
   ) {
     setProductosFormulario((productos) =>
       productos.map((producto) =>
@@ -639,7 +639,7 @@ export default function Home() {
 
   function actualizarProductoEditando(
     campo: keyof Producto,
-    valor: string | number | boolean,
+    valor: string | number | boolean | null,
   ) {
     setProductoEditando((actual) =>
       actual
@@ -676,9 +676,11 @@ export default function Home() {
       return;
     }
 
+    const productoConPrecio = aplicarPrecioProductoActual(productoEditando.producto, precios);
+
     const productosActualizados = pedido.productos.map((producto) =>
-      producto.id === productoEditando.producto.id
-        ? productoEditando.producto
+      producto.id === productoConPrecio.id
+        ? productoConPrecio
         : producto,
     );
 
@@ -697,7 +699,7 @@ export default function Home() {
     );
 
     try {
-      await actualizarProductoDB(productoEditando.producto);
+      await actualizarProductoDB(productoConPrecio, precios);
       await actualizarArchivadoPedidoDB(
         productoEditando.pedidoId,
         nuevoArchivado,
@@ -719,7 +721,7 @@ export default function Home() {
 
   function actualizarProductoAñadiendo(
     campo: keyof Producto,
-    valor: string | number | boolean,
+    valor: string | number | boolean | null,
   ) {
     setProductoAñadiendo((actual) =>
       actual

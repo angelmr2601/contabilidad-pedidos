@@ -9,6 +9,7 @@ export function crearProductoVacio(id: number): Producto {
     tipo: "Fan",
     personalizacion: false,
     parche: false,
+    parcheNombre: "",
     mangaLarga: false,
     nombrePersonalizacion: "",
     numeroPersonalizacion: "",

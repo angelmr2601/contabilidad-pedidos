@@ -30,7 +30,7 @@ type Props = {
   onActualizarProducto: (
     id: number,
     campo: keyof Producto,
-    valor: string | number | boolean,
+    valor: string | number | boolean | null,
   ) => void;
 };
 

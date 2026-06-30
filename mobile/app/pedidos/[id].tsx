@@ -1,5 +1,5 @@
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Alert, Clipboard, FlatList, Modal, Text, View } from "react-native";
 import { ProductoCard } from "@/components/ProductoCard";
 import { ProductoForm } from "@/components/ProductoForm";
@@ -17,7 +17,6 @@ export default function PedidoDetalle() {
   const [seguimientoModal, setSeguimientoModal] = useState(false); const [numeroSeguimiento, setNumeroSeguimiento] = useState(""); const [guardandoSeguimiento, setGuardandoSeguimiento] = useState(false); const [errorSeguimiento, setErrorSeguimiento] = useState("");
   const cargar = useCallback(async () => { const [pedidos, c] = await Promise.all([cargarPedidos(), cargarConfiguracionPrecios()]); setPedido(pedidos.find((p) => p.id === pedidoId) ?? null); setPrecios(c); }, [pedidoId]);
   useFocusEffect(useCallback(() => { cargar(); }, [cargar]));
-  useEffect(() => { cargar(); }, [cargar]);
   const puedeGuardarProducto = useMemo(() => producto && precios, [producto, precios]);
   async function syncArchivado(nextProductos: Producto[]) { await guardarArchivadoPedido(pedidoId, nextProductos); await cargar(); }
   async function guardarProducto() {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useFocusEffect } from "expo-router";
 import { Text, View } from "react-native";
 import { ResumenCards } from "@/components/ResumenCards";
@@ -18,7 +18,6 @@ export default function ResumenScreen() {
   const [pedidos, setPedidos] = useState<Pedido[]>([]); const [precios, setPrecios] = useState<ConfiguracionPrecios | null>(null); const [periodo, setPeriodo] = useState<Periodo>(mesActual());
   const cargar = useCallback(async () => { const [p, c] = await Promise.all([cargarPedidos(), cargarConfiguracionPrecios()]); setPedidos(p); setPrecios(c); }, []);
   useFocusEffect(useCallback(() => { cargar(); }, [cargar]));
-  useEffect(() => { cargar(); }, [cargar]);
   const actual = mesActual();
   const pedidosFiltrados = useMemo(() => periodo === "todos" ? pedidos : pedidos.filter((p) => p.fechaPedido.startsWith(periodo)), [pedidos, periodo]);
   const resumen = useMemo(() => calcularResumen(calcularPedidosConTotales(pedidosFiltrados, precios ?? undefined)), [pedidosFiltrados, precios]);

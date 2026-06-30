@@ -11,7 +11,7 @@ export function calcularProducto(producto: Producto, precios: ConfiguracionPreci
     Fan: [precios.costeFan, precios.ventaFan],
     Player: [precios.costePlayer, precios.ventaPlayer],
     Retro: [precios.costeRetro, precios.ventaRetro],
-    Personalizada: [precios.costePersonalizada, precios.ventaPersonalizada],
+    Personalizada: [producto.costeManual, producto.precioVentaManual],
     Infantil: [precios.costeInfantil, precios.ventaInfantil],
   } as const;
   let [costeTotal, ventaTotal] = porTipo[producto.tipo];

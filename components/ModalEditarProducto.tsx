@@ -9,7 +9,7 @@ type Props = {
   onGuardar: () => void;
   onActualizarProducto: (
     campo: keyof Producto,
-    valor: string | number | boolean
+    valor: string | number | boolean | null
   ) => void;
 };
 

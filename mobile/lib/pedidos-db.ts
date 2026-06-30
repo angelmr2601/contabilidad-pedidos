@@ -4,13 +4,13 @@ import { supabase } from "./supabase";
 
 type ProductoDB = {
   id: number; pedido_id: number; cliente: string; nombre: string; talla: string; tipo: string; manga: string | null;
-  personalizacion: boolean; parche: boolean | null; manga_larga: boolean | null; nombre_personalizacion: string | null;
-  numero_personalizacion: string | null; venta_unidad_snapshot: number | null; coste_unidad_snapshot: number | null;
+  personalizacion: boolean; parche: boolean | null; nombre_parche: string | null; manga_larga: boolean | null; nombre_personalizacion: string | null;
+  numero_personalizacion: string | null; precio_venta_manual: number | null; coste_manual: number | null; venta_unidad_snapshot: number | null; coste_unidad_snapshot: number | null;
   pagado: boolean; entregado: boolean;
 };
 type PedidoDB = { id: number; nombre: string; fecha_pedido: string; numero_seguimiento: string | null; archivado: boolean; coste_fijo_snapshot: number | null; productos: ProductoDB[] };
 
-const PRODUCTOS_SELECT = "id,pedido_id,cliente,nombre,talla,tipo,manga,personalizacion,parche,manga_larga,nombre_personalizacion,numero_personalizacion,venta_unidad_snapshot,coste_unidad_snapshot,pagado,entregado";
+const PRODUCTOS_SELECT = "id,pedido_id,cliente,nombre,talla,tipo,manga,personalizacion,parche,nombre_parche,manga_larga,nombre_personalizacion,numero_personalizacion,precio_venta_manual,coste_manual,venta_unidad_snapshot,coste_unidad_snapshot,pagado,entregado";
 const PEDIDOS_SELECT = `id,nombre,fecha_pedido,numero_seguimiento,archivado,coste_fijo_snapshot,productos(${PRODUCTOS_SELECT})`;
 
 function normalizarTipo(tipo: string): TipoProducto {
@@ -20,10 +20,10 @@ function normalizarTipo(tipo: string): TipoProducto {
   return "Personalizada";
 }
 function productoDesdeDB(p: ProductoDB): Producto {
-  return { id: p.id, cliente: p.cliente, nombre: p.nombre, talla: p.talla as TallaProducto, tipo: normalizarTipo(p.tipo), personalizacion: Boolean(p.personalizacion), parche: Boolean(p.parche), mangaLarga: Boolean(p.manga_larga ?? p.manga === "Larga"), nombrePersonalizacion: p.nombre_personalizacion ?? "", numeroPersonalizacion: p.numero_personalizacion ?? "", ventaUnidadSnapshot: p.venta_unidad_snapshot === null ? null : Number(p.venta_unidad_snapshot), costeUnidadSnapshot: p.coste_unidad_snapshot === null ? null : Number(p.coste_unidad_snapshot), pagado: p.pagado, entregado: p.entregado };
+  return { id: p.id, cliente: p.cliente, nombre: p.nombre, talla: p.talla as TallaProducto, tipo: normalizarTipo(p.tipo), personalizacion: Boolean(p.personalizacion), parche: Boolean(p.parche), parcheNombre: p.nombre_parche ?? "", mangaLarga: Boolean(p.manga_larga ?? p.manga === "Larga"), nombrePersonalizacion: p.nombre_personalizacion ?? "", numeroPersonalizacion: p.numero_personalizacion ?? "", precioVentaManual: Number(p.precio_venta_manual ?? 0), costeManual: Number(p.coste_manual ?? 0), ventaUnidadSnapshot: p.venta_unidad_snapshot === null ? null : Number(p.venta_unidad_snapshot), costeUnidadSnapshot: p.coste_unidad_snapshot === null ? null : Number(p.coste_unidad_snapshot), pagado: p.pagado, entregado: p.entregado };
 }
 function productoCamposDB(producto: Producto) {
-  return { cliente: producto.cliente, nombre: producto.nombre, talla: producto.talla, tipo: producto.tipo, manga: producto.mangaLarga ? "Larga" : "Corta", personalizacion: producto.personalizacion, parche: producto.parche, manga_larga: producto.mangaLarga, nombre_personalizacion: producto.nombrePersonalizacion, numero_personalizacion: producto.numeroPersonalizacion, venta_unidad_snapshot: producto.ventaUnidadSnapshot, coste_unidad_snapshot: producto.costeUnidadSnapshot, pagado: producto.pagado, entregado: producto.entregado };
+  return { cliente: producto.cliente, nombre: producto.nombre, talla: producto.talla, tipo: producto.tipo, manga: producto.mangaLarga ? "Larga" : "Corta", personalizacion: producto.personalizacion, parche: producto.parche, nombre_parche: producto.parche ? producto.parcheNombre : "", manga_larga: producto.mangaLarga, nombre_personalizacion: producto.nombrePersonalizacion, numero_personalizacion: producto.numeroPersonalizacion, precio_venta_manual: producto.tipo === "Personalizada" ? producto.precioVentaManual : null, coste_manual: producto.tipo === "Personalizada" ? producto.costeManual : null, venta_unidad_snapshot: producto.ventaUnidadSnapshot, coste_unidad_snapshot: producto.costeUnidadSnapshot, pagado: producto.pagado, entregado: producto.entregado };
 }
 function productoParaDB(producto: Producto, pedidoId: number) {
   return { pedido_id: pedidoId, ...productoCamposDB(producto) };

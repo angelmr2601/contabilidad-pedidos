@@ -30,8 +30,8 @@ export function calcularPrecioProductoDesdeConfiguracion(
   }
 
   if (producto.tipo === "Personalizada") {
-    costeUnidad = precios.costePersonalizada;
-    ventaUnidad = precios.ventaPersonalizada;
+    costeUnidad = producto.costeManual;
+    ventaUnidad = producto.precioVentaManual;
   }
 
   if (producto.tipo === "Infantil") {

@@ -9,11 +9,12 @@ import type {
 type Props = {
   producto: Producto;
   precios: ConfiguracionPrecios;
-  onChange: (campo: keyof Producto, valor: string | number | boolean) => void;
+  onChange: (campo: keyof Producto, valor: string | number | boolean | null) => void;
 };
 
 export default function ProductoForm({ producto, precios, onChange }: Props) {
-  const calculo = calcularProducto(producto, precios);
+  const calculo = calcularProducto({ ...producto, costeUnidadSnapshot: null, ventaUnidadSnapshot: null }, precios);
+  const esPersonalizada = producto.tipo === "Personalizada";
   const esInfantil = producto.tipo === "Infantil";
   const tallasAdulto: TallaProducto[] = [
     "S",
@@ -37,6 +38,8 @@ export default function ProductoForm({ producto, precios, onChange }: Props) {
 
   function cambiarTipo(tipo: TipoProducto) {
     onChange("tipo", tipo);
+    onChange("costeUnidadSnapshot", null);
+    onChange("ventaUnidadSnapshot", null);
 
     if (
       tipo === "Infantil" &&
@@ -109,6 +112,35 @@ export default function ProductoForm({ producto, precios, onChange }: Props) {
         </div>
       </div>
 
+      {esPersonalizada && (
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="mb-2 block text-sm font-medium">Coste manual</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={producto.costeManual}
+              onChange={(event) => onChange("costeManual", Number(event.target.value))}
+              placeholder="Coste"
+              className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
+            />
+          </div>
+          <div>
+            <label className="mb-2 block text-sm font-medium">Venta manual</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={producto.precioVentaManual}
+              onChange={(event) => onChange("precioVentaManual", Number(event.target.value))}
+              placeholder="Venta"
+              className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
+            />
+          </div>
+        </div>
+      )}
+
       <div className="mt-4 flex flex-wrap gap-4">
         <label className="flex items-center gap-2 text-sm">
           <input
@@ -157,6 +189,18 @@ export default function ProductoForm({ producto, precios, onChange }: Props) {
           Entregado
         </label>
       </div>
+
+      {producto.parche && (
+        <div className="mt-4">
+          <label className="mb-2 block text-sm font-medium">Qué parche</label>
+          <input
+            value={producto.parcheNombre}
+            onChange={(event) => onChange("parcheNombre", event.target.value)}
+            placeholder="Ej: Champions League"
+            className="w-full rounded-xl border border-border-strong bg-surface px-4 py-3 outline-none focus:border-foreground"
+          />
+        </div>
+      )}
 
       {producto.personalizacion && (
         <div className="mt-4 grid gap-4 md:grid-cols-2">

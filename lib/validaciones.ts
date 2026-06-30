@@ -1,5 +1,13 @@
 import type { PedidoEditando, Producto, ProductoEditando } from "../types";
 
+function productoPersonalizadaSinPrecio(producto: Producto) {
+  return producto.tipo === "Personalizada" && (producto.costeManual <= 0 || producto.precioVentaManual <= 0);
+}
+
+function productoConParcheSinNombre(producto: Producto) {
+  return producto.parche && !producto.parcheNombre.trim();
+}
+
 function productoPersonalizadoSinDatos(producto: Producto) {
   return (
     producto.personalizacion &&
@@ -38,6 +46,14 @@ export function validarNuevoPedido(
     return "Hay un producto con personalización marcada, pero sin nombre ni número.";
   }
 
+  if (productosValidos.find(productoPersonalizadaSinPrecio)) {
+    return "Hay un producto de tipo Personalizada sin coste o venta manual.";
+  }
+
+  if (productosValidos.find(productoConParcheSinNombre)) {
+    return "Hay un producto con parche marcado, pero sin indicar qué parche.";
+  }
+
   return null;
 }
 
@@ -58,6 +74,14 @@ export function validarProductoEditando(productoEditando: ProductoEditando) {
 
   if (productoPersonalizadoSinDatos(productoEditando.producto)) {
     return "La personalización está marcada, pero no hay nombre ni número indicado.";
+  }
+
+  if (productoPersonalizadaSinPrecio(productoEditando.producto)) {
+    return "Indica coste y venta manual para el producto Personalizada.";
+  }
+
+  if (productoConParcheSinNombre(productoEditando.producto)) {
+    return "Indica qué parche lleva el producto.";
   }
 
   return null;
