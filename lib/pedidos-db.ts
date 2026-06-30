@@ -13,6 +13,7 @@ type ProductoDB = {
   manga: string | null;
   personalizacion: boolean;
   parche: boolean | null;
+  nombre_parche: string | null;
   manga_larga: boolean | null;
   nombre_personalizacion: string;
   numero_personalizacion: string;
@@ -47,6 +48,7 @@ const PRODUCTOS_SELECT = `
   manga,
   personalizacion,
   parche,
+  nombre_parche,
   manga_larga,
   nombre_personalizacion,
   numero_personalizacion,
@@ -79,6 +81,7 @@ function productoDesdeDB(producto: ProductoDB): Producto {
     tipo: normalizarTipoProductoDB(producto.tipo),
     personalizacion: producto.personalizacion,
     parche: Boolean(producto.parche),
+    parcheNombre: producto.nombre_parche ?? "",
     mangaLarga,
     nombrePersonalizacion: producto.nombre_personalizacion,
     numeroPersonalizacion: producto.numero_personalizacion,
@@ -106,12 +109,13 @@ function productoParaDB(producto: Producto, pedidoId: number) {
     tipo: producto.tipo,
     manga: producto.mangaLarga ? "Larga" : "Corta",
     parche: producto.parche,
+    nombre_parche: producto.parche ? producto.parcheNombre : "",
     manga_larga: producto.mangaLarga,
     personalizacion: producto.personalizacion,
     nombre_personalizacion: producto.nombrePersonalizacion,
     numero_personalizacion: producto.numeroPersonalizacion,
-    precio_venta_manual: null,
-    coste_manual: null,
+    precio_venta_manual: producto.tipo === "Personalizada" ? producto.precioVentaManual : null,
+    coste_manual: producto.tipo === "Personalizada" ? producto.costeManual : null,
     venta_unidad_snapshot: producto.ventaUnidadSnapshot,
     coste_unidad_snapshot: producto.costeUnidadSnapshot,
     pagado: producto.pagado,
@@ -333,26 +337,28 @@ export async function eliminarPedidoDB(pedidoId: number) {
   }
 }
 
-export async function actualizarProductoDB(producto: Producto) {
+export async function actualizarProductoDB(producto: Producto, precios?: ConfiguracionPrecios) {
+  const productoConPrecio = precios ? aplicarPrecioProductoActual(producto, precios) : producto;
   const { error } = await supabase
     .from("productos")
     .update({
-      cliente: producto.cliente,
-      nombre: producto.nombre,
-      talla: producto.talla,
-      tipo: producto.tipo,
-      manga: producto.mangaLarga ? "Larga" : "Corta",
-    parche: producto.parche,
-    manga_larga: producto.mangaLarga,
-      personalizacion: producto.personalizacion,
-      nombre_personalizacion: producto.nombrePersonalizacion,
-      numero_personalizacion: producto.numeroPersonalizacion,
-      precio_venta_manual: null,
-      coste_manual: null,
-      venta_unidad_snapshot: producto.ventaUnidadSnapshot,
-      coste_unidad_snapshot: producto.costeUnidadSnapshot,
-      pagado: producto.pagado,
-      entregado: producto.entregado,
+      cliente: productoConPrecio.cliente,
+      nombre: productoConPrecio.nombre,
+      talla: productoConPrecio.talla,
+      tipo: productoConPrecio.tipo,
+      manga: productoConPrecio.mangaLarga ? "Larga" : "Corta",
+      parche: productoConPrecio.parche,
+      nombre_parche: productoConPrecio.parche ? productoConPrecio.parcheNombre : "",
+      manga_larga: productoConPrecio.mangaLarga,
+      personalizacion: productoConPrecio.personalizacion,
+      nombre_personalizacion: productoConPrecio.nombrePersonalizacion,
+      numero_personalizacion: productoConPrecio.numeroPersonalizacion,
+      precio_venta_manual: productoConPrecio.tipo === "Personalizada" ? productoConPrecio.precioVentaManual : null,
+      coste_manual: productoConPrecio.tipo === "Personalizada" ? productoConPrecio.costeManual : null,
+      venta_unidad_snapshot: productoConPrecio.ventaUnidadSnapshot,
+      coste_unidad_snapshot: productoConPrecio.costeUnidadSnapshot,
+      pagado: productoConPrecio.pagado,
+      entregado: productoConPrecio.entregado,
     })
     .eq("id", producto.id);
 

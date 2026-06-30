@@ -11,7 +11,7 @@ export function calcularProducto(producto: Producto, precios: ConfiguracionPreci
     Fan: [precios.costeFan, precios.ventaFan],
     Player: [precios.costePlayer, precios.ventaPlayer],
     Retro: [precios.costeRetro, precios.ventaRetro],
-    Personalizada: [precios.costePersonalizada, precios.ventaPersonalizada],
+    Personalizada: [producto.costeManual, producto.precioVentaManual],
     Infantil: [precios.costeInfantil, precios.ventaInfantil],
   } as const;
   let [costeTotal, ventaTotal] = porTipo[producto.tipo];
@@ -24,6 +24,10 @@ export function calcularProducto(producto: Producto, precios: ConfiguracionPreci
 export function aplicarPrecioProductoActual(producto: Producto, precios: ConfiguracionPrecios): Producto {
   const precio = calcularProducto({ ...producto, costeUnidadSnapshot: null, ventaUnidadSnapshot: null }, precios);
   return { ...producto, costeUnidadSnapshot: precio.costeUnidad, ventaUnidadSnapshot: precio.ventaUnidad };
+}
+
+export function calcularArchivadoPedido(productos: Producto[]): boolean {
+  return productos.length > 0 && productos.every((producto) => producto.pagado && producto.entregado);
 }
 
 export function calcularPedidosConTotales(pedidos: Pedido[], precios: ConfiguracionPrecios = PRECIOS_POR_DEFECTO): PedidoConTotales[] {

@@ -60,7 +60,7 @@ export default function SimuladorPedido({ precios, onPedidoGuardado }: Props) {
   function actualizarProducto(
     id: number,
     campo: keyof Producto,
-    valor: string | number | boolean,
+    valor: string | number | boolean | null,
   ) {
     setProductos((productosActuales) =>
       productosActuales.map((producto) =>

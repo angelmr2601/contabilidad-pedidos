@@ -10,9 +10,12 @@ export type Producto = {
   tipo: TipoProducto;
   personalizacion: boolean;
   parche: boolean;
+  parcheNombre: string;
   mangaLarga: boolean;
   nombrePersonalizacion: string;
   numeroPersonalizacion: string;
+  precioVentaManual: number;
+  costeManual: number;
   pagado: boolean;
   entregado: boolean;
   ventaUnidadSnapshot: number | null;

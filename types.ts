@@ -51,6 +51,7 @@ export type Producto = {
   tipo: TipoProducto;
   personalizacion: boolean;
   parche: boolean;
+  parcheNombre: string;
   mangaLarga: boolean;
   nombrePersonalizacion: string;
   numeroPersonalizacion: string;
