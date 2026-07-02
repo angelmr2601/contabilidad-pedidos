@@ -92,4 +92,21 @@ export function calcularResumen(pedidos: PedidoConTotales[]) {
 }
 
 export const formatoEuros = (valor: number) => new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(valor);
-export const formatoFecha = (fecha: string) => fecha ? new Intl.DateTimeFormat("es-ES").format(new Date(`${fecha}T00:00:00`)) : "Sin fecha";
+
+export function formatoFecha(valor?: string | Date | number | null) {
+  if (valor === null || valor === undefined || valor === "") return "—";
+
+  const fecha = valor instanceof Date
+    ? valor
+    : typeof valor === "string" && /^\d{4}-\d{2}-\d{2}$/.test(valor)
+      ? new Date(`${valor}T00:00:00`)
+      : new Date(valor);
+
+  if (Number.isNaN(fecha.getTime())) return "—";
+
+  return new Intl.DateTimeFormat("es-ES", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(fecha);
+}
