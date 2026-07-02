@@ -7,14 +7,20 @@
     "scheme": "offsideclub",
     "userInterfaceStyle": "light",
     "splash": {
+      "image": "./assets/brand/logo-dark.png",
       "resizeMode": "contain",
       "backgroundColor": "#f3f4f6"
     },
     "android": {
-      "package": "com.offsideclub.contabilidad"
+      "package": "com.offsideclub.contabilidad",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/brand/logo-dark.png",
+        "backgroundColor": "#f3f4f6"
+      }
     },
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "icon": "./assets/brand/logo-dark.png"
   }
 }
