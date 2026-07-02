@@ -2,6 +2,7 @@ import { ReactNode, useState } from "react";
 import { Pressable, PressableProps, StyleProp, Text, TextInput, TextInputProps, View, ViewProps, ViewStyle } from "react-native";
 import { router, usePathname } from "expo-router";
 import { colors, helpers } from "@/theme";
+import { BrandLogo } from "./BrandLogo";
 import { styles } from "./styles";
 
 type ButtonVariant = "primary" | "secondary" | "danger";
@@ -39,7 +40,7 @@ export function EmptyState({ title, body, action }: { title: string; body: strin
 }
 
 export function AppHeader({ eyebrow = "Offside Club", title, subtitle, action }: { eyebrow?: string; title: string; subtitle?: string; action?: ReactNode }) {
-  return <View style={styles.appHeader}><View style={{ flex: 1 }}><Text style={styles.eyebrow}>{eyebrow}</Text><Text style={styles.title}>{title}</Text>{subtitle ? <Text style={styles.muted}>{subtitle}</Text> : null}</View>{action}</View>;
+  return <View style={styles.appHeader}><BrandLogo variant="dark" size="sm" style={{ marginTop: 2 }} /><View style={{ flex: 1 }}><Text style={styles.eyebrow}>{eyebrow}</Text><Text style={styles.title}>{title}</Text>{subtitle ? <Text style={styles.muted}>{subtitle}</Text> : null}</View>{action}</View>;
 }
 
 export function SegmentedControl<T extends string>({ value, options, onChange }: { value: T; options: { label: string; value: T }[]; onChange: (value: T) => void }) {
