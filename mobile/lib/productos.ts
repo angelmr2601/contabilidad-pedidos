@@ -24,3 +24,25 @@ export function crearProductoVacio(id = Date.now() * -1): Producto {
     costeUnidadSnapshot: null,
   };
 }
+
+export function duplicarProductoLocal(producto: Producto, id = Date.now() * -1): Producto {
+  return {
+    ...producto,
+    id,
+    pagado: false,
+    entregado: false,
+  };
+}
+
+export function guardarProductoEnLista(productos: Producto[], producto: Producto): Producto[] {
+  const existe = productos.some((actual) => actual.id === producto.id);
+  return existe ? productos.map((actual) => actual.id === producto.id ? producto : actual) : [...productos, producto];
+}
+
+export function reemplazarProducto(productos: Producto[], producto: Producto): Producto[] {
+  return productos.map((actual) => actual.id === producto.id ? producto : actual);
+}
+
+export function alternarCampoProducto(productos: Producto[], productoId: number, campo: "pagado" | "entregado"): Producto[] {
+  return productos.map((producto) => producto.id === productoId ? { ...producto, [campo]: !producto[campo] } : producto);
+}

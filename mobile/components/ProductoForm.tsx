@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import type { ConfiguracionPrecios, Producto, TallaProducto, TipoProducto } from "@/types";
 import { calcularProducto, formatoEuros } from "@/lib/calculos";
@@ -19,11 +19,6 @@ export function ProductoForm({ producto, precios, onChange }: { producto: Produc
   };
   const [costeManualTexto, setCosteManualTexto] = useState(numeroComoTexto(producto.costeManual));
   const [ventaManualTexto, setVentaManualTexto] = useState(numeroComoTexto(producto.precioVentaManual));
-
-  useEffect(() => {
-    setCosteManualTexto(numeroComoTexto(producto.costeManual));
-    setVentaManualTexto(numeroComoTexto(producto.precioVentaManual));
-  }, [producto.id]);
 
   const cambiarCosteManual = (valor: string) => {
     setCosteManualTexto(valor);
