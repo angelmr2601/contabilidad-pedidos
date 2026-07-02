@@ -6,12 +6,17 @@ import { listenTrackingNotificationResponses, setupTrackingNotifications } from 
 
 export default function RootLayout() {
   useEffect(() => {
-    const notificationSubscription = listenTrackingNotificationResponses();
+    let notificationSubscription: { remove(): void } = { remove: () => undefined };
+    let mounted = true;
+    listenTrackingNotificationResponses().then((subscription) => {
+      if (mounted) notificationSubscription = subscription;
+      else subscription.remove();
+    }).catch(() => undefined);
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) router.replace("/login");
-      else setupTrackingNotifications(session);
+      else setupTrackingNotifications(session).catch(() => undefined);
     });
-    return () => { notificationSubscription.remove(); data.subscription.unsubscribe(); };
+    return () => { mounted = false; notificationSubscription.remove(); data.subscription.unsubscribe(); };
   }, []);
 
   return <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
