@@ -2,13 +2,16 @@ import { Stack, router } from "expo-router";
 import { useEffect } from "react";
 import { colors } from "@/theme";
 import { supabase } from "@/lib/supabase";
+import { listenTrackingNotificationResponses, setupTrackingNotifications } from "@/lib/push-notifications";
 
 export default function RootLayout() {
   useEffect(() => {
+    const notificationSubscription = listenTrackingNotificationResponses();
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) router.replace("/login");
+      else setupTrackingNotifications(session);
     });
-    return () => data.subscription.unsubscribe();
+    return () => { notificationSubscription.remove(); data.subscription.unsubscribe(); };
   }, []);
 
   return <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>

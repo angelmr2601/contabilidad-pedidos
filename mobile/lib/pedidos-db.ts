@@ -8,10 +8,11 @@ type ProductoDB = {
   numero_personalizacion: string | null; precio_venta_manual: number | null; coste_manual: number | null; venta_unidad_snapshot: number | null; coste_unidad_snapshot: number | null;
   pagado: boolean; entregado: boolean;
 };
-type PedidoDB = { id: number; nombre: string; fecha_pedido: string; numero_seguimiento: string | null; archivado: boolean; coste_fijo_snapshot: number | null; productos: ProductoDB[] };
+type PedidoDB = { id: number; nombre: string; fecha_pedido: string; numero_seguimiento: string | null; transportista_codigo: string | null; transportista_nombre: string | null; tracking_estado: string | null; tracking_subestado: string | null; tracking_estado_interno: import("@/types").TrackingEstadoInterno | null; tracking_ultimo_evento: string | null; tracking_ultima_ubicacion: string | null; tracking_actualizado_at: string | null; tracking_registrado_at: string | null; tracking_error: string | null; archivado: boolean; coste_fijo_snapshot: number | null; productos: ProductoDB[] };
 
 const PRODUCTOS_SELECT = "id,pedido_id,cliente,nombre,talla,tipo,manga,personalizacion,parche,nombre_parche,manga_larga,nombre_personalizacion,numero_personalizacion,precio_venta_manual,coste_manual,venta_unidad_snapshot,coste_unidad_snapshot,pagado,entregado";
-const PEDIDOS_SELECT = `id,nombre,fecha_pedido,numero_seguimiento,archivado,coste_fijo_snapshot,productos(${PRODUCTOS_SELECT})`;
+const TRACKING_SELECT = "numero_seguimiento,transportista_codigo,transportista_nombre,tracking_estado,tracking_subestado,tracking_estado_interno,tracking_ultimo_evento,tracking_ultima_ubicacion,tracking_actualizado_at,tracking_registrado_at,tracking_error";
+const PEDIDOS_SELECT = `id,nombre,fecha_pedido,${TRACKING_SELECT},archivado,coste_fijo_snapshot,productos(${PRODUCTOS_SELECT})`;
 
 function normalizarTipo(tipo: string): TipoProducto {
   if (["Fan", "Player", "Retro", "Personalizada", "Infantil"].includes(tipo)) return tipo as TipoProducto;
@@ -34,7 +35,7 @@ function normalizarNumeroSeguimiento(numeroSeguimiento: string | null) {
 }
 
 function pedidoDesdeDB(p: PedidoDB): Pedido {
-  return { id: p.id, nombre: p.nombre, fechaPedido: p.fecha_pedido, numeroSeguimiento: normalizarNumeroSeguimiento(p.numero_seguimiento), archivado: p.archivado, costeFijoSnapshot: p.coste_fijo_snapshot === null ? null : Number(p.coste_fijo_snapshot), productos: (p.productos ?? []).map(productoDesdeDB) };
+  return { id: p.id, nombre: p.nombre, fechaPedido: p.fecha_pedido, numeroSeguimiento: normalizarNumeroSeguimiento(p.numero_seguimiento), transportistaCodigo: p.transportista_codigo, transportistaNombre: p.transportista_nombre, trackingEstado: p.tracking_estado, trackingSubestado: p.tracking_subestado, trackingEstadoInterno: p.tracking_estado_interno, trackingUltimoEvento: p.tracking_ultimo_evento, trackingUltimaUbicacion: p.tracking_ultima_ubicacion, trackingActualizadoAt: p.tracking_actualizado_at, trackingRegistradoAt: p.tracking_registrado_at, trackingError: p.tracking_error, archivado: p.archivado, costeFijoSnapshot: p.coste_fijo_snapshot === null ? null : Number(p.coste_fijo_snapshot), productos: (p.productos ?? []).map(productoDesdeDB) };
 }
 
 export async function cargarPedidos(): Promise<Pedido[]> {
@@ -51,8 +52,10 @@ export async function actualizarPedido(pedidoId: number, nombre: string, fechaPe
   const { error } = await supabase.from("pedidos").update({ nombre, fecha_pedido: fechaPedido }).eq("id", pedidoId);
   if (error) throw error;
 }
-export async function actualizarNumeroSeguimientoPedido(pedidoId: number, numeroSeguimiento: string | null) {
-  const { data, error } = await supabase.from("pedidos").update({ numero_seguimiento: normalizarNumeroSeguimiento(numeroSeguimiento) }).eq("id", pedidoId).select(PEDIDOS_SELECT).single();
+export async function actualizarNumeroSeguimientoPedido(pedidoId: number, numeroSeguimiento: string | null, transportista?: { codigo: string; nombre: string } | null) {
+  const clean = normalizarNumeroSeguimiento(numeroSeguimiento);
+  const patch = clean ? { numero_seguimiento: clean, transportista_codigo: transportista?.codigo ?? null, transportista_nombre: transportista?.nombre ?? null } : { numero_seguimiento: null, transportista_codigo: null, transportista_nombre: null, tracking_estado: null, tracking_subestado: null, tracking_estado_interno: null, tracking_ultimo_evento: null, tracking_ultima_ubicacion: null, tracking_actualizado_at: null, tracking_registrado_at: null, tracking_error: null };
+  const { data, error } = await supabase.from("pedidos").update(patch).eq("id", pedidoId).select(PEDIDOS_SELECT).single();
   if (error) throw error;
   return pedidoDesdeDB(data as PedidoDB);
 }
