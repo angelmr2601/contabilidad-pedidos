@@ -5,7 +5,7 @@ const FINALES = new Set<TrackingEstadoInterno>(["en_reparto", "entregado", "inci
 
 const INFO_RECIBIDA_RE = /(?:informaci[oó]n\s+electr[oó]nica\s+recibida|se\s+ha\s+recibido\s+informaci[oó]n\s+electr[oó]nica|electronic\s+information\s+received|shipment\s+information\s+received|info\s+received|order\s+data\s+received|datos\s+recibidos|received\s+shipment\s+information|received\s+electronic\s+information|inforeceived)/i;
 const ENTREGA_FINAL_RE = /(?:\bdelivered\b|final\s+delivery|delivered\s+to\s+(?:recipient|consignee)|signed\s+by|已签收|签收|entregado\s+al\s+(?:destinatario|receptor)|entrega\s+completada|paquete\s+entregado)/i;
-const DEVOLUCION_RE = /(?:return|returned|devuelto|devoluci[oó]n)/i;
+const DEVOLUCION_RE = /(?:returned\s+to\s+sender|return\s+to\s+sender|\breturned\b|parcel\s+returned|package\s+returned|shipment\s+returned|devuelto\s+al\s+remitente|devoluci[oó]n\s+al\s+remitente|paquete\s+devuelto|env[ií]o\s+devuelto|retornado\s+al\s+remitente|退回|退件|已退回)/i;
 const INCIDENCIA_RE = /(?:deliveryfailure|exception|expired|fail|failed|incidencia|fallo|error)/i;
 const REPARTO_RE = /(?:availableforpickup|outfordelivery|out\s+for\s+delivery|reparto|en\s+reparto)/i;
 const CAMINO_RE = /(?:intransit|in\s+transit|transit|transport|camino|aerol[ií]nea|airline|vuelo|flight|salida|sale\s+del\s+centro|centro\s+de\s+operaciones|aduaner|customs|despacho|carga\s+pasada|punto\s+de\s+recogida|llega\s+al\s+punto|启运|航空|清关|操作中心|揽收)/i;
@@ -74,35 +74,45 @@ function recolectarEventos(raw: unknown, eventos: EventoTracking[] = []): Evento
   return eventos;
 }
 
-function eventoMasReciente(raw: unknown): EventoTracking | null {
-  const eventos = recolectarEventos(raw);
-  if (!eventos.length) return null;
-  return eventos.sort((a, b) => (b.fechaMs ?? 0) - (a.fechaMs ?? 0))[0];
+function eventosOrdenados(raw: unknown): EventoTracking[] {
+  return recolectarEventos(raw).sort((a, b) => (b.fechaMs ?? 0) - (a.fechaMs ?? 0));
 }
 
-function normalizarInterno(combinado: string, ultimoEvento: string | null): TrackingEstadoInterno {
+function eventoMasReciente(eventos: EventoTracking[]): EventoTracking | null {
+  return eventos[0] ?? null;
+}
+
+function normalizarInterno(combinado: string, ultimoEvento: string | null): { estadoInterno: TrackingEstadoInterno; matchedRule: string } {
   const esInfoRecibida = INFO_RECIBIDA_RE.test(combinado);
   const tieneMovimientoFisico = CAMINO_RE.test(combinado) || REPARTO_RE.test(combinado);
   const entregaFinalEstricta = ENTREGA_FINAL_RE.test(ultimoEvento ?? "") || (!esInfoRecibida && ENTREGA_FINAL_RE.test(combinado));
 
-  if (entregaFinalEstricta) return "entregado";
-  if (DEVOLUCION_RE.test(combinado)) return "devuelto";
-  if (INCIDENCIA_RE.test(combinado)) return "incidencia";
-  if (REPARTO_RE.test(combinado)) return "en_reparto";
-  if (tieneMovimientoFisico) return "de_camino";
-  if (esInfoRecibida || PREPARANDO_RE.test(combinado)) return "preparando_envio";
-  if (/notfound|not found/i.test(combinado)) return "pendiente_informacion";
-  return "pendiente_informacion";
+  if (entregaFinalEstricta) return { estadoInterno: "entregado", matchedRule: "entrega_final_estricta" };
+  if (DEVOLUCION_RE.test(combinado)) return { estadoInterno: "devuelto", matchedRule: "devolucion_estricta" };
+  if (INCIDENCIA_RE.test(combinado)) return { estadoInterno: "incidencia", matchedRule: "incidencia_clara" };
+  if (REPARTO_RE.test(combinado)) return { estadoInterno: "en_reparto", matchedRule: "reparto_local" };
+  if (tieneMovimientoFisico) return { estadoInterno: "de_camino", matchedRule: "transito_fisico" };
+  if (esInfoRecibida || PREPARANDO_RE.test(combinado)) return { estadoInterno: "preparando_envio", matchedRule: "informacion_recibida" };
+  if (/notfound|not found/i.test(combinado)) return { estadoInterno: "pendiente_informacion", matchedRule: "not_found" };
+  return { estadoInterno: "pendiente_informacion", matchedRule: "sin_eventos_relevantes" };
 }
 
 export function normalizarEstado17Track(raw: unknown): TrackingSnapshot {
-  const eventoReciente = eventoMasReciente(raw);
+  const eventos = eventosOrdenados(raw);
+  const eventoReciente = eventoMasReciente(eventos);
   const estado = buscar(raw, ["status", "estado", "delivery_status", "delivery_status_text", "track_status"]) ?? "NotFound";
   const subestado = buscar(raw, ["substatus", "subestado", "sub_status", "delivery_substatus"]);
   const ultimoEvento = eventoReciente?.texto ?? buscar(raw, ["description", "event", "evento", "latest_event", "latest_event_text", "track_info"]);
   const ultimaUbicacion = eventoReciente?.ubicacion ?? buscar(raw, ["location", "ubicacion", "latest_location", "place"]);
-  const combinado = [estado, subestado, ultimoEvento, ultimaUbicacion, JSON.stringify(raw)].filter(Boolean).join(" ");
-  let estadoInterno = normalizarInterno(combinado, ultimoEvento);
-  if (!FINALES.has(estadoInterno) && ESPANA_RE.test(combinado)) estadoInterno = "en_espana";
+  const combinado = [estado, subestado, ultimoEvento, ultimaUbicacion, ...eventos.map((evento) => evento.texto), ...eventos.map((evento) => evento.ubicacion)].filter(Boolean).join(" ");
+  const normalizado = normalizarInterno(combinado, ultimoEvento);
+  let { estadoInterno, matchedRule } = normalizado;
+  if (!FINALES.has(estadoInterno) && ESPANA_RE.test(combinado)) {
+    estadoInterno = "en_espana";
+    matchedRule = "ubicacion_espana";
+  }
+  if (process.env.NODE_ENV !== "production") {
+    console.info("[17TRACK normalize]", { status: estado, substatus: subestado, internalStatus: estadoInterno, matchedRule, latestEvent: ultimoEvento });
+  }
   return { estado, subestado, estadoInterno, ultimoEvento, ultimaUbicacion, actualizadoAt: eventoReciente?.fecha ?? new Date().toISOString(), raw };
 }
