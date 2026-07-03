@@ -10,6 +10,16 @@ function unauthorized() {
 }
 
 export function proxy(request: NextRequest) {
+  const publicApiPrefixes = ["/api/tracking/", "/api/push/"];
+
+  if (
+    publicApiPrefixes.some((prefix) =>
+      request.nextUrl.pathname.startsWith(prefix),
+    )
+  ) {
+    return NextResponse.next();
+  }
+
   // Hostinger no puede enviar Basic Auth al webhook. Esta ruta se protege
   // con su propio Bearer token HOSTINGER_MAIL_WEBHOOK_SECRET en el handler.
   if (request.nextUrl.pathname === "/api/webhooks/hostinger-mail") {
