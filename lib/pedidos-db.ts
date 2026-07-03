@@ -31,6 +31,16 @@ type PedidoDB = {
   fecha_pedido: string;
   numero_pedido: string | null;
   numero_seguimiento: string | null;
+  transportista_codigo: string | null;
+  transportista_nombre: string | null;
+  tracking_estado: string | null;
+  tracking_subestado: string | null;
+  tracking_estado_interno: import("../types").TrackingEstadoInterno | null;
+  tracking_ultimo_evento: string | null;
+  tracking_ultima_ubicacion: string | null;
+  tracking_actualizado_at: string | null;
+  tracking_registrado_at: string | null;
+  tracking_error: string | null;
   archivado: boolean;
   coste_fijo_snapshot: number | null;
   incluir_gastos_envio: boolean | null;
@@ -140,6 +150,16 @@ export async function cargarPedidos(): Promise<Pedido[]> {
       fecha_pedido,
       numero_pedido,
       numero_seguimiento,
+      transportista_codigo,
+      transportista_nombre,
+      tracking_estado,
+      tracking_subestado,
+      tracking_estado_interno,
+      tracking_ultimo_evento,
+      tracking_ultima_ubicacion,
+      tracking_actualizado_at,
+      tracking_registrado_at,
+      tracking_error,
       archivado,
       coste_fijo_snapshot,
       incluir_gastos_envio,
@@ -162,6 +182,16 @@ export async function cargarPedidos(): Promise<Pedido[]> {
     fechaPedido: pedido.fecha_pedido,
     numeroPedido: pedido.numero_pedido ?? "",
     numeroSeguimiento: pedido.numero_seguimiento ?? "",
+    transportistaCodigo: pedido.transportista_codigo,
+    transportistaNombre: pedido.transportista_nombre,
+    trackingEstado: pedido.tracking_estado,
+    trackingSubestado: pedido.tracking_subestado,
+    trackingEstadoInterno: pedido.tracking_estado_interno,
+    trackingUltimoEvento: pedido.tracking_ultimo_evento,
+    trackingUltimaUbicacion: pedido.tracking_ultima_ubicacion,
+    trackingActualizadoAt: pedido.tracking_actualizado_at,
+    trackingRegistradoAt: pedido.tracking_registrado_at,
+    trackingError: pedido.tracking_error,
     archivado: pedido.archivado,
     costeFijoSnapshot:
       pedido.coste_fijo_snapshot === null
@@ -232,6 +262,16 @@ export async function crearPedidoConProductos(
     fechaPedido: pedidoCreado.fecha_pedido,
     numeroPedido: pedidoCreado.numero_pedido ?? "",
     numeroSeguimiento: pedidoCreado.numero_seguimiento ?? "",
+    transportistaCodigo: null,
+    transportistaNombre: null,
+    trackingEstado: null,
+    trackingSubestado: null,
+    trackingEstadoInterno: null,
+    trackingUltimoEvento: null,
+    trackingUltimaUbicacion: null,
+    trackingActualizadoAt: null,
+    trackingRegistradoAt: null,
+    trackingError: null,
     archivado: pedidoCreado.archivado,
     costeFijoSnapshot:
       pedidoCreado.coste_fijo_snapshot === null

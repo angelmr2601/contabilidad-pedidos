@@ -1,6 +1,7 @@
 export type TipoProducto = "Fan" | "Player" | "Retro" | "Personalizada" | "Infantil";
 export type TallaProducto = "S" | "M" | "L" | "XL" | "XXL" | "3XL" | "4XL";
 export type FiltroArchivo = "activos" | "archivados" | "todos";
+export type TrackingEstadoInterno = "sin_seguimiento" | "pendiente_informacion" | "preparando_envio" | "de_camino" | "en_espana" | "en_reparto" | "entregado" | "incidencia" | "devuelto";
 
 export type Producto = {
   id: number;
@@ -27,6 +28,16 @@ export type Pedido = {
   nombre: string;
   fechaPedido: string;
   numeroSeguimiento: string | null;
+  transportistaCodigo: string | null;
+  transportistaNombre: string | null;
+  trackingEstado: string | null;
+  trackingSubestado: string | null;
+  trackingEstadoInterno: TrackingEstadoInterno | null;
+  trackingUltimoEvento: string | null;
+  trackingUltimaUbicacion: string | null;
+  trackingActualizadoAt: string | null;
+  trackingRegistradoAt: string | null;
+  trackingError: string | null;
   archivado: boolean;
   costeFijoSnapshot: number | null;
   productos: Producto[];

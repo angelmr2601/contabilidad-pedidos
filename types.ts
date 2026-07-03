@@ -18,6 +18,7 @@ export type TallaProducto =
 export type FiltroPago = "todos" | "pagado" | "pendiente";
 export type FiltroEntrega = "todos" | "entregado" | "pendiente";
 export type FiltroArchivo = "activos" | "archivados" | "todos";
+export type TrackingEstadoInterno = "sin_seguimiento" | "pendiente_informacion" | "preparando_envio" | "de_camino" | "en_espana" | "en_reparto" | "entregado" | "incidencia" | "devuelto";
 
 export type ConfiguracionPrecios = {
   costeFan: number;
@@ -69,6 +70,16 @@ export type Pedido = {
   fechaPedido: string;
   numeroPedido: string;
   numeroSeguimiento: string;
+  transportistaCodigo: string | null;
+  transportistaNombre: string | null;
+  trackingEstado: string | null;
+  trackingSubestado: string | null;
+  trackingEstadoInterno: TrackingEstadoInterno | null;
+  trackingUltimoEvento: string | null;
+  trackingUltimaUbicacion: string | null;
+  trackingActualizadoAt: string | null;
+  trackingRegistradoAt: string | null;
+  trackingError: string | null;
   archivado: boolean;
   costeFijoSnapshot: number | null;
   incluirGastosEnvio: boolean;
