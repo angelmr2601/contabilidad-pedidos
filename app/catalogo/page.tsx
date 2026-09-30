@@ -5,7 +5,7 @@ import { cargarCatalogo, eliminarVariante, guardarProducto, guardarVariante, sub
 
 const tipos=["Fan","Player","Retro","Infantil","Manga larga"];
 const ediciones=["LaLiga","Champions","Copa","Retro"];
-const emptyVar=():CatalogoVariante=>({id:"",producto_id:"",edicion:"LaLiga",tipo:"Fan",etiqueta:"",precio:null,imagen_url:null});
+const emptyVar=():CatalogoVariante=>({id:0,producto_id:0,edicion:"LaLiga",tipo:"Fan",etiqueta:"",precio:null,imagen_url:null});
 export default function CatalogoPage(){
  const [items,setItems]=useState<CatalogoProducto[]>([]); const [selected,setSelected]=useState<CatalogoProducto|null>(null); const [name,setName]=useState(""); const [desc,setDesc]=useState(""); const [active,setActive]=useState(true); const [variant,setVariant]=useState(emptyVar()); const [busy,setBusy]=useState(false); const [message,setMessage]=useState(""); const inputRef=useRef<HTMLInputElement>(null);
  async function load(){try{setItems(await cargarCatalogo())}catch(e){setMessage(e instanceof Error?e.message:"No se pudo cargar el catálogo")}}
