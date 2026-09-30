@@ -1,22 +1,10 @@
 import { supabase } from "./supabase";
-
-export type CatalogoProducto = { id:string; nombre:string; descripcion:string; activo:boolean; updated_at:string; variantes: CatalogoVariante[] };
-export type CatalogoVariante = { id:string; producto_id:string; edicion:string; tipo:string; etiqueta:string; precio:number|null; imagen_url:string|null };
-
-export async function cargarCatalogo(): Promise<CatalogoProducto[]> {
-  const { data, error } = await supabase.from("catalogo_productos").select("*, variantes:catalogo_variantes(*)").order("updated_at",{ascending:false});
-  if (error) throw error;
-  return (data ?? []) as CatalogoProducto[];
-}
-export async function guardarProducto(input:{id?:string;nombre:string;descripcion:string;activo:boolean}) {
-  const query = input.id
-    ? supabase.from("catalogo_productos").update({nombre:input.nombre,descripcion:input.descripcion,activo:input.activo,updated_at:new Date().toISOString()}).eq("id",input.id).select().single()
-    : supabase.from("catalogo_productos").insert({nombre:input.nombre,descripcion:input.descripcion,activo:input.activo}).select().single();
-  const {data,error}=await query; if(error) throw error; return data as {id:string};
-}
-export async function guardarVariante(input:{id?:string;producto_id:string;edicion:string;tipo:string;etiqueta:string;precio:number|null;imagen_url:string|null}) {
-  const query=input.id ? supabase.from("catalogo_variantes").update(input).eq("id",input.id).select().single() : supabase.from("catalogo_variantes").insert(input).select().single();
-  const {data,error}=await query; if(error) throw error; return data as CatalogoVariante;
-}
-export async function eliminarVariante(id:string){const {error}=await supabase.from("catalogo_variantes").delete().eq("id",id);if(error)throw error;}
-export async function subirImagen(file:File){const safe=file.name.toLowerCase().replace(/[^a-z0-9.]+/g,"-");const path=`${crypto.randomUUID()}-${safe}`;const {error}=await supabase.storage.from("catalogo-productos").upload(path,file,{upsert:false,contentType:file.type});if(error)throw error;const {data}=supabase.storage.from("catalogo-productos").getPublicUrl(path);return data.publicUrl;}
+export type CatalogoProducto={id:number;nombre:string;descripcion:string;activo:boolean;updated_at:string;equipo?:string;liga?:string;temporada?:string;modelo?:string;variantes:CatalogoVariante[]};
+export type CatalogoVariante={id:number;producto_id:number;edicion:string;tipo:string;etiqueta:string;precio:number|null;imagen_url:string|null};
+type Img={id:number;catalogo_producto_id:number;imagen_path:string;alt_text:string|null;version:string|null;edicion:string|null};
+const publicImage=(path:string)=>path.startsWith("http")?path:supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl;
+export async function cargarCatalogo():Promise<CatalogoProducto[]>{const [{data:products,error:e1},{data:images,error:e2}]=await Promise.all([supabase.from("catalogo_productos").select("*").order("updated_at",{ascending:false}),supabase.from("catalogo_producto_imagenes").select("*").order("orden")]);if(e1)throw e1;if(e2)throw e2;return ((products??[]) as CatalogoProducto[]).map(p=>({...p,variantes:((images??[]) as Img[]).filter(i=>i.catalogo_producto_id===p.id).map(i=>({id:i.id,producto_id:p.id,edicion:i.edicion||"LaLiga",tipo:i.version||"Fan",etiqueta:i.alt_text||"",precio:null,imagen_url:i.imagen_path?publicImage(i.imagen_path):null}))}))}
+export async function guardarProducto(input:{id?:number;nombre:string;descripcion:string;activo:boolean}){const values={nombre:input.nombre,descripcion:input.descripcion,activo:input.activo,updated_at:new Date().toISOString()};const q=input.id?supabase.from("catalogo_productos").update(values).eq("id",input.id).select().single():supabase.from("catalogo_productos").insert(values).select().single();const {data,error}=await q;if(error)throw error;return data as {id:number}}
+export async function guardarVariante(v:{id?:number;producto_id:number;edicion:string;tipo:string;etiqueta:string;precio:number|null;imagen_url:string|null}){const path=v.imagen_url?.split("/product-images/")[1]??v.imagen_url??"";const values={catalogo_producto_id:v.producto_id,edicion:v.edicion,version:v.tipo,alt_text:v.etiqueta,imagen_path:path,orden:0,es_principal:false};const q=v.id?supabase.from("catalogo_producto_imagenes").update(values).eq("id",v.id).select().single():supabase.from("catalogo_producto_imagenes").insert(values).select().single();const {data,error}=await q;if(error)throw error;return {id:data.id,...v}}
+export async function eliminarVariante(id:number){const {error}=await supabase.from("catalogo_producto_imagenes").delete().eq("id",id);if(error)throw error}
+export async function subirImagen(file:File){const safe=file.name.toLowerCase().replace(/[^a-z0-9.]+/g,"-");const path=`${crypto.randomUUID()}-${safe}`;const {error}=await supabase.storage.from("product-images").upload(path,file,{upsert:false,contentType:file.type});if(error)throw error;return supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl}
